@@ -76,10 +76,9 @@ func (i *LogService) CreateOperationLog(ctx context.Context, req *CreateOperatio
 
 type RetrieveLoginLogsReq struct {
 	router.PageReq
-	UserNameLike     string `json:"userName"`  // 用户名模糊
-	Ip               string `json:"ip"`        // IP 地址
-	UserType         string `json:"userType"`  // 用户类型（user/super_admin）
-	CreatedAtBetween string `json:"createdAt"` // 创建时间区间查询
+	UserNameLike string `json:"userName"` // 用户名模糊
+	Ip           string `json:"ip"`       // IP 地址
+	UserType     string `json:"userType"` // 用户类型（user/super_admin）
 }
 
 func (i *LogService) RetrieveLoginLogs(ctx context.Context, req *RetrieveLoginLogsReq) (count int64, list []model.LoginLog, err error) {
@@ -89,7 +88,7 @@ func (i *LogService) RetrieveLoginLogs(ctx context.Context, req *RetrieveLoginLo
 
 	return i.logRepo.WithContext(ctx).RetrieveLoginLogs(req.Page, req.PageSize, func(tx *gorm.DB) {
 		db.AppendWhereFromStruct(tx, req)
-		tx.Order("created_at desc")
+		tx.Order("login_time desc")
 	})
 }
 
