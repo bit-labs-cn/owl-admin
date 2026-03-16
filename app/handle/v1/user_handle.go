@@ -319,6 +319,29 @@ func (i *UserHandle) ResetPassword(ctx *gin.Context) {
 	router.Success(ctx, nil)
 }
 
+// @Summary		修改用户头像
+// @Description	管理员修改指定用户头像
+// @Tags			用户管理
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int	true	"用户ID"
+// @Param			request	body		service.ChangeAvatarReq	true	"头像请求（avatar 为图片 URL）"
+// @Success		200		{object}	router.Resp				"操作成功"
+// @Router			/api/v1/users/{id}/avatar [PUT]
+func (i *UserHandle) ChangeAvatar(ctx *gin.Context) {
+	var req service.ChangeAvatarReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		router.BadRequest(ctx, err.Error())
+		return
+	}
+	req.UserID = cast.ToUint(ctx.Param("id"))
+	if err := i.userSvc.ChangeUserAvatar(ctx.Request.Context(), &req); err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	router.Success(ctx, nil)
+}
+
 // @Summary		用户登录
 // @Description	使用用户名与密码进行登录
 // @Tags			用户管理

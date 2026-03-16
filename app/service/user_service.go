@@ -348,6 +348,17 @@ func (i *UserService) RetrieveUsers(ctx context.Context, req *RetrieveUserReq) (
 	return cast.ToInt(c), u, e
 }
 
+// RetrieveUsersByRoleID 按角色获取用户列表
+func (i *UserService) RetrieveUsersByRoleID(ctx context.Context, roleID uint, page, pageSize int) (count int, list []model.User, err error) {
+	c, u, e := i.userRepo.WithContext(ctx).Retrieve(page, pageSize, func(tx *gorm.DB) {
+		tx.Joins("JOIN admin_user_role aur ON aur.user_id = admin_user.id AND aur.role_id = ?", roleID)
+		tx.Preload("Roles")
+		tx.Order("created_at desc")
+	})
+
+	return cast.ToInt(c), u, e
+}
+
 // CreateUser 创建用户
 func (i *UserService) CreateUser(ctx context.Context, req *CreateUserReq) error {
 	if err := i.validate.Struct(req); err != nil {

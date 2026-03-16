@@ -162,6 +162,7 @@ func InitApi(app foundation.Application, appName string) {
 
 			r.Get("/users/:id", router.AccessAuthorized, userHandle.Detail).Name("获取用户详情").Build()
 			r.Put("/users/:id/reset", router.AccessSuperAdmin, userHandle.ResetPassword).Name("重置用户密码").Build()
+			r.Put("/users/:id/avatar", router.AccessAuthorized, userHandle.ChangeAvatar).Name("修改用户头像").Build()
 
 			r.Post("/users/:id/roles", router.AccessAuthorized, userHandle.AssignRolesToUser).Deps(
 				[]router.Dep{
@@ -191,7 +192,7 @@ func InitApi(app foundation.Application, appName string) {
 			r.Get("/roles", router.AccessAuthorized, roleHandle.Retrieve).Name("角色列表").Build()
 			r.Get("/roles/:id", router.AccessAuthorized, roleHandle.Detail).Name("获取角色详情").Build()
 			r.Get("/roles/:id/menu-ids", router.AccessAuthorized, roleHandle.GetRoleMenuIDs).Name("获取角色拥有的菜单").Build()
-			r.Get("/roles/:id/users", router.AccessAuthorized, roleHandle.GetRoleMenuIDs).Name("获取角色下的用户").Build()
+			r.Get("/roles/:id/users", router.AccessAuthorized, roleHandle.GetUsersByRoleID).Name("获取角色下的用户").Build()
 
 			r.Get("/roles-options", router.AccessAuthenticated, roleHandle.RoleOptions).Name("所有角色(id,name)").Build()
 

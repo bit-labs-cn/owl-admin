@@ -13,15 +13,17 @@ var _ router.CrudHandler = (*RoleHandle)(nil)
 
 type RoleHandle struct {
 	roleService *service.RoleService
+	userService *service.UserService
 }
 
 func (i *RoleHandle) ModuleName() (string, string) {
 	return "role", "角色管理"
 }
 
-func NewRoleHandle(roleService *service.RoleService) *RoleHandle {
+func NewRoleHandle(roleService *service.RoleService, userService *service.UserService) *RoleHandle {
 	return &RoleHandle{
 		roleService: roleService,
+		userService: userService,
 	}
 }
 
@@ -158,6 +160,22 @@ func (i *RoleHandle) GetRoleMenuIDs(ctx *gin.Context) {
 	menuIds := i.roleService.GetRolesMenuIDs(ctx.Request.Context(), id)
 	router.Success(ctx, menuIds)
 
+}
+
+// GetUsersByRoleID 获取角色下的用户列表
+func (i *RoleHandle) GetUsersByRoleID(ctx *gin.Context) {
+	roleID := cast.ToUint(ctx.Param("id"))
+
+	page := cast.ToInt(ctx.DefaultQuery("page", "1"))
+	pageSize := cast.ToInt(ctx.DefaultQuery("pageSize", "10"))
+
+	count, list, err := i.userService.RetrieveUsersByRoleID(ctx.Request.Context(), roleID, page, pageSize)
+	if err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+
+	router.PageSuccess(ctx, count, page, pageSize, list)
 }
 
 // @Summary		获取角色选项
