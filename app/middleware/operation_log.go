@@ -7,8 +7,8 @@ import (
 
 	"bit-labs.cn/owl/provider/router"
 
-	"bit-labs.cn/flex-admin/app/model"
-	"bit-labs.cn/flex-admin/app/service"
+	"bit-labs.cn/owl-admin/app/model"
+	"bit-labs.cn/owl-admin/app/service"
 	"github.com/gin-gonic/gin"
 )
 

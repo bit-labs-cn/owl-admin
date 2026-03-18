@@ -1,9 +1,9 @@
 package listener
 
 import (
-	"bit-labs.cn/flex-admin/app/event"
-	"bit-labs.cn/flex-admin/app/service"
 	"bit-labs.cn/owl"
+	"bit-labs.cn/owl-admin/app/event"
+	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/contract/foundation"
 	"bit-labs.cn/owl/contract/log"
 	"bit-labs.cn/owl/provider/router"

@@ -6,7 +6,7 @@ import (
 
 	"bit-labs.cn/owl/provider/db"
 
-	"bit-labs.cn/flex-admin/app/model"
+	"bit-labs.cn/owl-admin/app/model"
 	"gorm.io/gorm"
 )
 

@@ -1,13 +1,13 @@
 package admin
 
 import (
-	"bit-labs.cn/flex-admin/app/cmd"
-	"bit-labs.cn/flex-admin/app/database"
-	"bit-labs.cn/flex-admin/app/database/seeder"
-	"bit-labs.cn/flex-admin/app/listener"
-	"bit-labs.cn/flex-admin/app/provider/jwt"
-	"bit-labs.cn/flex-admin/app/route"
 	"bit-labs.cn/owl"
+	"bit-labs.cn/owl-admin/app/cmd"
+	"bit-labs.cn/owl-admin/app/database"
+	"bit-labs.cn/owl-admin/app/database/seeder"
+	"bit-labs.cn/owl-admin/app/listener"
+	"bit-labs.cn/owl-admin/app/provider/jwt"
+	"bit-labs.cn/owl-admin/app/route"
 	"bit-labs.cn/owl/contract/foundation"
 	"bit-labs.cn/owl/provider/captcha"
 	"bit-labs.cn/owl/provider/db"
@@ -20,10 +20,10 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"bit-labs.cn/flex-admin/app/handle/oauth"
-	v1 "bit-labs.cn/flex-admin/app/handle/v1"
-	"bit-labs.cn/flex-admin/app/repository"
-	"bit-labs.cn/flex-admin/app/service"
+	"bit-labs.cn/owl-admin/app/handle/oauth"
+	v1 "bit-labs.cn/owl-admin/app/handle/v1"
+	"bit-labs.cn/owl-admin/app/repository"
+	"bit-labs.cn/owl-admin/app/service"
 )
 
 var _ owl.SubApp = (*SubAppAdmin)(nil)

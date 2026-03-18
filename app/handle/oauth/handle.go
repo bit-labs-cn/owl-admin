@@ -1,9 +1,9 @@
 package oauth
 
 import (
-	"bit-labs.cn/flex-admin/app/provider/jwt"
-	"bit-labs.cn/flex-admin/app/repository"
-	"bit-labs.cn/flex-admin/app/service"
+	"bit-labs.cn/owl-admin/app/provider/jwt"
+	"bit-labs.cn/owl-admin/app/repository"
+	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/provider/conf"
 	"bit-labs.cn/owl/provider/router"
 

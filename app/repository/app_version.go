@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"bit-labs.cn/flex-admin/app/model"
+	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl/contract"
 	"bit-labs.cn/owl/provider/db"
 	"gorm.io/gorm"

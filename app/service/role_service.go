@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	"bit-labs.cn/flex-admin/app/event"
-	"bit-labs.cn/flex-admin/app/model"
-	"bit-labs.cn/flex-admin/app/repository"
+	"bit-labs.cn/owl-admin/app/event"
+	"bit-labs.cn/owl-admin/app/model"
+	"bit-labs.cn/owl-admin/app/repository"
 	"bit-labs.cn/owl/contract/log"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/redis"

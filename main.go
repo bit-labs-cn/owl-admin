@@ -1,8 +1,8 @@
 package main
 
 import (
-	admin "bit-labs.cn/flex-admin/app"
 	"bit-labs.cn/owl"
+	admin "bit-labs.cn/owl-admin/app"
 )
 
 func main() {

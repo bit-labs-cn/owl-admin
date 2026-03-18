@@ -1,4 +1,4 @@
-module bit-labs.cn/flex-admin
+module bit-labs.cn/owl-admin
 
 go 1.26.0
 

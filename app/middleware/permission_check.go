@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"bit-labs.cn/flex-admin/app/provider/jwt"
+	"bit-labs.cn/owl-admin/app/provider/jwt"
 
 	"bit-labs.cn/owl/provider/router"
 	"bit-labs.cn/owl/utils"

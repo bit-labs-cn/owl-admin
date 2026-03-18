@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"bit-labs.cn/flex-admin/app/model"
-	"bit-labs.cn/flex-admin/app/repository"
+	"bit-labs.cn/owl-admin/app/model"
+	"bit-labs.cn/owl-admin/app/repository"
 	"bit-labs.cn/owl/provider/db"
 	validatorv10 "github.com/go-playground/validator/v10"
 	"gorm.io/gorm"

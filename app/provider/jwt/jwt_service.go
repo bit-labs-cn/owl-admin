@@ -3,7 +3,7 @@ package jwt
 import (
 	"time"
 
-	"bit-labs.cn/flex-admin/app/model"
+	"bit-labs.cn/owl-admin/app/model"
 	"github.com/golang-jwt/jwt/v5"
 	jsoniter "github.com/json-iterator/go"
 )

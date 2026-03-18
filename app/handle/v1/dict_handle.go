@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"bit-labs.cn/flex-admin/app/service"
+	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/provider/router"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"

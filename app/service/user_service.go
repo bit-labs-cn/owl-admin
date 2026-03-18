@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cast"
 
-	"bit-labs.cn/flex-admin/app/event"
-	"bit-labs.cn/flex-admin/app/model"
-	"bit-labs.cn/flex-admin/app/provider/jwt"
-	"bit-labs.cn/flex-admin/app/repository"
+	"bit-labs.cn/owl-admin/app/event"
+	"bit-labs.cn/owl-admin/app/model"
+	"bit-labs.cn/owl-admin/app/provider/jwt"
+	"bit-labs.cn/owl-admin/app/repository"
 	"bit-labs.cn/owl/provider/conf"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/redis"

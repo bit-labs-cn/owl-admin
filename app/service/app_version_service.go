@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"bit-labs.cn/flex-admin/app/model"
-	"bit-labs.cn/flex-admin/app/repository"
+	"bit-labs.cn/owl-admin/app/model"
+	"bit-labs.cn/owl-admin/app/repository"
 )
 
 var ErrNoAvailableAppVersion = errors.New("暂无可用版本")

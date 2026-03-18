@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"bit-labs.cn/flex-admin/app/service"
+	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/provider/router"
 	"github.com/gin-gonic/gin"
 )
