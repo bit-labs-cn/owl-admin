@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/repository"
+	errContract "bit-labs.cn/owl/contract/errors"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
@@ -14,6 +16,24 @@ import (
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
+
+const (
+	CodeDictExists     = "DICT_EXISTS"
+	CodeDictNotFound   = "DICT_NOT_FOUND"
+	CodeDictItemExists = "DICT_ITEM_EXISTS"
+)
+
+func DictExists() *errContract.BizError {
+	return errContract.NewBizError(CodeDictExists, "字典已存在")
+}
+
+func DictNotFound() *errContract.BizError {
+	return errContract.NewBizError(CodeDictNotFound, "字典不存在")
+}
+
+func DictItemExists() *errContract.BizError {
+	return errContract.NewBizError(CodeDictItemExists, "字典项已存在")
+}
 
 type CreateDictReq struct {
 	Name   string `json:"name" validate:"required,max=32" label:"字典名"`              // 字典名（中）
@@ -52,6 +72,10 @@ func (i DictService) CreateDict(ctx context.Context, req *CreateDictReq) error {
 	}
 	defer l.Unlock()
 
+	if _, exists := i.dictRepo.WithContext(ctx).Unique(0, req.Name, req.Type); exists {
+		return DictExists()
+	}
+
 	dict := new(model.Dict)
 	err := copier.Copy(&dict, req)
 	if err != nil {
@@ -72,7 +96,14 @@ func (i DictService) UpdateDict(ctx context.Context, req *UpdateDictReq) error {
 	}
 	defer l.Unlock()
 
+	if _, exists := i.dictRepo.WithContext(ctx).Unique(req.ID, req.Name, req.Type); exists {
+		return DictExists()
+	}
+
 	dict, err := i.dictRepo.WithContext(ctx).Detail(req.ID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return DictNotFound()
+	}
 	if err != nil {
 		return err
 	}
@@ -137,6 +168,9 @@ func (i DictService) CreateItem(ctx context.Context, req *CreateDictItemReq) err
 	defer l.Unlock()
 
 	_, err := i.dictRepo.WithContext(ctx).Detail(req.DictID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return DictNotFound()
+	}
 	if err != nil {
 		return err
 	}
@@ -157,6 +191,9 @@ func (i DictService) DeleteItems(ctx context.Context, dictID any, itemIds ...str
 	defer l.Unlock()
 
 	_, err := i.dictRepo.WithContext(ctx).Detail(dictID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return DictNotFound()
+	}
 	if err != nil {
 		return err
 	}
@@ -175,6 +212,9 @@ func (i DictService) UpdateItem(ctx context.Context, req *UpdateDictItemReq) err
 	defer l.Unlock()
 
 	_, err := i.dictRepo.WithContext(ctx).Detail(req.DictID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return DictNotFound()
+	}
 	if err != nil {
 		return err
 	}
@@ -205,6 +245,9 @@ func (i DictService) DeleteDict(ctx context.Context, ids ...string) error {
 func (i DictService) GetDictByType(ctx context.Context, dictType string) ([]model.DictItem, error) {
 
 	if _, err := i.dictRepo.WithContext(ctx).DetailByType(dictType); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, DictNotFound()
+		}
 		return nil, err
 	}
 

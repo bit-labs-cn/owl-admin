@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl/contract"
@@ -10,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrDeptExists = errors.New("部门已存在")
-var ErrDeptNotExists = errors.New("部门不存在")
-
 type DeptRepositoryInterface interface {
 	contract.Repository[model.Dept]
+	// Unique 用于唯一性判断：当存在与 (parent_id, name) 匹配的其他记录时返回 true。
+	// id > 0 时会排除自身（id != ?），用于 update 场景。
+	Unique(id uint, parentID int, name string) bool
 	contract.WithContext[DeptRepositoryInterface]
 }
 
@@ -39,20 +38,18 @@ func (i *DeptRepository) WithContext(ctx context.Context) DeptRepositoryInterfac
 	return i
 }
 func (i *DeptRepository) Create(data *model.Dept) error {
-	_, exists := i.BaseRepository.Unique(data.ID, func(db *gorm.DB) {
-		db.Where("parent_id = ? and name = ?", data.ParentId, data.Name)
-	})
-
-	if exists {
-		return ErrDeptExists
-	}
-	err := i.BaseRepository.Save(data)
-
-	return err
+	return i.BaseRepository.Save(data)
 }
 
 func (i *DeptRepository) Update(data *model.Dept) error {
 	return i.Create(data)
+}
+
+func (i *DeptRepository) Unique(id uint, parentID int, name string) bool {
+	_, exists := i.BaseRepository.Unique(id, func(db *gorm.DB) {
+		db.Where("parent_id = ? and name = ?", parentID, name)
+	})
+	return exists
 }
 
 func (i *DeptRepository) Delete(id uint) error {

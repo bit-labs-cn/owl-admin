@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl/contract"
@@ -10,11 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrUserExists = errors.New("用户已存在")
-var ErrUserNotExists = errors.New("用户不存在")
-
 type UserRepositoryInterface interface {
 	FindById(id any) (*model.User, error)
+	// Unique 用于唯一性判断：当存在与 (username, source) 匹配的其他记录时返回 true。
+	// id > 0 时会排除自身（id != ?），用于 update 场景。
+	Unique(id uint, username string, source string) bool
 	Save(user *model.User) error
 	Delete(ids ...any) error
 	Retrieve(page, pageSize int, fn func(db *gorm.DB)) (count int64, list []model.User, err error)
@@ -45,13 +44,6 @@ func (i *UserRepository) WithContext(ctx context.Context) UserRepositoryInterfac
 }
 
 func (i *UserRepository) Save(user *model.User) error {
-	_, exists := i.BaseRepository.Unique(user.ID, func(db *gorm.DB) {
-		db.Where("username", user.Username).Where("source", user.Source)
-	})
-	if exists {
-		return ErrUserExists
-	}
-
 	err := i.db.Save(&user).Error
 	if err != nil {
 		return err
@@ -60,28 +52,26 @@ func (i *UserRepository) Save(user *model.User) error {
 
 	return err
 }
+
+func (i *UserRepository) Unique(id uint, username string, source string) bool {
+	_, exists := i.BaseRepository.Unique(id, func(db *gorm.DB) {
+		db.Where("username", username).Where("source", source)
+	})
+	return exists
+}
 func (i *UserRepository) FindById(id any) (*model.User, error) {
 	var user model.User
 	err := i.db.Where("id = ?", id).Preload("Roles").First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &user, ErrUserNotExists
-	}
 	return &user, err
 }
 func (i *UserRepository) GetByName(name string) (model.User, error) {
 	var user model.User
 	err := i.db.Where("username = ?", name).Preload("Roles").First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return user, ErrUserNotExists
-	}
 	return user, err
 }
 
 func (i *UserRepository) GetByNameAndThirdProvider(name string, provider string) (model.User, error) {
 	var user model.User
 	err := i.db.Where("username = ?", name).Where("source = ?", provider).Preload("Roles").First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return user, ErrUserNotExists
-	}
 	return user, err
 }

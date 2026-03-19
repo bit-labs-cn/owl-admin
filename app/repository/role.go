@@ -2,16 +2,12 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl/contract"
 	"bit-labs.cn/owl/provider/db"
 	"gorm.io/gorm"
 )
-
-var ErrRoleNotExists = errors.New("角色不存在")
-var ErrRoleExists = errors.New("角色已存在")
 
 type RoleRepositoryInterface interface {
 	Save(role *model.Role) error
@@ -40,10 +36,6 @@ func NewRoleRepository(d *gorm.DB) RoleRepositoryInterface {
 
 // Save 保存角色
 func (i *RoleRepository) Save(role *model.Role) error {
-	if _, b := i.Unique(role.ID, role.Name, role.Code); b {
-		return ErrRoleExists
-	}
-
 	err := i.db.Save(&role).Error
 	if err != nil {
 		return err
@@ -64,9 +56,6 @@ func (i *RoleRepository) WithContext(ctx context.Context) RoleRepositoryInterfac
 func (i *RoleRepository) Detail(id any) (*model.Role, error) {
 	var role model.Role
 	err := i.db.Where("id = ?", id).Preload("Menus").First(&role).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &role, ErrRoleNotExists
-	}
 	return &role, err
 }
 

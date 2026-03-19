@@ -6,6 +6,7 @@ import (
 	"bit-labs.cn/owl-admin/app/event"
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/repository"
+	errContract "bit-labs.cn/owl/contract/errors"
 	"bit-labs.cn/owl/contract/log"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/redis"
@@ -17,6 +18,19 @@ import (
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
+
+const (
+	CodeRoleExists   = "ROLE_EXISTS"
+	CodeRoleNotFound = "ROLE_NOT_FOUND"
+)
+
+func RoleExists() *errContract.BizError {
+	return errContract.NewBizError(CodeRoleExists, "角色已存在")
+}
+
+func RoleNotFound() *errContract.BizError {
+	return errContract.NewBizError(CodeRoleNotFound, "角色不存在")
+}
 
 // CreateRoleReq 创建角色
 type CreateRoleReq struct {
@@ -99,6 +113,11 @@ func (i *RoleService) CreateRole(ctx context.Context, req *CreateRoleReq) error 
 	}
 	defer l.Unlock()
 
+	// 创建前唯一性校验：name 或 code 不能重复。
+	if _, exists := i.roleRepo.WithContext(ctx).Unique(0, req.Name, req.Code); exists {
+		return RoleExists()
+	}
+
 	var role model.Role
 	err := copier.Copy(&role, req)
 	if err != nil {
@@ -119,6 +138,11 @@ func (i *RoleService) UpdateRole(ctx context.Context, req *UpdateRoleReq) error 
 		return err
 	}
 	defer l.Unlock()
+
+	// 更新前唯一性校验：排除自身记录后，name 或 code 不能重复。
+	if _, exists := i.roleRepo.WithContext(ctx).Unique(req.ID, req.Name, req.Code); exists {
+		return RoleExists()
+	}
 
 	role, err := i.roleRepo.WithContext(ctx).Detail(req.ID)
 	if err != nil {

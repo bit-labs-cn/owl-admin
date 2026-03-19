@@ -2,7 +2,6 @@ package oauth
 
 import (
 	"bit-labs.cn/owl-admin/app/provider/jwt"
-	"bit-labs.cn/owl-admin/app/repository"
 	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/provider/conf"
 	"bit-labs.cn/owl/provider/router"
@@ -12,6 +11,7 @@ import (
 	"io"
 	"net/http"
 
+	errContract "bit-labs.cn/owl/contract/errors"
 	"bit-labs.cn/owl/contract/foundation"
 	"github.com/gin-gonic/gin"
 	socketio "github.com/googollee/go-socket.io"
@@ -192,9 +192,14 @@ func (i *Handle) Callback(c *gin.Context) {
 	}
 	err = i.userSvc.CreateUser(c.Request.Context(), createUser)
 
-	if err != nil && !errors.Is(err, repository.ErrUserExists) {
-		c.JSON(http.StatusInternalServerError, router.Resp{Success: false, Msg: err.Error()})
-		return
+	if err != nil {
+		var bizErr *errContract.BizError
+		if errors.As(err, &bizErr) && bizErr.Code == service.CodeUserExists {
+			// 用户已存在：忽略错误，继续进行第三方登录流程。
+		} else {
+			c.JSON(http.StatusInternalServerError, router.Resp{Success: false, Msg: err.Error()})
+			return
+		}
 	}
 
 	html := `

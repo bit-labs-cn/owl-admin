@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"errors"
 	"strconv"
 
 	"bit-labs.cn/owl-admin/app/service"
@@ -44,10 +43,6 @@ func (i AppUpgradeHandle) Upgrade(ctx *gin.Context) {
 
 	latest, err := i.appVersionSvc.Latest(ctx.Request.Context(), apkType)
 	if err != nil {
-		if errors.Is(err, service.ErrNoAvailableAppVersion) {
-			router.SuccessWithMsg(ctx, err.Error(), nil)
-			return
-		}
 		router.Fail(ctx, err)
 		return
 	}

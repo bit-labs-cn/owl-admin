@@ -2,17 +2,12 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl/contract"
 	"bit-labs.cn/owl/provider/db"
 	"gorm.io/gorm"
 )
-
-var ErrDictExists = errors.New("字典已存在")
-var ErrDictNotExists = errors.New("字典不存在")
-var ErrDictItemExists = errors.New("字典项已存在")
 
 type DictRepositoryInterface interface {
 	Save(dict *model.Dict) error
@@ -51,11 +46,6 @@ func (i *DictRepository) WithContext(ctx context.Context) DictRepositoryInterfac
 	return i
 }
 func (i *DictRepository) Save(dict *model.Dict) error {
-	_, exists := i.Unique(dict.ID, dict.Name, dict.Type)
-	if exists {
-		return ErrDictExists
-	}
-
 	err := i.db.Where("id", dict.ID).Save(&dict).Error
 	return err
 }
@@ -63,19 +53,12 @@ func (i *DictRepository) Save(dict *model.Dict) error {
 func (i *DictRepository) Detail(id any) (*model.Dict, error) {
 	var m model.Dict
 	err := i.db.Where("id = ?", id).First(&m).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &m, ErrDictNotExists
-	}
-
 	return &m, err
 }
 
 func (i *DictRepository) DetailByType(dictType string) (*model.Dict, error) {
 	var m model.Dict
 	err := i.db.Where("type = ?", dictType).First(&m).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return &m, ErrDictNotExists
-	}
 	return &m, err
 }
 

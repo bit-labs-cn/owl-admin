@@ -5,6 +5,7 @@ import (
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/repository"
+	errContract "bit-labs.cn/owl/contract/errors"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
@@ -13,6 +14,19 @@ import (
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
+
+const (
+	CodeDeptExists   = "DEPT_EXISTS"
+	CodeDeptNotFound = "DEPT_NOT_FOUND"
+)
+
+func DeptExists() *errContract.BizError {
+	return errContract.NewBizError(CodeDeptExists, "部门已存在")
+}
+
+func DeptNotFound() *errContract.BizError {
+	return errContract.NewBizError(CodeDeptNotFound, "部门不存在")
+}
 
 type DeptService struct {
 	deptRepo repository.DeptRepositoryInterface
@@ -61,6 +75,11 @@ func (i DeptService) CreateDept(ctx context.Context, req *CreateDeptReq) error {
 	}
 	defer l.Unlock()
 
+	// 创建前唯一性校验：parent_id + name 不能重复。
+	if i.deptRepo.WithContext(ctx).Unique(0, req.ParentId, req.Name) {
+		return DeptExists()
+	}
+
 	var dept model.Dept
 	err := copier.Copy(&dept, req)
 	if err != nil {
@@ -79,6 +98,11 @@ func (i DeptService) UpdateDept(ctx context.Context, req *UpdateDeptReq) error {
 		return err
 	}
 	defer l.Unlock()
+
+	// 更新前唯一性校验：排除自身记录后，parent_id + name 不能重复。
+	if i.deptRepo.WithContext(ctx).Unique(req.ID, req.ParentId, req.Name) {
+		return DeptExists()
+	}
 
 	var dept model.Dept
 	err := copier.Copy(&dept, req)

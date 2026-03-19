@@ -10,6 +10,7 @@ import (
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/provider/jwt"
 	"bit-labs.cn/owl-admin/app/repository"
+	errContract "bit-labs.cn/owl/contract/errors"
 	"bit-labs.cn/owl/provider/conf"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/redis"
@@ -25,6 +26,19 @@ import (
 var (
 	ErrLogin = errors.New("用户名或密码错误")
 )
+
+const (
+	CodeUserExists   = "USER_EXISTS"
+	CodeUserNotFound = "USER_NOT_FOUND"
+)
+
+func UserExists() *errContract.BizError {
+	return errContract.NewBizError(CodeUserExists, "用户已存在")
+}
+
+func UserNotFound() *errContract.BizError {
+	return errContract.NewBizError(CodeUserNotFound, "用户不存在")
+}
 
 type UserBatchFields struct {
 	Username string `json:"username" validate:"required,min=2,max=32" label:"用户名"` // 用户名
@@ -188,7 +202,7 @@ func (i *UserService) GetUserByName(ctx context.Context, name string) (*model.Us
 	} else {
 		// 从数据库查找用户
 		user, err = i.userRepo.WithContext(ctx).GetByName(name)
-		if errors.Is(err, repository.ErrUserNotExists) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrLogin
 		}
 	}
@@ -371,6 +385,11 @@ func (i *UserService) CreateUser(ctx context.Context, req *CreateUserReq) error 
 	}
 	defer l.Unlock()
 
+	// 创建前做唯一性校验，避免 repository 直接返回“业务已存在”错误。
+	if i.userRepo.WithContext(ctx).Unique(0, req.Username, req.Source) {
+		return UserExists()
+	}
+
 	var user model.User
 	err := copier.Copy(&user, req)
 	if err != nil {
@@ -416,6 +435,11 @@ func (i *UserService) UpdateUser(ctx context.Context, req *UpdateUserReq) error 
 		return err
 	}
 	defer l.Unlock()
+
+	// 更新前做唯一性校验：当 (username, source) 存在且不是自身记录时返回“已存在”业务异常。
+	if i.userRepo.WithContext(ctx).Unique(req.ID, req.Username, req.Source) {
+		return UserExists()
+	}
 
 	user, err := i.userRepo.WithContext(ctx).FindById(req.ID)
 	if err != nil {

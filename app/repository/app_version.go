@@ -2,15 +2,12 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl/contract"
 	"bit-labs.cn/owl/provider/db"
 	"gorm.io/gorm"
 )
-
-var ErrAppVersionNotFound = errors.New("app版本不存在")
 
 type AppVersionRepositoryInterface interface {
 	Latest(apkType *int32) (*model.AppVersion, error)
@@ -49,9 +46,6 @@ func (i *AppVersionRepository) Latest(apkType *int32) (*model.AppVersion, error)
 	}
 
 	err := tx.Order("id desc").First(&v).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, ErrAppVersionNotFound
-	}
 	return &v, err
 }
 
