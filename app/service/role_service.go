@@ -60,9 +60,9 @@ type AssignRoleToUser struct {
 
 type RetrieveRoleReq struct {
 	router.PageReq
-	NameLike string `json:"name" validate:"omitempty,max=32" label:"角色名称"`          // 名称模糊搜索
-	CodeLike string `json:"code" validate:"omitempty,alphanum,max=32" label:"角色编码"` // 角色编码
-	Status   uint8  `json:"status" validate:"omitempty,oneof=1 2" label:"状态"`       // 状态(1启用,2禁用)
+	NameLike string `json:"name" form:"name" validate:"omitempty,max=32" label:"角色名称"`          // 名称模糊搜索
+	CodeLike string `json:"code" form:"code" validate:"omitempty,alphanum,max=32" label:"角色编码"` // 角色编码
+	Status   uint8  `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"`     // 状态(1启用,2禁用)
 }
 
 // RoleService 角色服务

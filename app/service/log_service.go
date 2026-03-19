@@ -76,9 +76,10 @@ func (i *LogService) CreateOperationLog(ctx context.Context, req *CreateOperatio
 
 type RetrieveLoginLogsReq struct {
 	router.PageReq
-	UserNameLike string `json:"userName"` // 用户名模糊
-	Ip           string `json:"ip"`       // IP 地址
-	UserType     string `json:"userType"` // 用户类型（user/super_admin）
+	UserNameLike     string `json:"userName"`  // 用户名模糊
+	Ip               string `json:"ip"`        // IP 地址
+	UserType         string `json:"userType"`  // 用户类型（user/super_admin）
+	LoginTimeBetween string `json:"loginTime"` // 登录时间区间（Unix 秒，逗号分隔 "start,end"）
 }
 
 func (i *LogService) RetrieveLoginLogs(ctx context.Context, req *RetrieveLoginLogsReq) (count int64, list []model.LoginLog, err error) {

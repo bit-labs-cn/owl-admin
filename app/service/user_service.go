@@ -65,7 +65,9 @@ type UpdateUserReq struct {
 
 type RetrieveUserReq struct {
 	router.PageReq
-	Keyword string `json:"keyword" validate:"omitempty,max=64" label:"关键字"` // 关键字
+	UsernameLike string `json:"username" form:"username" validate:"omitempty,max=64" label:"用户名"` // 用户名模糊
+	PhoneLike    string `json:"phone" form:"phone" validate:"omitempty,max=32" label:"手机号"`       // 手机号模糊
+	Status       int    `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"`   // 状态
 }
 
 type LoginReq struct {

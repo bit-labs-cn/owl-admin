@@ -58,8 +58,8 @@ type UpdateDeptReq struct {
 
 type RetrieveDeptReq struct {
 	router.PageReq
-	NameLike string `json:"name" validate:"omitempty,max=64" label:"部门名称"`    // 部门名称模糊搜索
-	Status   uint   `json:"status" validate:"omitempty,oneof=1 2" label:"状态"` // 状态(1启用,2禁用)
+	NameLike string `json:"name" form:"name" validate:"omitempty,max=64" label:"部门名称"`      // 部门名称模糊搜索
+	Status   uint   `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"` // 状态(1启用,2禁用)
 }
 
 // CreateDept 创建部门

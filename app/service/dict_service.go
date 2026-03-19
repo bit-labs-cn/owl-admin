@@ -118,9 +118,9 @@ func (i DictService) UpdateDict(ctx context.Context, req *UpdateDictReq) error {
 
 type RetrieveDictReq struct {
 	router.PageReq
-	NameLike string `json:"name" binding:"omitempty,max=64" validate:"omitempty,max=64" label:"字典名"`  // 名称模糊搜索
-	StatusIn string `json:"status" binding:"omitempty" validate:"omitempty" label:"状态"`               // 状态 in 查询
-	Type     string `json:"type" binding:"omitempty,max=32" validate:"omitempty,max=32" label:"字典类型"` // 字典类型
+	NameLike string `json:"name" form:"name" binding:"omitempty,max=64" validate:"omitempty,max=64" label:"字典名"`  // 名称模糊搜索
+	StatusIn string `json:"status" form:"status" binding:"omitempty" validate:"omitempty" label:"状态"`             // 状态 in 查询
+	Type     string `json:"type" form:"type" binding:"omitempty,max=32" validate:"omitempty,max=32" label:"字典类型"` // 字典类型
 }
 
 func (i DictService) RetrieveDicts(ctx context.Context, req *RetrieveDictReq) (count int64, list []model.Dict, err error) {

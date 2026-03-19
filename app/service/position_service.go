@@ -27,8 +27,8 @@ type UpdatePositionReq struct {
 
 type RetrievePositionReq struct {
 	router.PageReq
-	NameLike string `json:"name" validate:"omitempty,max=32" label:"岗位名称"`    // 名称模糊搜索
-	Status   int    `json:"status" validate:"omitempty,oneof=1 2" label:"状态"` // 状态(1启用,2禁用)
+	NameLike string `json:"name" form:"name" validate:"omitempty,max=32" label:"岗位名称"`      // 名称模糊搜索
+	Status   int    `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"` // 状态(1启用,2禁用)
 }
 
 type PositionService struct {
