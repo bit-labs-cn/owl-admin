@@ -20,35 +20,35 @@ import (
 
 // CreateRoleReq 创建角色
 type CreateRoleReq struct {
-	Name   string `json:"name" validate:"required,min=2,max=32"`          // 角色名称
-	Code   string `json:"code" validate:"required,alphanum,min=2,max=32"` // 角色编码
-	Status int    `json:"status" validate:"omitempty,oneof=1 2"`          // 状态(1启用,2禁用)
-	Remark string `json:"remark" validate:"omitempty,max=255"`            // 备注
+	Name   string `json:"name" validate:"required,min=2,max=32" label:"角色名称"`          // 角色名称
+	Code   string `json:"code" validate:"required,alphanum,min=2,max=32" label:"角色编码"` // 角色编码
+	Status int    `json:"status" validate:"omitempty,oneof=1 2" label:"状态"`            // 状态(1启用,2禁用)
+	Remark string `json:"remark" validate:"omitempty,max=255" label:"备注"`              // 备注
 }
 
 // UpdateRoleReq 更新角色
 type UpdateRoleReq struct {
-	ID uint `json:"id,string" validate:"required"` // 角色ID
+	ID uint `json:"id,string" validate:"required" label:"角色ID"` // 角色ID
 	CreateRoleReq
 }
 
 // AssignMenuToRole 分配菜单给角色, 菜单和按钮权限
 type AssignMenuToRole struct {
-	RoleID  uint     `json:"roleID,string" validate:"required"` // 角色ID
-	MenuIDs []string `json:"menuIds" validate:"required"`       // 菜单ID列表
+	RoleID  uint     `json:"roleID,string" validate:"required" label:"角色ID"` // 角色ID
+	MenuIDs []string `json:"menuIds" validate:"required" label:"菜单ID列表"`     // 菜单ID列表
 }
 
 // AssignRoleToUser 分配角色给用户
 type AssignRoleToUser struct {
-	UserID  uint     `json:"userID,string" validate:"required"` // 用户ID
-	RoleIDs []string `json:"roleIDs" validate:"required"`       // 角色ID列表
+	UserID  uint     `json:"userID,string" validate:"required" label:"用户ID"` // 用户ID
+	RoleIDs []string `json:"roleIDs" validate:"required" label:"角色ID列表"`     // 角色ID列表
 }
 
 type RetrieveRoleReq struct {
 	router.PageReq
-	NameLike string `json:"name" validate:"omitempty,max=32"`          // 名称模糊搜索
-	CodeLike string `json:"code" validate:"omitempty,alphanum,max=32"` // 角色编码
-	Status   uint8  `json:"status" validate:"omitempty,oneof=1 2"`     // 状态(1启用,2禁用)
+	NameLike string `json:"name" validate:"omitempty,max=32" label:"角色名称"`          // 名称模糊搜索
+	CodeLike string `json:"code" validate:"omitempty,alphanum,max=32" label:"角色编码"` // 角色编码
+	Status   uint8  `json:"status" validate:"omitempty,oneof=1 2" label:"状态"`       // 状态(1启用,2禁用)
 }
 
 // RoleService 角色服务

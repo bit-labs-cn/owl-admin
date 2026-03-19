@@ -27,21 +27,21 @@ var (
 )
 
 type UserBatchFields struct {
-	Username string `json:"username" validate:"required,min=2,max=32"` // 用户名
-	NickName string `json:"nickName" validate:"omitempty,max=32"`      // 昵称
-	Email    string `json:"email" validate:"omitempty,email"`          // 邮箱
-	Phone    string `json:"phone" validate:"omitempty,numeric"`        // 手机号
-	Remark   string `json:"remark" validate:"omitempty,max=255"`       // 备注
-	Status   int    `json:"status" validate:"omitempty,oneof=1 2 3"`   // 状态(1启用,2禁用,3待审核)
-	Sex      int    `json:"sex" validate:"omitempty,oneof=1 2 3"`      // 性别(1男,2女,3未知)
-	Source   string `json:"source" validate:"omitempty,max=32"`        // 来源
-	SourceID string `json:"sourceId" validate:"omitempty,max=64"`      // 来源ID
+	Username string `json:"username" validate:"required,min=2,max=32" label:"用户名"` // 用户名
+	NickName string `json:"nickName" validate:"omitempty,max=32" label:"昵称"`       // 昵称
+	Email    string `json:"email" validate:"omitempty,email" label:"邮箱"`           // 邮箱
+	Phone    string `json:"phone" validate:"omitempty,numeric" label:"手机号"`        // 手机号
+	Remark   string `json:"remark" validate:"omitempty,max=255" label:"备注"`        // 备注
+	Status   int    `json:"status" validate:"omitempty,oneof=1 2 3" label:"状态"`    // 状态(1启用,2禁用,3待审核)
+	Sex      int    `json:"sex" validate:"omitempty,oneof=1 2 3" label:"性别"`       // 性别(1男,2女,3未知)
+	Source   string `json:"source" validate:"omitempty,max=32" label:"来源"`         // 来源
+	SourceID string `json:"sourceId" validate:"omitempty,max=64" label:"来源ID"`     // 来源ID
 }
 
 // CreateUserReq 创建用户
 type CreateUserReq struct {
 	UserBatchFields
-	Password string `json:"password" validate:"required,min=6,max=64"` // 密码
+	Password string `json:"password" validate:"required,min=6,max=64" label:"密码"` // 密码
 }
 
 type UpdateUserReq struct {
@@ -51,12 +51,12 @@ type UpdateUserReq struct {
 
 type RetrieveUserReq struct {
 	router.PageReq
-	Keyword string `json:"keyword" validate:"omitempty,max=64"` // 关键字
+	Keyword string `json:"keyword" validate:"omitempty,max=64" label:"关键字"` // 关键字
 }
 
 type LoginReq struct {
-	Username string `json:"username" validate:"required"` // 用户名
-	Password string `json:"password" validate:"required"` // 密码
+	Username string `json:"username" validate:"required" label:"用户名"` // 用户名
+	Password string `json:"password" validate:"required" label:"密码"`  // 密码
 }
 
 type LoginResp struct {
@@ -65,15 +65,15 @@ type LoginResp struct {
 }
 
 type ChangePasswordReq struct {
-	UserID      uint   `json:"userId,string"`                                // 用户ID
-	OldPassword string `json:"oldPassword" validate:"required,min=6,max=64"` // 旧密码
-	NewPassword string `json:"newPassword" validate:"required,min=6,max=64"` // 新密码
+	UserID      uint   `json:"userId,string"`                                            // 用户ID
+	OldPassword string `json:"oldPassword" validate:"required,min=6,max=64" label:"旧密码"` // 旧密码
+	NewPassword string `json:"newPassword" validate:"required,min=6,max=64" label:"新密码"` // 新密码
 }
 
 // ResetPasswordReq 超管重置用户密码
 type ResetPasswordReq struct {
-	UserID      uint   `json:"userId,string" validate:"required"`            // 用户ID
-	NewPassword string `json:"newPassword" validate:"required,min=6,max=64"` // 新密码
+	UserID      uint   `json:"userId,string" validate:"required" label:"用户ID"`           // 用户ID
+	NewPassword string `json:"newPassword" validate:"required,min=6,max=64" label:"新密码"` // 新密码
 }
 
 type AssignPermissionReq struct {
@@ -308,8 +308,8 @@ func (i *UserService) ResetUserPassword(ctx context.Context, req *ResetPasswordR
 }
 
 type ChangeAvatarReq struct {
-	UserID uint   `json:"userId,string" validate:"required"`
-	Avatar string `json:"avatar" validate:"required,url"`
+	UserID uint   `json:"userId,string" validate:"required" label:"用户ID"`
+	Avatar string `json:"avatar" validate:"required,url" label:"头像"`
 }
 
 // ChangeUserAvatar 修改用户头像

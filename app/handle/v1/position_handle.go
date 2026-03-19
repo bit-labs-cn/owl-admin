@@ -31,7 +31,7 @@ func (i *PositionHandle) ModuleName() (string, string) { return "position", "岗
 func (i *PositionHandle) Create(ctx *gin.Context) {
 	var req service.CreatePositionReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 	if err := i.svc.CreatePosition(ctx.Request.Context(), &req); err != nil {
@@ -55,7 +55,7 @@ func (i *PositionHandle) Create(ctx *gin.Context) {
 func (i *PositionHandle) Update(ctx *gin.Context) {
 	var req service.UpdatePositionReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
@@ -122,7 +122,7 @@ func (i *PositionHandle) Retrieve(ctx *gin.Context) {
 func (i *PositionHandle) ChangeStatus(ctx *gin.Context) {
 	var req db.ChangeStatus
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))

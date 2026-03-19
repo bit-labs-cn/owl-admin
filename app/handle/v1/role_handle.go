@@ -40,7 +40,7 @@ func NewRoleHandle(roleService *service.RoleService, userService *service.UserSe
 func (i *RoleHandle) Create(ctx *gin.Context) {
 	req := new(service.CreateRoleReq)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (i *RoleHandle) Detail(ctx *gin.Context) {
 func (i *RoleHandle) Update(ctx *gin.Context) {
 	req := new(service.UpdateRoleReq)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func (i *RoleHandle) Retrieve(ctx *gin.Context) {
 func (i *RoleHandle) AssignMenusToRole(ctx *gin.Context) {
 	req := new(service.AssignMenuToRole)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	req.RoleID = cast.ToUint(ctx.Param("id"))
@@ -209,7 +209,7 @@ func (i *RoleHandle) ChangeStatus(ctx *gin.Context) {
 
 	req := new(db.ChangeStatus)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	id := cast.ToUint(ctx.Param("id"))

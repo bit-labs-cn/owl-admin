@@ -24,26 +24,26 @@ func NewLogService(repo repository.LogRepositoryInterface, validate *validatorv1
 // 记录登录日志
 
 type CreateOperationLogReq struct {
-	UserId    int    `json:"userId" validate:"required,gte=1"`           // 用户编号
-	UserName  string `json:"userName" validate:"required,max=64"`        // 用户名称
-	UserType  string `json:"userType" validate:"required,max=32"`        // 用户类型（user/super_admin）
-	Method    string `json:"method" validate:"required,max=16"`          // 请求方法
-	Path      string `json:"path" validate:"required,max=255"`           // 请求路径
-	ApiName   string `json:"apiName" validate:"omitempty,max=64"`        // 接口中文名称
-	Status    int    `json:"status" validate:"required,gte=100,lte=599"` // 响应状态码（HTTP）
-	CostMs    int    `json:"costMs" validate:"omitempty,gte=0"`          // 耗时毫秒
-	Ip        string `json:"ip" validate:"omitempty,max=64"`             // 客户端 IP
-	UserAgent string `json:"userAgent" validate:"omitempty,max=255"`     // 客户端 UA
-	ReqBody   string `json:"reqBody" validate:"omitempty"`               // 请求体（文本）
+	UserId    int    `json:"userId" validate:"required,gte=1" label:"用户编号"`            // 用户编号
+	UserName  string `json:"userName" validate:"required,max=64" label:"用户名称"`         // 用户名称
+	UserType  string `json:"userType" validate:"required,max=32" label:"用户类型"`         // 用户类型（user/super_admin）
+	Method    string `json:"method" validate:"required,max=16" label:"请求方法"`           // 请求方法
+	Path      string `json:"path" validate:"required,max=255" label:"请求路径"`            // 请求路径
+	ApiName   string `json:"apiName" validate:"omitempty,max=64" label:"接口名称"`         // 接口中文名称
+	Status    int    `json:"status" validate:"required,gte=100,lte=599" label:"状态码"`   // 响应状态码（HTTP）
+	CostMs    int    `json:"costMs" validate:"omitempty,gte=0" label:"耗时"`             // 耗时毫秒
+	Ip        string `json:"ip" validate:"omitempty,max=64" label:"IP"`                // 客户端 IP
+	UserAgent string `json:"userAgent" validate:"omitempty,max=255" label:"UserAgent"` // 客户端 UA
+	ReqBody   string `json:"reqBody" validate:"omitempty" label:"请求体"`                 // 请求体（文本）
 }
 
 type CreateLoginLogReq struct {
-	UserId    int    `json:"userId" validate:"required,gte=1"`       // 用户编号
-	UserName  string `json:"userName" validate:"required,max=64"`    // 用户名称
-	UserType  string `json:"userType" validate:"required,max=32"`    // 用户类型（user/super_admin）
-	LoginTime int    `json:"loginTime" validate:"required,gte=1"`    // 登录时间（Unix 秒）
-	Ip        string `json:"ip" validate:"omitempty,max=64"`         // 客户端 IP
-	UserAgent string `json:"userAgent" validate:"omitempty,max=255"` // 客户端 UA
+	UserId    int    `json:"userId" validate:"required,gte=1" label:"用户编号"`            // 用户编号
+	UserName  string `json:"userName" validate:"required,max=64" label:"用户名称"`         // 用户名称
+	UserType  string `json:"userType" validate:"required,max=32" label:"用户类型"`         // 用户类型（user/super_admin）
+	LoginTime int    `json:"loginTime" validate:"required,gte=1" label:"登录时间"`         // 登录时间（Unix 秒）
+	Ip        string `json:"ip" validate:"omitempty,max=64" label:"IP"`                // 客户端 IP
+	UserAgent string `json:"userAgent" validate:"omitempty,max=255" label:"UserAgent"` // 客户端 UA
 }
 
 func (i *LogService) CreateLoginLog(ctx context.Context, req *CreateLoginLogReq) error {

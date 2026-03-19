@@ -47,7 +47,7 @@ func NewUserHandle(userService *service.UserService, roleService *service.RoleSe
 func (i *UserHandle) Create(ctx *gin.Context) {
 	req := new(service.CreateUserReq)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (i *UserHandle) Update(ctx *gin.Context) {
 
 	req := new(service.UpdateUserReq)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	id := cast.ToUint(ctx.Param("id"))
@@ -125,7 +125,7 @@ func (i *UserHandle) Update(ctx *gin.Context) {
 func (i *UserHandle) ChangeStatus(ctx *gin.Context) {
 	req := new(db.ChangeStatus)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	id := cast.ToUint(ctx.Param("id"))
@@ -177,7 +177,7 @@ func (i *UserHandle) Retrieve(ctx *gin.Context) {
 func (i *UserHandle) AssignRolesToUser(ctx *gin.Context) {
 	req := new(service.AssignRoleToUser)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	req.UserID = cast.ToUint(ctx.Param("id"))
@@ -221,7 +221,7 @@ func (i *UserHandle) GetRoleIdsByUserId(ctx *gin.Context) {
 func (i *UserHandle) AssignMenuToUser(ctx *gin.Context) {
 	req := new(service.AssignRoleToUser)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	req.UserID = cast.ToUint(ctx.Param("id"))
@@ -280,7 +280,7 @@ func (i *UserHandle) GetMyPermissions(ctx *gin.Context) {
 func (i *UserHandle) ChangePassword(ctx *gin.Context) {
 	var req service.ChangePasswordReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	uVal, _ := ctx.Get("user")
@@ -307,7 +307,7 @@ func (i *UserHandle) ChangePassword(ctx *gin.Context) {
 func (i *UserHandle) ResetPassword(ctx *gin.Context) {
 	var req service.ResetPasswordReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 
@@ -331,7 +331,7 @@ func (i *UserHandle) ResetPassword(ctx *gin.Context) {
 func (i *UserHandle) ChangeAvatar(ctx *gin.Context) {
 	var req service.ChangeAvatarReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	req.UserID = cast.ToUint(ctx.Param("id"))
@@ -355,7 +355,7 @@ func (i *UserHandle) ChangeAvatar(ctx *gin.Context) {
 func (i *UserHandle) Login(ctx *gin.Context) {
 	var req service.LoginReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 

@@ -32,7 +32,7 @@ func (i *LogHandle) ModuleName() (string, string) {
 func (i *LogHandle) LoginLogs(ctx *gin.Context) {
 	var req service.RetrieveLoginLogsReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	count, list, err := i.logSvc.RetrieveLoginLogs(ctx.Request.Context(), &req)
@@ -55,7 +55,7 @@ func (i *LogHandle) LoginLogs(ctx *gin.Context) {
 func (i *LogHandle) OperationLogs(ctx *gin.Context) {
 	var req service.RetrieveOperationLogsReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, err.Error())
+		router.Fail(ctx, err)
 		return
 	}
 	count, list, err := i.logSvc.RetrieveOperationLogs(ctx.Request.Context(), &req)

@@ -34,7 +34,7 @@ func (i DeptHandle) ModuleName() (en string, zh string) {
 func (i DeptHandle) Create(ctx *gin.Context) {
 	var req service.CreateDeptReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (i DeptHandle) Create(ctx *gin.Context) {
 func (i DeptHandle) Update(ctx *gin.Context) {
 	var req service.UpdateDeptReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 

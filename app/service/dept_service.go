@@ -29,12 +29,12 @@ func NewDeptService(deptRepo repository.DeptRepositoryInterface, locker redis.Lo
 }
 
 type CreateDeptReq struct {
-	Name        string `gorm:"comment:部门名称" json:"name" validate:"required,max=64"`                                    // 部门名称
-	ParentId    int    `gorm:"comment:父级部门" json:"parentId,string" validate:"omitempty"`                               // 父级部门
-	Level       uint   `gorm:"comment:部门层级" json:"level" validate:"omitempty"`                                         // 部门层级
-	Sort        uint   `gorm:"comment:排序" json:"sort" validate:"omitempty"`                                            // 排序
-	Status      uint   `gorm:"comment:状态" json:"status" validate:"omitempty,oneof=1 2"`                                // 状态(1启用,2禁用)
-	Description string `gorm:"comment:描述" json:"description" binding:"omitempty,max=255" validate:"omitempty,max=255"` // 描述
+	Name        string `gorm:"comment:部门名称" json:"name" validate:"required,max=64" label:"部门名称"`                                  // 部门名称
+	ParentId    int    `gorm:"comment:父级部门" json:"parentId,string" validate:"omitempty"`                                          // 父级部门
+	Level       uint   `gorm:"comment:部门层级" json:"level" validate:"omitempty"`                                                    // 部门层级
+	Sort        uint   `gorm:"comment:排序" json:"sort" validate:"omitempty"`                                                       // 排序
+	Status      uint   `gorm:"comment:状态" json:"status" validate:"omitempty,oneof=1 2" label:"状态"`                                // 状态(1启用,2禁用)
+	Description string `gorm:"comment:描述" json:"description" binding:"omitempty,max=255" validate:"omitempty,max=255" label:"描述"` // 描述
 }
 
 type UpdateDeptReq struct {
@@ -44,8 +44,8 @@ type UpdateDeptReq struct {
 
 type RetrieveDeptReq struct {
 	router.PageReq
-	NameLike string `json:"name" validate:"omitempty,max=64"`      // 部门名称模糊搜索
-	Status   uint   `json:"status" validate:"omitempty,oneof=1 2"` // 状态(1启用,2禁用)
+	NameLike string `json:"name" validate:"omitempty,max=64" label:"部门名称"`    // 部门名称模糊搜索
+	Status   uint   `json:"status" validate:"omitempty,oneof=1 2" label:"状态"` // 状态(1启用,2禁用)
 }
 
 // CreateDept 创建部门

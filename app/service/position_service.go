@@ -15,20 +15,20 @@ import (
 )
 
 type CreatePositionReq struct {
-	Name   string `json:"name" validate:"required,min=2,max=32"` // 岗位名称
-	Remark string `json:"remark" validate:"omitempty,max=255"`   // 备注
-	Status int    `json:"status" validate:"required,oneof=1 2"`  // 状态(1启用,2禁用)
+	Name   string `json:"name" validate:"required,min=2,max=32" label:"岗位名称"` // 岗位名称
+	Remark string `json:"remark" validate:"omitempty,max=255" label:"备注"`     // 备注
+	Status int    `json:"status" validate:"required,oneof=1 2" label:"状态"`    // 状态(1启用,2禁用)
 }
 
 type UpdatePositionReq struct {
-	ID uint `json:"id,string" validate:"required,gt=0"` // 岗位ID
+	ID uint `json:"id,string" validate:"required,gt=0" label:"岗位ID"` // 岗位ID
 	CreatePositionReq
 }
 
 type RetrievePositionReq struct {
 	router.PageReq
-	NameLike string `json:"name" validate:"omitempty,max=32"`      // 名称模糊搜索
-	Status   int    `json:"status" validate:"omitempty,oneof=1 2"` // 状态(1启用,2禁用)
+	NameLike string `json:"name" validate:"omitempty,max=32" label:"岗位名称"`    // 名称模糊搜索
+	Status   int    `json:"status" validate:"omitempty,oneof=1 2" label:"状态"` // 状态(1启用,2禁用)
 }
 
 type PositionService struct {

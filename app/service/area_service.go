@@ -20,8 +20,8 @@ func NewAreaService(areaRepo repository.AreaRepositoryInterface, validate *valid
 }
 
 type RetrieveAllAreaReq struct {
-	ParentID uint   `json:"parentId,string" validate:"omitempty"` // 父级区域ID
-	NameLike string `json:"name" validate:"omitempty,max=64"`     // 区域名称
+	ParentID uint   `json:"parentId,string" validate:"omitempty" label:"父级区域ID"` // 父级区域ID
+	NameLike string `json:"name" validate:"omitempty,max=64" label:"区域名称"`       // 区域名称
 }
 
 func (i *AreaService) RetrieveAll(ctx context.Context, req *RetrieveAllAreaReq) (list []model.Area, err error) {

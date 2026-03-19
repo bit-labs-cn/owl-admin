@@ -37,7 +37,7 @@ func NewDictHandle(dictService *service.DictService) *DictHandle {
 func (i *DictHandle) Create(ctx *gin.Context) {
 	var req service.CreateDictReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (i *DictHandle) Detail(ctx *gin.Context) {
 func (i *DictHandle) Update(ctx *gin.Context) {
 	var req service.UpdateDictReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 	id := cast.ToUint(ctx.Param("id"))
@@ -141,7 +141,7 @@ func (i *DictHandle) Retrieve(ctx *gin.Context) {
 func (i *DictHandle) CreateItem(ctx *gin.Context) {
 	var req service.CreateDictItemReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 	req.DictID = cast.ToUint(ctx.Param("id"))
@@ -168,7 +168,7 @@ func (i *DictHandle) CreateItem(ctx *gin.Context) {
 func (i *DictHandle) UpdateItem(ctx *gin.Context) {
 	var req service.UpdateDictItemReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		router.BadRequest(ctx, "参数绑定失败")
+		router.Fail(ctx, err)
 		return
 	}
 	req.DictID = cast.ToUint(ctx.Param("id"))
