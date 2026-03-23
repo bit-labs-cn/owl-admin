@@ -203,6 +203,10 @@ GET /api/v1/oauth/gitee/login
   - Socket.IO（`github.com/googollee/go-socket.io`）
   - 配置管理（Viper）、命令行（Cobra）、参数校验（validator/v10）
 
+## 开发文档
+
+在本项目中**新增业务模块**的完整说明（架构、标准模板、路由/菜单/权限、迁移/Seeder/事件、操作清单与常见坑）见 **[docs/](docs/)** 目录。适合开发人员与 AI 开发工具按顺序阅读后直接开发新模块。
+
 ## 开发扩展指南（新增模块）
 
 新增一个业务模块通常遵循以下路径（与现有 `user/role/dict/...` 保持一致）：
@@ -212,3 +216,5 @@ GET /api/v1/oauth/gitee/login
 3. `app/service/`：实现业务规则、校验与事务
 4. `app/handle/v1/`：实现 HTTP Handler（绑定参数/调用 service/返回统一响应）
 5. `app/route/api.go`：注册路由、权限级别与菜单元信息
+
+更详细的步骤、模板引用与自检清单见 [docs/](docs/)。
