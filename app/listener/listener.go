@@ -8,12 +8,12 @@ import (
 	"bit-labs.cn/owl/contract/log"
 	"bit-labs.cn/owl/provider/router"
 	"github.com/asaskevich/EventBus"
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 	"github.com/spf13/cast"
 )
 
 func Init(app foundation.Application) {
-	err := app.Invoke(func(bus EventBus.Bus, enforcer casbin.IEnforcer, log log.Logger, menuRepo *router.MenuRepository) {
+	err := app.Invoke(func(bus EventBus.Bus, enforcer *casbin.SyncedEnforcer, log log.Logger, menuRepo *router.MenuRepository) {
 		bus.Subscribe(event.AssignRoleToUser, func(req *service.AssignRoleToUser) {
 			userID := cast.ToString(req.UserID)
 			var rules [][]string

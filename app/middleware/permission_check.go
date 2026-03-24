@@ -10,12 +10,12 @@ import (
 
 	"bit-labs.cn/owl/provider/router"
 	"bit-labs.cn/owl/utils"
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 )
 
-func PermissionCheck(enforcer casbin.IEnforcer, jwtService *jwt.JWTService) gin.HandlerFunc {
+func PermissionCheck(enforcer *casbin.SyncedEnforcer, jwtService *jwt.JWTService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		url := ctx.Request.URL.Path

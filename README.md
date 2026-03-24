@@ -197,7 +197,7 @@ GET /api/v1/oauth/gitee/login
   - Redis（`github.com/redis/go-redis/v9`，通过 owl provider 注入）
 - 认证与权限
   - JWT（`github.com/golang-jwt/jwt/v5`）
-  - Casbin（`github.com/casbin/casbin/v2`）
+  - Casbin（`github.com/casbin/casbin/v3`）
 - 其他
   - OAuth2（`golang.org/x/oauth2`）
   - Socket.IO（`github.com/googollee/go-socket.io`）

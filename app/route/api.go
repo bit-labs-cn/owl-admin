@@ -14,7 +14,7 @@ import (
 	"bit-labs.cn/owl/provider/router"
 	"bit-labs.cn/owl/provider/router/middleware"
 	"bit-labs.cn/owl/provider/storage"
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 	"github.com/gin-gonic/gin"
 )
 
@@ -107,7 +107,7 @@ func InitApi(app foundation.Application, appName string) {
 		areaHandle *v1.AreaHandle,
 		logHandle *v1.LogHandle,
 		appUpgradeHandle *v1.AppUpgradeHandle,
-		enforcer casbin.IEnforcer,
+		enforcer *casbin.SyncedEnforcer,
 		oauthHandle *oauth.Handle,
 		engine *gin.Engine,
 		jwtSvc *jwt.JWTService,

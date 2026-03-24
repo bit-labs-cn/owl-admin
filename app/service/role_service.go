@@ -12,7 +12,6 @@ import (
 	"bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
 	"github.com/asaskevich/EventBus"
-	"github.com/casbin/casbin/v2"
 	validatorv10 "github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"github.com/spf13/cast"
@@ -68,7 +67,6 @@ type RetrieveRoleReq struct {
 // RoleService 角色服务
 type RoleService struct {
 	db.BaseRepository[model.Role]
-	enforcer casbin.IEnforcer
 	ctx      context.Context
 	log      log.Logger
 	validate *validatorv10.Validate
@@ -82,7 +80,6 @@ type RoleService struct {
 func NewRoleService(
 	menuManager *router.MenuRepository,
 	roleRepo repository.RoleRepositoryInterface,
-	enforcer casbin.IEnforcer,
 	bus EventBus.Bus,
 	locker redis.LockerFactory,
 	validate *validatorv10.Validate,
@@ -90,7 +87,6 @@ func NewRoleService(
 ) *RoleService {
 	return &RoleService{
 		menuRepo:       menuManager,
-		enforcer:       enforcer,
 		roleRepo:       roleRepo,
 		eventbus:       bus,
 		locker:         locker,

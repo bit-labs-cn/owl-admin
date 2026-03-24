@@ -17,7 +17,6 @@ import (
 	"bit-labs.cn/owl/provider/router"
 	"bit-labs.cn/owl/utils"
 	"github.com/asaskevich/EventBus"
-	"github.com/casbin/casbin/v2"
 	validatorv10 "github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
@@ -114,7 +113,6 @@ type UserService struct {
 	jwtSvc     *jwt.JWTService
 	db.BaseRepository[model.User]
 	roleSvc   *RoleService
-	enforcer  casbin.IEnforcer
 	userRepo  repository.UserRepositoryInterface
 	eventBus  EventBus.Bus
 	configure *conf.Configure
@@ -126,7 +124,6 @@ func NewUserService(
 	roleSvc *RoleService,
 	userRepo repository.UserRepositoryInterface,
 	tx *gorm.DB,
-	enforcer casbin.IEnforcer,
 	eventBus EventBus.Bus,
 	configure *conf.Configure,
 	jwtSvc *jwt.JWTService,
@@ -138,7 +135,6 @@ func NewUserService(
 		db:             tx,
 		roleSvc:        roleSvc,
 		userRepo:       userRepo,
-		enforcer:       enforcer,
 		BaseRepository: db.NewBaseRepository[model.User](tx),
 		eventBus:       eventBus,
 		configure:      configure,
