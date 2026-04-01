@@ -44,12 +44,17 @@ func (i *UserRepository) WithContext(ctx context.Context) UserRepositoryInterfac
 }
 
 func (i *UserRepository) Save(user *model.User) error {
-	err := i.db.Save(&user).Error
+	err := i.db.Omit("Roles", "Groups", "Depts").Save(&user).Error
 	if err != nil {
 		return err
 	}
-	err = i.db.Model(&user).Association("Roles").Replace(&user.Roles)
-
+	if err = i.db.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
+		return err
+	}
+	if err = i.db.Model(&user).Association("Groups").Replace(&user.Groups); err != nil {
+		return err
+	}
+	err = i.db.Model(&user).Association("Depts").Replace(&user.Depts)
 	return err
 }
 
@@ -61,7 +66,7 @@ func (i *UserRepository) Unique(id uint, username string, source string) bool {
 }
 func (i *UserRepository) FindById(id any) (*model.User, error) {
 	var user model.User
-	err := i.db.Where("id = ?", id).Preload("Roles").First(&user).Error
+	err := i.db.Where("id = ?", id).Preload("Roles").Preload("Groups").Preload("Depts").First(&user).Error
 	return &user, err
 }
 func (i *UserRepository) GetByName(name string) (model.User, error) {

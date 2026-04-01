@@ -25,8 +25,10 @@ type User struct {
 	Source     string     `gorm:"comment:用户来源" json:"source"`
 	SourceID   string     `gorm:"comment:第三方用户唯一标识" json:"sourceID"`
 
-	Roles []Role `gorm:"many2many:admin_user_role;joinForeignKey:user_id;References:id;JoinReferences:role_id" json:"roles"`
-	Menus []Menu `gorm:"many2many:admin_user_menu;joinForeignKey:user_id;References:id;JoinReferences:menu_id" json:"menus"`
+	Roles  []Role      `gorm:"many2many:admin_user_role;joinForeignKey:user_id;References:id;JoinReferences:role_id" json:"roles"`
+	Menus  []Menu      `gorm:"many2many:admin_user_menu;joinForeignKey:user_id;References:id;JoinReferences:menu_id" json:"menus"`
+	Groups []UserGroup `gorm:"many2many:admin_user_group_user;joinForeignKey:user_id;References:id;JoinReferences:user_group_id" json:"groups,omitempty"`
+	Depts  []Dept      `gorm:"many2many:admin_user_dept;joinForeignKey:user_id;References:id;JoinReferences:dept_id" json:"depts,omitempty"`
 
 	Permissions  []string `json:"permissions" gorm:"-"`
 	IsSuperAdmin bool     `json:"isSuperAdmin" gorm:"-"`
@@ -62,6 +64,30 @@ func (i *User) GetRoleIDs() []string {
 		roleIDs = append(roleIDs, cast.ToString(role.ID))
 	}
 	return roleIDs
+}
+
+func (i *User) SetGroups(groups []UserGroup) {
+	i.Groups = groups
+}
+
+func (i *User) GetGroupIDs() []string {
+	var ids []string
+	for _, g := range i.Groups {
+		ids = append(ids, cast.ToString(g.ID))
+	}
+	return ids
+}
+
+func (i *User) SetDepts(depts []Dept) {
+	i.Depts = depts
+}
+
+func (i *User) GetDeptIDs() []string {
+	var ids []string
+	for _, d := range i.Depts {
+		ids = append(ids, cast.ToString(d.ID))
+	}
+	return ids
 }
 
 func NewSuperUser() User {

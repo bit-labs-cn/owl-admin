@@ -49,6 +49,7 @@ type UserBatchFields struct {
 	Sex      int    `json:"sex" validate:"omitempty,oneof=1 2 3" label:"性别"`       // 性别(1男,2女,3未知)
 	Source   string `json:"source" validate:"omitempty,max=32" label:"来源"`         // 来源
 	SourceID string `json:"sourceId" validate:"omitempty,max=64" label:"来源ID"`     // 来源ID
+	DeptID   string `json:"parentId" validate:"omitempty" label:"归属部门"`            // 归属部门ID
 }
 
 // CreateUserReq 创建用户
@@ -67,6 +68,7 @@ type RetrieveUserReq struct {
 	UsernameLike string `json:"username" form:"username" validate:"omitempty,max=64" label:"用户名"` // 用户名模糊
 	PhoneLike    string `json:"phone" form:"phone" validate:"omitempty,max=32" label:"手机号"`       // 手机号模糊
 	Status       int    `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"`   // 状态
+	DeptID       string `json:"deptId" form:"deptId" validate:"omitempty"`                        // 部门筛选
 }
 
 type LoginReq struct {
@@ -351,13 +353,49 @@ func (i *UserService) RetrieveUsers(ctx context.Context, req *RetrieveUserReq) (
 		return 0, nil, err
 	}
 
+	deptID := req.DeptID
+	req.DeptID = ""
+
 	c, u, e := i.userRepo.WithContext(ctx).Retrieve(req.Page, req.PageSize, func(tx *gorm.DB) {
 		db.AppendWhereFromStruct(tx, req)
 		tx.Preload("Roles")
+		tx.Preload("Depts")
 		tx.Order("created_at desc")
+
+		if deptID != "" {
+			deptIDs := i.getDescendantDeptIDs(ctx, cast.ToUint(deptID))
+			tx.Where("admin_user.id IN (?)",
+				i.db.Table("admin_user_dept").Select("user_id").Where("dept_id IN ?", deptIDs))
+		}
 	})
 
+	req.DeptID = deptID
 	return cast.ToInt(c), u, e
+}
+
+// getDescendantDeptIDs 收集指定部门及所有子孙部门的 ID 集合
+func (i *UserService) getDescendantDeptIDs(ctx context.Context, deptID uint) []uint {
+	var allDepts []model.Dept
+	if err := i.db.WithContext(ctx).Select("id, parent_id").Find(&allDepts).Error; err != nil {
+		return []uint{deptID}
+	}
+
+	childrenMap := make(map[uint][]uint)
+	for _, d := range allDepts {
+		childrenMap[uint(d.ParentId)] = append(childrenMap[uint(d.ParentId)], d.ID)
+	}
+
+	result := []uint{deptID}
+	queue := []uint{deptID}
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		for _, childID := range childrenMap[current] {
+			result = append(result, childID)
+			queue = append(queue, childID)
+		}
+	}
+	return result
 }
 
 // RetrieveUsersByRoleID 按角色获取用户列表
@@ -394,6 +432,10 @@ func (i *UserService) CreateUser(ctx context.Context, req *CreateUserReq) error 
 		return err
 	}
 	user.SetPassword(req.Password)
+
+	if req.DeptID != "" {
+		user.Depts = db.GetModelsByIDs[model.Dept]([]string{req.DeptID})
+	}
 
 	if err = i.userRepo.WithContext(ctx).Save(&user); err != nil {
 		return err
@@ -447,6 +489,12 @@ func (i *UserService) UpdateUser(ctx context.Context, req *UpdateUserReq) error 
 	err = copier.Copy(&user, req)
 	if err != nil {
 		return err
+	}
+
+	if req.DeptID != "" {
+		user.Depts = db.GetModelsByIDs[model.Dept]([]string{req.DeptID})
+	} else {
+		user.Depts = []model.Dept{}
 	}
 
 	return i.userRepo.WithContext(ctx).Save(user)

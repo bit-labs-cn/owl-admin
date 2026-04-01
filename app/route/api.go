@@ -18,7 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu *router.Menu
+var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu *router.Menu
 
 func InitMenu() []*router.Menu {
 	return []*router.Menu{
@@ -35,6 +35,7 @@ func InitMenu() []*router.Menu {
 			Children: []*router.Menu{
 				userMenu,
 				roleMenu,
+				userGroupMenu,
 				deptMenu,
 				positionMenu,
 			},
@@ -98,6 +99,7 @@ func InitApi(app foundation.Application, appName string) {
 	err := app.Invoke(func(
 		userHandle *v1.UserHandle,
 		roleHandle *v1.RoleHandle,
+		userGroupHandle *v1.UserGroupHandle,
 		apiHandle *v1.ApiHandle,
 		fileHandle *storage.FileHandle,
 		menuHandle *v1.MenuHandle,
@@ -202,6 +204,28 @@ func InitApi(app foundation.Application, appName string) {
 			}
 			r.Put("/roles/:id/menus", router.AccessAuthorized, roleHandle.AssignMenusToRole).Deps(deps...).Name("分配菜单给角色").Build()
 			roleMenu = r.GetMenu()
+		}
+
+		// user-group
+		{
+			r := router.NewRouteInfoBuilder(appName, userGroupHandle, gv1, router.MenuOption{
+				ComponentName: "SystemUserGroup",
+				Path:          "/system/user-group/index",
+				Icon:          "ri:group-line",
+			})
+
+			r.Post("/user-groups", router.AccessAuthorized, userGroupHandle.Create).Name("创建用户组").Build()
+			r.Delete("/user-groups/:id", router.AccessAuthorized, userGroupHandle.Delete).Name("删除用户组").Build()
+			r.Put("/user-groups/:id", router.AccessAuthorized, userGroupHandle.Update).Name("更新用户组").Build()
+			r.Put("/user-groups/:id/status", router.AccessAuthorized, userGroupHandle.ChangeStatus).Name("启用，禁用用户组").Build()
+
+			r.Get("/user-groups", router.AccessAuthorized, userGroupHandle.Retrieve).Name("用户组列表").Build()
+			r.Get("/user-groups-options", router.AccessAuthenticated, userGroupHandle.Options).Name("所有用户组(id,name)").Build()
+			r.Get("/user-groups/:id/users", router.AccessAuthorized, userGroupHandle.GetUsersByGroupID).Name("获取用户组下的用户").Build()
+			r.Get("/user-groups/:id/user-ids", router.AccessAuthorized, userGroupHandle.GetUserIDsByGroupID).Name("获取用户组的用户ID列表").Build()
+			r.Put("/user-groups/:id/users", router.AccessAuthorized, userGroupHandle.AssignUsersToGroup).Name("为用户组分配用户").Build()
+
+			userGroupMenu = r.GetMenu()
 		}
 
 		// api(permission)

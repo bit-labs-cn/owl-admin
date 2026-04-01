@@ -86,6 +86,7 @@ func (i *SubAppAdmin) Binds() []any {
 		v1.NewAreaHandle,
 		v1.NewLogHandle,
 		v1.NewUserHandle,
+		v1.NewUserGroupHandle,
 		service.NewDeptService,
 		service.NewDictService,
 		service.NewRoleService,
@@ -102,5 +103,7 @@ func (i *SubAppAdmin) Binds() []any {
 		repository.NewAreaRepository,
 		repository.NewAppVersionRepository,
 		service.NewPositionService,
+		service.NewUserGroupService,
+		repository.NewUserGroupRepository,
 	}
 }

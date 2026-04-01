@@ -393,3 +393,4 @@ func (i *UserHandle) Me(ctx *gin.Context) {
 	value, _ := ctx.Get("user")
 	router.Success(ctx, value)
 }
+
