@@ -69,6 +69,7 @@ func (i *SubAppAdmin) Commands() []*cobra.Command {
 }
 
 func (i *SubAppAdmin) RegisterRouters() {
+	route.InitWeb(i.app)
 	route.InitApi(i.app, i.Name())
 }
 
