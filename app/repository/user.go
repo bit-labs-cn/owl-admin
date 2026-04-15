@@ -71,7 +71,7 @@ func (i *UserRepository) FindById(id any) (*model.User, error) {
 }
 func (i *UserRepository) GetByName(name string) (model.User, error) {
 	var user model.User
-	err := i.db.Where("username = ?", name).Preload("Roles").First(&user).Error
+	err := i.db.Where("username = ?", name).Preload("Roles").Preload("Depts").First(&user).Error
 	return user, err
 }
 
