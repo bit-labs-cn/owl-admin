@@ -41,6 +41,7 @@ func (i *SubAppAdmin) Bootstrap() {
 		migDB := gdb.Session(&gorm.Session{Logger: gdb.Config.Logger.LogMode(logger.Error)})
 		go database.Migrate(migDB)
 		go seeder.InitAllDictData(migDB)
+		go seeder.InitAdminAreaData(migDB)
 		listener.Init(i.app)
 	})
 }
