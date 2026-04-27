@@ -1,13 +1,13 @@
 import { type Ref, reactive, ref, onMounted, watch, computed, toRaw } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { roleAPI } from "@bit-labs.cn/owl-admin-ui/api/role";
 import { menuApi } from "@bit-labs.cn/owl-admin-ui/api/menu";
 
 import { transformI18n } from "@bit-labs.cn/owl-ui/plugins/i18n";
 import { getKeyList } from "@pureadmin/utils";
 
-export function useRoleList(treeRef: Ref) {
+export function useRoleList(menuTreeRef: Ref) {
   const form = reactive({ name: "", code: "", status: "" });
   const curRow = ref();
   const dataList = ref([]);
@@ -113,12 +113,12 @@ export function useRoleList(treeRef: Ref) {
   }
 
   async function handleMenu(row?: any) {
-    const { id } = row;
+    const { id } = row ?? {};
     if (id) {
       curRow.value = row;
       isShow.value = true;
-      const { data } = await roleAPI.getRoleMenuIds(id);
-      treeRef.value.setCheckedKeys(data);
+      const menuRes = await roleAPI.getRoleMenuIds(id);
+      menuTreeRef.value?.setCheckedKeys(menuRes?.data ?? []);
     } else {
       curRow.value = null;
       isShow.value = false;
@@ -132,18 +132,18 @@ export function useRoleList(treeRef: Ref) {
     };
   }
 
-  function handleSave() {
+  async function handleSave() {
     const { id } = curRow.value;
-    roleAPI
-      .assignMenusToRole({
-        id: id,
-        menuIds: treeRef.value.getCheckedKeys()
-      })
-      .then(() => {});
+    if (!id) return;
+    await roleAPI.assignMenusToRole({
+      id,
+      menuIds: menuTreeRef.value.getCheckedKeys()
+    });
+    ElMessage.success("已保存");
   }
 
   const onQueryChanged = (query: string) => {
-    treeRef.value!.filter(query);
+    menuTreeRef.value!.filter(query);
   };
 
   const filterMethod = (query: string, node) => {
@@ -152,21 +152,21 @@ export function useRoleList(treeRef: Ref) {
 
   onMounted(async () => {
     onSearch();
-    const { data } = await menuApi.getAssignableMenus();
-    treeIds.value = getKeyList(data, "id");
-    treeData.value = data;
+    const { data: menuData } = await menuApi.getAssignableMenus();
+    treeIds.value = getKeyList(menuData, "id");
+    treeData.value = menuData;
   });
 
   watch(isExpandAll, val => {
     val
-      ? treeRef.value.setExpandedKeys(treeIds.value)
-      : treeRef.value.setExpandedKeys([]);
+      ? menuTreeRef.value.setExpandedKeys(treeIds.value)
+      : menuTreeRef.value.setExpandedKeys([]);
   });
 
   watch(isSelectAll, val => {
     val
-      ? treeRef.value.setCheckedKeys(treeIds.value)
-      : treeRef.value.setCheckedKeys([]);
+      ? menuTreeRef.value.setCheckedKeys(treeIds.value)
+      : menuTreeRef.value.setCheckedKeys([]);
   });
 
   return {

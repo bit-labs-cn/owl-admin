@@ -39,6 +39,6 @@ export function createColumns({
       formatter: ({ createdAt }) =>
         dayjs(createdAt).format("YYYY-MM-DD HH:mm:ss")
     },
-    { label: "操作", fixed: "right", width: 250, slot: "operation" }
+    { label: "操作", fixed: "right", minWidth: 300, slot: "operation" }
   ];
 }

@@ -6,7 +6,6 @@ import RoleUserListDialog from "./RoleUserListDialog.vue";
 import type { RoleFormData } from "./types";
 import { roleAPI } from "@bit-labs.cn/owl-admin-ui/api/role";
 import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
-
 import { ref, h, computed, nextTick, onMounted } from "vue";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
@@ -18,16 +17,14 @@ import {
 } from "@pureadmin/utils";
 import { usePublicHooks } from "../hooks";
 
-import Database from "@iconify-icons/ri/database-2-line";
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import Refresh from "@iconify-icons/ep/refresh";
-import Menu from "@iconify-icons/ep/menu";
 import AddFill from "@iconify-icons/ri/add-circle-line";
+import Menu from "@iconify-icons/ep/menu";
 import Close from "@iconify-icons/ep/close";
 import Check from "@iconify-icons/ep/check";
 import User from "@iconify-icons/ri/user-3-fill";
-import More from "@iconify-icons/ep/more-filled";
 
 defineOptions({
   name: "SystemRole"
@@ -54,8 +51,10 @@ const tableRef = ref();
 const contentRef = ref();
 const treeHeight = ref();
 const roleFormRef = ref();
-
 const { switchStyle } = usePublicHooks();
+
+/** 固定引用，避免模板里每次 `useRenderIcon(Menu)` 新建组件导致图标重复渲染 */
+const roleMenuPermIcon = useRenderIcon(Menu);
 
 const {
   form,
@@ -71,7 +70,6 @@ const {
   isSelectAll,
   treeSearchValue,
   switchLoadMap,
-  buttonClass,
   onSearch,
   resetForm,
   onChange,
@@ -87,6 +85,12 @@ const {
 } = useRoleList(treeRef);
 
 const columns = createColumns({ switchLoadMap, switchStyle, onChange });
+
+const menuTreeHeight = computed(() => {
+  const h = treeHeight.value;
+  if (h == null || Number.isNaN(h)) return 280;
+  return Math.max(200, h - 120);
+});
 
 function openRoleUserDialog(row) {
   addDialog({
@@ -249,88 +253,50 @@ onMounted(() => {
             @page-current-change="handleCurrentChange"
           >
             <template #operation="{ row }">
-              <el-button
-                class="reset-margin"
-                link
-                type="info"
-                :size="size"
-                :icon="useRenderIcon(User)"
-                @click="openRoleUserDialog(row)"
-              >
-                用户
-              </el-button>
-              <el-button
-                class="reset-margin"
-                link
-                type="primary"
-                :size="size"
-                :icon="useRenderIcon(EditPen)"
-                @click="openDialog('修改', row)"
-              >
-                修改
-              </el-button>
-              <el-popconfirm
-                :title="`是否确认删除角色名称为${row.name}的这条数据`"
-                @confirm="handleDelete(row)"
-              >
-                <template #reference>
-                  <el-button
-                    class="reset-margin"
-                    link
-                    type="danger"
-                    :size="size"
-                    :icon="useRenderIcon(Delete)"
-                  >
-                    删除
-                  </el-button>
-                </template>
-              </el-popconfirm>
-              <el-button
-                class="reset-margin"
-                link
-                type="warning"
-                :size="size"
-                :icon="useRenderIcon(Menu)"
-                @click="handleMenu(row)"
-              >
-                权限
-              </el-button>
-              <el-dropdown>
+              <div class="role-op-actions">
                 <el-button
-                  class="ml-3 mt-[2px]"
+                  link
+                  type="info"
+                  :size="size"
+                  :icon="useRenderIcon(User)"
+                  @click="openRoleUserDialog(row)"
+                >
+                  用户
+                </el-button>
+                <el-button
                   link
                   type="primary"
                   :size="size"
-                  :icon="useRenderIcon(More)"
-                />
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item>
-                      <el-button
-                        :class="buttonClass"
-                        link
-                        type="warning"
-                        :size="size"
-                        :icon="useRenderIcon(Menu)"
-                        @click="handleMenu"
-                      >
-                        菜单权限
-                      </el-button>
-                    </el-dropdown-item>
-                    <el-dropdown-item>
-                      <el-button
-                        :class="buttonClass"
-                        link
-                        type="info"
-                        :size="size"
-                        :icon="useRenderIcon(Database)"
-                      >
-                        数据权限
-                      </el-button>
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
+                  :icon="useRenderIcon(EditPen)"
+                  @click="openDialog('修改', row)"
+                >
+                  修改
+                </el-button>
+                <el-popconfirm
+                  :title="`是否确认删除角色名称为${row.name}的这条数据`"
+                  @confirm="handleDelete(row)"
+                >
+                  <template #reference>
+                    <el-button
+                      link
+                      type="danger"
+                      :size="size"
+                      :icon="useRenderIcon(Delete)"
+                    >
+                      删除
+                    </el-button>
+                  </template>
+                </el-popconfirm>
+                <el-button
+                  link
+                  type="warning"
+                  :size="size"
+                  :icon="roleMenuPermIcon"
+                  @click="handleMenu(row)"
+                >
+                  权限
+                </el-button>
+              </div>
             </template>
           </pure-table>
         </template>
@@ -384,7 +350,7 @@ onMounted(() => {
           show-checkbox
           :data="treeData"
           :props="treeProps"
-          :height="treeHeight"
+          :height="menuTreeHeight"
           :filter-method="filterMethod"
         >
           <template #default="{ data }">
@@ -397,6 +363,27 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.role-op-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.role-op-actions :deep(.el-button),
+.role-op-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.role-op-actions :deep(.el-popconfirm) {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
 :deep(.el-dropdown-menu__item i) {
   margin: 0;
 }
