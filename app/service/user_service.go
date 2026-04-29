@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/spf13/cast"
 
@@ -65,6 +66,8 @@ type UpdateUserReq struct {
 
 type RetrieveUserReq struct {
 	router.PageReq
+	// Keyword 综合搜索：登录名、昵称同时模糊匹配（与 UsernameLike 互斥，优先 Keyword）
+	Keyword      string `json:"keyword" form:"keyword" validate:"omitempty,max=64" label:"关键词"`
 	UsernameLike string `json:"username" form:"username" validate:"omitempty,max=64" label:"用户名"` // 用户名模糊
 	PhoneLike    string `json:"phone" form:"phone" validate:"omitempty,max=32" label:"手机号"`       // 手机号模糊
 	Status       int    `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"`   // 状态
@@ -356,8 +359,32 @@ func (i *UserService) RetrieveUsers(ctx context.Context, req *RetrieveUserReq) (
 	deptID := req.DeptID
 	req.DeptID = ""
 
+	kw := strings.TrimSpace(req.Keyword)
+	type userListFilter struct {
+		router.PageReq
+		UsernameLike string
+		PhoneLike    string
+		Status       int
+		DeptID       string
+	}
+	flt := userListFilter{
+		PageReq:      req.PageReq,
+		UsernameLike: req.UsernameLike,
+		PhoneLike:    req.PhoneLike,
+		Status:       req.Status,
+		DeptID:       req.DeptID,
+	}
+	if kw != "" {
+		// 由 Keyword 统一匹配登录名+昵称，避免仅 username 时搜不到“显示名”
+		flt.UsernameLike = ""
+	}
+
 	c, u, e := i.userRepo.WithContext(ctx).Retrieve(req.Page, req.PageSize, func(tx *gorm.DB) {
-		db.AppendWhereFromStruct(tx, req)
+		if kw != "" {
+			like := "%" + kw + "%"
+			tx.Where("(admin_user.username LIKE ? OR admin_user.nickname LIKE ?)", like, like)
+		}
+		db.AppendWhereFromStruct(tx, &flt)
 		tx.Preload("Roles")
 		tx.Preload("Depts")
 		tx.Order("created_at desc")

@@ -145,7 +145,8 @@ func (i *UserHandle) ChangeStatus(ctx *gin.Context) {
 // @Produce		json
 // @Param			page		query		int				false	"页码"
 // @Param			pageSize	query		int				false	"每页数量"
-// @Param			keyword		query		string			false	"搜索关键词"
+// @Param			keyword		query		string			false	"综合关键词（登录名、昵称模糊）"
+// @Param			username		query		string			false	"用户名模糊"
 // @Success		200			{object}	router.PageResp	"操作成功"
 // @Failure		500			{object}	router.Resp		"服务器内部错误"
 // @Router			/api/v1/users [GET]
@@ -393,4 +394,3 @@ func (i *UserHandle) Me(ctx *gin.Context) {
 	value, _ := ctx.Get("user")
 	router.Success(ctx, value)
 }
-
