@@ -1,4 +1,4 @@
-# flex-admin
+# owl-admin
 
 基于 Go + Gin 的后台管理服务（RBAC 权限体系），采用 `bit-labs.cn/owl` 应用框架组织子应用、依赖注入与配置管理。提供用户/角色/菜单/接口权限、组织架构、字典、地区、日志、文件上传、APP 升级检查与第三方 OAuth 登录等能力。
 
@@ -7,7 +7,7 @@
 项目采用典型的分层结构：`route(路由)` → `handle(HTTP 处理)` → `service(领域服务)` → `repository(数据访问)` → `model(数据模型)`，并通过 `middleware`、`event/listener` 等模块完成鉴权、操作审计、权限同步等横切能力。
 
 ```text
-flex-admin/
+owl-admin/
 ├─ main.go                       # 入口：启动 owl 应用并运行 HTTP 服务
 ├─ go.mod / go.sum               # Go 模块与依赖（包含对 bit-labs.cn/owl 的本地 replace）
 ├─ README.md                     # 项目说明
@@ -41,7 +41,7 @@ flex-admin/
 
 ## 核心功能
 
-以下能力均通过 `/api/v1` 前缀提供（详见 [api.go](file:///d:/project/bit-labs/flex-admin/app/route/api.go)）：
+以下能力均通过 `/api/v1` 前缀提供（详见 [api.go](file:///d:/project/bit-labs/owl-admin/app/route/api.go)）：
 
 - 认证与鉴权（RBAC）
   - JWT 登录、解析与用户上下文注入（`Authorization: Bearer <token>`）
@@ -73,7 +73,7 @@ flex-admin/
 
 ### 环境要求
 
-- Go：`1.24.x`（见 [go.mod](file:///d:/project/bit-labs/flex-admin/go.mod#L1-L6)）
+- Go：`1.24.x`（见 [go.mod](file:///d:/project/bit-labs/owl-admin/go.mod#L1-L6)）
 - 数据库：PostgreSQL / MySQL / SQLite（三选一，取决于 `conf/database.yaml`）
 - Redis：用于分布式锁与缓存（`conf/redis.yaml`）
 

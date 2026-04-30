@@ -1,5 +1,5 @@
 # 配置 jwt
 
 signing-key: "your-secret-key" # 签名密钥
-issuer: "flex-admin" # 签发者
+issuer: "owl-admin" # 签发者
 expire: 3600 # 过期时间，单位秒
