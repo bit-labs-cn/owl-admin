@@ -7,6 +7,27 @@ import { menuApi } from "@bit-labs.cn/owl-admin-ui/api/menu";
 import { transformI18n } from "@bit-labs.cn/owl-ui/plugins/i18n";
 import { getKeyList } from "@pureadmin/utils";
 
+/** 与后端 `router.MenuType` 一致；在拉取菜单后写回节点，避免树节点插槽里反复计算 */
+function attachRolePermMenuTypeUi(nodes: unknown[] | undefined) {
+  if (!nodes?.length) return;
+  for (const raw of nodes) {
+    const node = raw as Record<string, unknown>;
+    const mt = node.menuType;
+    let tagType: "primary" | "success" | "info" | "warning" | "danger" | undefined;
+    if (mt === "目录") tagType = "info";
+    else if (mt === "菜单") tagType = "primary";
+    else if (mt === "按钮") tagType = "success";
+    if (tagType) {
+      node.rolePermMenuTypeTagType = tagType;
+      node.rolePermMenuTypeShowTag = true;
+    } else {
+      delete node.rolePermMenuTypeTagType;
+      node.rolePermMenuTypeShowTag = false;
+    }
+    attachRolePermMenuTypeUi(node.children as unknown[] | undefined);
+  }
+}
+
 export function useRoleList(menuTreeRef: Ref) {
   const form = reactive({ name: "", code: "", status: "" });
   const curRow = ref();
@@ -153,6 +174,7 @@ export function useRoleList(menuTreeRef: Ref) {
   onMounted(async () => {
     onSearch();
     const { data: menuData } = await menuApi.getAssignableMenus();
+    attachRolePermMenuTypeUi(menuData);
     treeIds.value = getKeyList(menuData, "id");
     treeData.value = menuData;
   });

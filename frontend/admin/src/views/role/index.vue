@@ -6,15 +6,17 @@ import RoleUserListDialog from "./RoleUserListDialog.vue";
 import type { RoleFormData } from "./types";
 import { roleAPI } from "@bit-labs.cn/owl-admin-ui/api/role";
 import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
-import { ref, h, computed, nextTick, onMounted } from "vue";
+import {
+  ref,
+  h,
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  watch
+} from "vue";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
-import {
-  delay,
-  subBefore,
-  deviceDetection,
-  useResizeObserver
-} from "@pureadmin/utils";
+import { deviceDetection } from "@pureadmin/utils";
 import { usePublicHooks } from "../hooks";
 
 import Delete from "@iconify-icons/ep/delete";
@@ -48,12 +50,16 @@ const iconClass = computed(() => [
 const treeRef = ref();
 const formRef = ref();
 const tableRef = ref();
-const contentRef = ref();
-const treeHeight = ref();
+const treeWrapRef = ref<HTMLElement | null>(null);
+const treeWrapHeight = ref(320);
+let treeWrapResizeObserver: ResizeObserver | null = null;
 const roleFormRef = ref();
 const { switchStyle } = usePublicHooks();
 
-/** 固定引用，避免模板里每次 `useRenderIcon(Menu)` 新建组件导致图标重复渲染 */
+/** 固定引用，避免模板里每次 `useRenderIcon(...)` 新建组件导致图标重复渲染 */
+const roleUserOpIcon = useRenderIcon(User);
+const roleEditOpIcon = useRenderIcon(EditPen);
+const roleDeleteOpIcon = useRenderIcon(Delete);
 const roleMenuPermIcon = useRenderIcon(Menu);
 
 const {
@@ -86,10 +92,43 @@ const {
 
 const columns = createColumns({ switchLoadMap, switchStyle, onChange });
 
-const menuTreeHeight = computed(() => {
-  const h = treeHeight.value;
-  if (h == null || Number.isNaN(h)) return 280;
-  return Math.max(200, h - 120);
+function tearDownTreeWrapObserver() {
+  treeWrapResizeObserver?.disconnect();
+  treeWrapResizeObserver = null;
+}
+
+function updateTreeWrapHeightFromEl() {
+  const el = treeWrapRef.value;
+  if (!el) return;
+  const h = Math.floor(el.getBoundingClientRect().height);
+  treeWrapHeight.value = Math.max(160, h);
+}
+
+function setupTreeWrapObserver() {
+  tearDownTreeWrapObserver();
+  const el = treeWrapRef.value;
+  if (!el) return;
+  updateTreeWrapHeightFromEl();
+  treeWrapResizeObserver = new ResizeObserver(() => {
+    updateTreeWrapHeightFromEl();
+  });
+  treeWrapResizeObserver.observe(el);
+}
+
+watch(isShow, async show => {
+  if (!show) {
+    tearDownTreeWrapObserver();
+    return;
+  }
+  await nextTick();
+  requestAnimationFrame(() => {
+    setupTreeWrapObserver();
+    requestAnimationFrame(() => updateTreeWrapHeightFromEl());
+  });
+});
+
+onBeforeUnmount(() => {
+  tearDownTreeWrapObserver();
 });
 
 function openRoleUserDialog(row) {
@@ -148,25 +187,15 @@ function openDialog(title = "新增", row?: RoleFormData) {
   });
 }
 
-onMounted(() => {
-  useResizeObserver(contentRef, async () => {
-    await nextTick();
-    delay(60).then(() => {
-      treeHeight.value = parseFloat(
-        subBefore(tableRef.value.getTableDoms().tableWrapper.style.height, "px")
-      );
-    });
-  });
-});
 </script>
 
 <template>
-  <div class="main">
+  <div class="main flex min-h-0 flex-1 flex-col">
     <el-form
       ref="formRef"
       :inline="true"
       :model="form"
-      class="search-form bg-bg_color w-[99/100] pl-8 pt-[12px] overflow-auto"
+      class="search-form bg-bg_color w-[99/100] shrink-0 pl-8 pt-[12px] overflow-auto"
     >
       <el-form-item label="角色名称：" prop="name">
         <el-input
@@ -211,11 +240,16 @@ onMounted(() => {
     </el-form>
 
     <div
-      ref="contentRef"
-      :class="['flex', deviceDetection() ? 'flex-wrap' : '']"
+      :class="[
+        'flex min-h-0 flex-1 items-stretch',
+        deviceDetection() ? 'flex-wrap' : ''
+      ]"
     >
       <PureTableBar
-        :class="[isShow && !deviceDetection() ? '!w-[60vw]' : 'w-full']"
+        :class="[
+          isShow && !deviceDetection() ? '!w-[60vw]' : 'w-full',
+          'min-h-0 min-w-0'
+        ]"
         style="transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1)"
         title="角色管理"
         :columns="columns"
@@ -258,7 +292,7 @@ onMounted(() => {
                   link
                   type="info"
                   :size="size"
-                  :icon="useRenderIcon(User)"
+                  :icon="roleUserOpIcon"
                   @click="openRoleUserDialog(row)"
                 >
                   用户
@@ -267,7 +301,7 @@ onMounted(() => {
                   link
                   type="primary"
                   :size="size"
-                  :icon="useRenderIcon(EditPen)"
+                  :icon="roleEditOpIcon"
                   @click="openDialog('修改', row)"
                 >
                   修改
@@ -281,7 +315,7 @@ onMounted(() => {
                       link
                       type="danger"
                       :size="size"
-                      :icon="useRenderIcon(Delete)"
+                      :icon="roleDeleteOpIcon"
                     >
                       删除
                     </el-button>
@@ -304,9 +338,9 @@ onMounted(() => {
 
       <div
         v-if="isShow"
-        class="!min-w-[calc(100vw-60vw-268px)] w-full mt-2 px-2 pb-2 bg-bg_color ml-2 overflow-auto"
+        class="!min-w-[calc(100vw-60vw-268px)] ml-2 mt-2 flex w-full min-h-0 flex-1 flex-col bg-bg_color px-2 pb-2 overflow-hidden"
       >
-        <div class="flex justify-between w-full px-3 pt-5 pb-4">
+        <div class="flex w-full shrink-0 justify-between px-3 pb-4 pt-5">
           <div class="flex">
             <span :class="iconClass">
               <IconifyIconOffline
@@ -337,26 +371,45 @@ onMounted(() => {
         <el-input
           v-model="treeSearchValue"
           placeholder="请输入菜单进行搜索"
-          class="mb-1"
+          class="mb-1 shrink-0"
           clearable
           @input="onQueryChanged"
         />
-        <div class="flex flex-wrap">
+        <div class="flex shrink-0 flex-wrap">
           <el-checkbox v-model="isExpandAll" label="展开/折叠" />
           <el-checkbox v-model="isSelectAll" label="全选/全不选" />
         </div>
-        <el-tree-v2
-          ref="treeRef"
-          show-checkbox
-          :data="treeData"
-          :props="treeProps"
-          :height="menuTreeHeight"
-          :filter-method="filterMethod"
+        <div
+          ref="treeWrapRef"
+          class="min-h-[200px] min-w-0 flex-1 overflow-hidden"
         >
-          <template #default="{ data }">
-            <span>{{ transformI18n(data.meta.title) }}</span>
-          </template>
-        </el-tree-v2>
+          <el-tree-v2
+            ref="treeRef"
+            show-checkbox
+            :data="treeData"
+            :props="treeProps"
+            :height="treeWrapHeight"
+            :filter-method="filterMethod"
+          >
+            <template #default="{ data }">
+              <span
+                class="inline-flex min-w-0 max-w-full flex-wrap items-center gap-1.5"
+              >
+                <span class="truncate">{{
+                  transformI18n(data.meta.title)
+                }}</span>
+                <el-tag
+                  v-if="data.rolePermMenuTypeShowTag"
+                  size="small"
+                  effect="plain"
+                  :type="data.rolePermMenuTypeTagType"
+                >
+                  {{ data.menuType }}
+                </el-tag>
+              </span>
+            </template>
+          </el-tree-v2>
+        </div>
       </div>
     </div>
   </div>
@@ -365,12 +418,12 @@ onMounted(() => {
 <style lang="scss" scoped>
 .role-op-actions {
   display: inline-flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 4px;
+  max-width: 100%;
   vertical-align: middle;
-  white-space: nowrap;
 }
 
 .role-op-actions :deep(.el-button),
@@ -382,6 +435,11 @@ onMounted(() => {
 .role-op-actions :deep(.el-popconfirm) {
   display: inline-flex;
   vertical-align: middle;
+}
+
+/* 固定右侧列单元格默认 overflow:hidden，会把「权限」等尾部裁掉 */
+:deep(.el-table__fixed-right .el-table__cell .cell) {
+  overflow: visible;
 }
 
 :deep(.el-dropdown-menu__item i) {
