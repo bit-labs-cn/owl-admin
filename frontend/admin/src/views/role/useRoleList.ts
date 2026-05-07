@@ -28,12 +28,30 @@ function attachRolePermMenuTypeUi(nodes: unknown[] | undefined) {
   }
 }
 
+/** 角色分配树不展示「菜单类型且不在侧边栏显示」的页面（如独立新增/详情页），权限仍通过按钮项分配 */
+function filterAssignableMenus(nodes: unknown[] | undefined): unknown[] {
+  if (!nodes?.length) return [];
+
+  return nodes
+    .filter(raw => {
+      const node = raw as { menuType?: string; meta?: { showLink?: boolean } };
+      return !(node.menuType === "菜单" && node.meta?.showLink === false);
+    })
+    .map(raw => {
+      const node = raw as Record<string, unknown>;
+      return {
+        ...node,
+        children: filterAssignableMenus(node.children as unknown[] | undefined)
+      };
+    });
+}
+
 export function useRoleList(menuTreeRef: Ref) {
   const form = reactive({ name: "", code: "", status: "" });
   const curRow = ref();
   const dataList = ref([]);
-  const treeIds = ref([]);
-  const treeData = ref([]);
+  const treeIds = ref<string[]>([]);
+  const treeData = ref<unknown[]>([]);
   const isShow = ref(false);
   const loading = ref(true);
   const treeSearchValue = ref();
@@ -174,9 +192,10 @@ export function useRoleList(menuTreeRef: Ref) {
   onMounted(async () => {
     onSearch();
     const { data: menuData } = await menuApi.getAssignableMenus();
-    attachRolePermMenuTypeUi(menuData);
-    treeIds.value = getKeyList(menuData, "id");
-    treeData.value = menuData;
+    const assignableMenuData = filterAssignableMenus(menuData);
+    attachRolePermMenuTypeUi(assignableMenuData);
+    treeIds.value = getKeyList(assignableMenuData, "id");
+    treeData.value = assignableMenuData;
   });
 
   watch(isExpandAll, val => {
