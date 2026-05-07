@@ -11,6 +11,7 @@ var GenPwd = &cobra.Command{
 	Use:   "admin:gen-pwd",
 	Short: "生成密码",
 	Run: func(cmd *cobra.Command, args []string) {
-		utils.PrintBlue(os.Args[1], utils.BcryptHash(os.Args[1]))
+		utils.PrintBlue("密码：", os.Args[2])
+		utils.PrintBlue("密文", utils.BcryptHash(os.Args[2]))
 	},
 }
