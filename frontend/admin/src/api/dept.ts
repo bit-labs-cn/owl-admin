@@ -9,8 +9,14 @@ class DeptAPI {
     return http.request<Result>("delete", `/api/v1/dept/${id}`);
   };
 
-  getDepts = (data?: object) => {
-    return http.request<Result>("get", "/api/v1/dept", { data }, { silentMessage: true });
+  /** GET 使用 params，与后端 ShouldBindQuery 一致；部门树需较大 pageSize */
+  getDepts = (params?: object) => {
+    return http.request<Result>(
+      "get",
+      "/api/v1/dept",
+      { params: { page: 1, pageSize: 1000, ...params } },
+      { silentMessage: true }
+    );
   };
 
   updateDept = (data?: object) => {
