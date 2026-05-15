@@ -15,6 +15,8 @@ export interface DictItem {
   status: string;
   sort: string;
   dictID: string;
+  /** 与所属字典 type 一致，后端冗余字段 json: dictType */
+  dictType?: string;
 }
 
 export interface DictRepositoryInterface {

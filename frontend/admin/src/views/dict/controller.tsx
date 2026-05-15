@@ -54,7 +54,7 @@ export class DictTable extends SmartTable {
     super();
 
     this.repo = repo;
-    this.itemTable = new DictItemTable("0", repo);
+    this.itemTable = new DictItemTable("0", repo, "");
     this.loadData();
   }
   /**
@@ -118,7 +118,8 @@ export class DictTable extends SmartTable {
       value: "",
       extend: "",
       status: "1",
-      dictID: this.choseDict.value.id
+      dictID: this.choseDict.value.id,
+      dictType: this.choseDict.value.type
     };
     const edit = Object.assign({ ...newDictItem, editing: true });
     this.itemTable.addRow(edit);
@@ -133,7 +134,7 @@ export class DictTable extends SmartTable {
 
   chooseDict = (row: any) => {
     this.choseDict.value = row;
-    this.itemTable = new DictItemTable(row.id, this.repo);
+    this.itemTable = new DictItemTable(row.id, this.repo, row.type ?? "");
   };
 
   rowClass = ({ row }) => {
@@ -165,7 +166,11 @@ export class DictTable extends SmartTable {
         this.choseDict.value = res[0];
         if (res.length > 0) {
           const dictID = this.choseDict.value.id;
-          this.itemTable = new DictItemTable(dictID, this.repo);
+          this.itemTable = new DictItemTable(
+            dictID,
+            this.repo,
+            this.choseDict.value.type ?? ""
+          );
         }
       })
       .catch(reason => {
@@ -180,11 +185,14 @@ export class DictTable extends SmartTable {
 class DictItemTable extends SmartTable {
   private repo: DictRepositoryInterface;
   private dictID: string;
-  constructor(dictID: string, repo: DictRepositoryInterface) {
+  /** 当前字典的 type，保存项时写入 dictType */
+  private dictType: string;
+  constructor(dictID: string, repo: DictRepositoryInterface, dictType = "") {
     super();
     this.repo = repo;
     this.loading.value = true;
     this.dictID = dictID;
+    this.dictType = dictType;
     this.loadData();
   }
 
@@ -228,10 +236,14 @@ class DictItemTable extends SmartTable {
   ];
 
   submitSave(dictItem: DictItem): Promise<Result> {
+    const payload: DictItem = {
+      ...dictItem,
+      dictType: dictItem.dictType || this.dictType
+    };
     if (dictItem.id === "0") {
-      return this.repo.createDictItem(dictItem.dictID, dictItem);
+      return this.repo.createDictItem(payload.dictID, payload);
     } else {
-      return this.repo.updateDictItem(dictItem.dictID, dictItem);
+      return this.repo.updateDictItem(payload.dictID, payload);
     }
   }
   loadData() {
