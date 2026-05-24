@@ -11,6 +11,7 @@ import (
 	"bit-labs.cn/owl/contract/foundation"
 	"bit-labs.cn/owl/provider/captcha"
 	"bit-labs.cn/owl/provider/db"
+	"bit-labs.cn/owl/provider/mailer"
 	"bit-labs.cn/owl/provider/permission"
 	"bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
@@ -56,6 +57,7 @@ func (i *SubAppAdmin) ServiceProviders() []foundation.ServiceProvider {
 		&socketio.SocketIOServiceProvider{},
 		&captcha.CaptchaServiceProvider{},
 		&storage.StorageServiceProvider{},
+		&mailer.MailerServiceProvider{},
 	}
 }
 func (i *SubAppAdmin) Menu() []*router.Menu {

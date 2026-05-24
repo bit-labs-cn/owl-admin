@@ -22,6 +22,7 @@ type User struct {
 	Status     int        `gorm:"comment:状态" json:"status"`
 	Sex        int        `gorm:"comment:性别" json:"sex"`
 	VerifiedAt *time.Time `gorm:"comment:验证时间" json:"verified_at"`
+	RegisterIP string     `gorm:"comment:注册IP;type:string;size:64" json:"register_ip"`
 	Source     string     `gorm:"comment:用户来源" json:"source"`
 	SourceID   string     `gorm:"comment:第三方用户唯一标识" json:"sourceID"`
 

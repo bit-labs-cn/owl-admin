@@ -18,6 +18,8 @@ type UserRepositoryInterface interface {
 	Delete(ids ...any) error
 	Retrieve(page, pageSize int, fn func(db *gorm.DB)) (count int64, list []model.User, err error)
 	GetByName(name string) (model.User, error)
+	GetByEmail(email string) (model.User, error)
+	UniqueByEmail(id uint, email string) bool
 	GetByNameAndThirdProvider(name string, provider string) (model.User, error)
 	contract.WithContext[UserRepositoryInterface]
 }
@@ -73,6 +75,22 @@ func (i *UserRepository) GetByName(name string) (model.User, error) {
 	var user model.User
 	err := i.db.Where("username = ?", name).Preload("Roles").Preload("Depts").First(&user).Error
 	return user, err
+}
+
+func (i *UserRepository) GetByEmail(email string) (model.User, error) {
+	var user model.User
+	err := i.db.Where("email = ?", email).Preload("Roles").Preload("Depts").First(&user).Error
+	return user, err
+}
+
+func (i *UserRepository) UniqueByEmail(id uint, email string) bool {
+	if email == "" {
+		return false
+	}
+	_, exists := i.BaseRepository.Unique(id, func(db *gorm.DB) {
+		db.Where("email = ?", email)
+	})
+	return exists
 }
 
 func (i *UserRepository) GetByNameAndThirdProvider(name string, provider string) (model.User, error) {

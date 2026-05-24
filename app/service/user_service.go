@@ -2,9 +2,14 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
+	"fmt"
+	"math/big"
 	"strings"
+	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cast"
 
 	"bit-labs.cn/owl-admin/app/event"
@@ -12,9 +17,11 @@ import (
 	"bit-labs.cn/owl-admin/app/provider/jwt"
 	"bit-labs.cn/owl-admin/app/repository"
 	errContract "bit-labs.cn/owl/contract/errors"
+	mailerContract "bit-labs.cn/owl/contract/mailer"
 	"bit-labs.cn/owl/provider/conf"
 	"bit-labs.cn/owl/provider/db"
-	"bit-labs.cn/owl/provider/redis"
+	"bit-labs.cn/owl/provider/mailer"
+	owlredis "bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
 	"bit-labs.cn/owl/utils"
 	"github.com/asaskevich/EventBus"
@@ -28,8 +35,18 @@ var (
 )
 
 const (
-	CodeUserExists   = "USER_EXISTS"
-	CodeUserNotFound = "USER_NOT_FOUND"
+	CodeUserExists        = "USER_EXISTS"
+	CodeUserNotFound      = "USER_NOT_FOUND"
+	CodeEmailCodeInvalid  = "EMAIL_CODE_INVALID"
+	CodeEmailCodeTooOften = "EMAIL_CODE_TOO_OFTEN"
+	CodeEmailSendFailed   = "EMAIL_SEND_FAILED"
+
+	emailRegisterSource    = "email"
+	registerCodeKeyPrefix  = "register:code:"
+	registerCooldownPrefix = "register:cooldown:"
+	registerCodeTTL        = 10 * time.Minute
+	registerCooldownTTL    = 60 * time.Second
+	registerCodeLength     = 6
 )
 
 func UserExists() *errContract.BizError {
@@ -38,6 +55,18 @@ func UserExists() *errContract.BizError {
 
 func UserNotFound() *errContract.BizError {
 	return errContract.NewBizError(CodeUserNotFound, "用户不存在")
+}
+
+func EmailCodeInvalid() *errContract.BizError {
+	return errContract.NewBizError(CodeEmailCodeInvalid, "邮箱验证码错误或已过期")
+}
+
+func EmailCodeTooOften() *errContract.BizError {
+	return errContract.NewBizError(CodeEmailCodeTooOften, "发送过于频繁，请稍后再试")
+}
+
+func EmailSendFailed() *errContract.BizError {
+	return errContract.NewBizError(CodeEmailSendFailed, "邮件发送失败")
 }
 
 type UserBatchFields struct {
@@ -79,6 +108,19 @@ type LoginReq struct {
 	Password string `json:"password" validate:"required" label:"密码"`  // 密码
 }
 
+// SendRegisterCodeReq 发送注册验证码
+type SendRegisterCodeReq struct {
+	Email string `json:"email" validate:"required,email" label:"邮箱"`
+}
+
+// EmailRegisterReq 邮箱注册
+type EmailRegisterReq struct {
+	Email    string `json:"email" validate:"required,email" label:"邮箱"`
+	Code     string `json:"code" validate:"required,len=6" label:"验证码"`
+	Password string `json:"password" validate:"required,min=6,max=64" label:"密码"`
+	NickName string `json:"nickName" validate:"omitempty,max=32" label:"昵称"`
+}
+
 type LoginResp struct {
 	*model.User
 	AccessToken string `json:"accessToken"` // 访问令牌
@@ -117,12 +159,14 @@ type UserService struct {
 	menuManger *router.MenuRepository
 	jwtSvc     *jwt.JWTService
 	db.BaseRepository[model.User]
-	roleSvc   *RoleService
-	userRepo  repository.UserRepositoryInterface
-	eventBus  EventBus.Bus
-	configure *conf.Configure
-	locker    redis.LockerFactory
-	validate  *validatorv10.Validate
+	roleSvc     *RoleService
+	userRepo    repository.UserRepositoryInterface
+	eventBus    EventBus.Bus
+	configure   *conf.Configure
+	locker      owlredis.LockerFactory
+	validate    *validatorv10.Validate
+	redisClient redis.UniversalClient
+	mailer      *mailer.MailerManager
 }
 
 func NewUserService(
@@ -133,8 +177,10 @@ func NewUserService(
 	configure *conf.Configure,
 	jwtSvc *jwt.JWTService,
 	menuManager *router.MenuRepository,
-	locker redis.LockerFactory,
+	locker owlredis.LockerFactory,
 	validate *validatorv10.Validate,
+	redisClient redis.UniversalClient,
+	mailerMgr *mailer.MailerManager,
 ) *UserService {
 	return &UserService{
 		db:             tx,
@@ -147,6 +193,8 @@ func NewUserService(
 		menuManger:     menuManager,
 		locker:         locker,
 		validate:       validate,
+		redisClient:    redisClient,
+		mailer:         mailerMgr,
 	}
 }
 
@@ -470,7 +518,111 @@ func (i *UserService) CreateUser(ctx context.Context, req *CreateUserReq) error 
 	return err
 }
 
-// Register 注册用户
+// SendRegisterCode 发送邮箱注册验证码
+func (i *UserService) SendRegisterCode(ctx context.Context, req *SendRegisterCodeReq) error {
+	if err := i.validate.Struct(req); err != nil {
+		return err
+	}
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+	if i.userRepo.WithContext(ctx).UniqueByEmail(0, email) {
+		return UserExists()
+	}
+
+	cooldownKey := registerCooldownPrefix + email
+	ok, err := i.redisClient.SetNX(ctx, cooldownKey, "1", registerCooldownTTL).Result()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return EmailCodeTooOften()
+	}
+
+	code, err := generateNumericCode(registerCodeLength)
+	if err != nil {
+		return err
+	}
+
+	codeKey := registerCodeKeyPrefix + email
+	if err = i.redisClient.Set(ctx, codeKey, code, registerCodeTTL).Err(); err != nil {
+		return err
+	}
+
+	subject := "注册验证码"
+	body := fmt.Sprintf("您的注册验证码为：%s，%d 分钟内有效。如非本人操作请忽略。", code, int(registerCodeTTL.Minutes()))
+	htmlBody := fmt.Sprintf("<p>您的注册验证码为：<strong>%s</strong>，%d 分钟内有效。</p><p>如非本人操作请忽略。</p>", code, int(registerCodeTTL.Minutes()))
+
+	if err = i.mailer.Send(ctx, &mailerContract.Message{
+		To:      []string{email},
+		Subject: subject,
+		Body:    body,
+		HTML:    htmlBody,
+	}); err != nil {
+		_ = i.redisClient.Del(ctx, codeKey).Err()
+		return EmailSendFailed()
+	}
+
+	return nil
+}
+
+// RegisterByEmail 邮箱验证码注册
+func (i *UserService) RegisterByEmail(ctx context.Context, req *EmailRegisterReq, registerIP string) error {
+	if err := i.validate.Struct(req); err != nil {
+		return err
+	}
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+	code := strings.TrimSpace(req.Code)
+
+	l := i.locker.New()
+	if err := l.Lock("user:register:" + email); err != nil {
+		return err
+	}
+	defer l.Unlock()
+
+	codeKey := registerCodeKeyPrefix + email
+	stored, err := i.redisClient.Get(ctx, codeKey).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return EmailCodeInvalid()
+		}
+		return err
+	}
+	if stored != code {
+		return EmailCodeInvalid()
+	}
+
+	if i.userRepo.WithContext(ctx).UniqueByEmail(0, email) {
+		return UserExists()
+	}
+	if i.userRepo.WithContext(ctx).Unique(0, email, emailRegisterSource) {
+		return UserExists()
+	}
+
+	now := time.Now()
+	user := model.User{
+		Username:   email,
+		Email:      email,
+		Nickname:   req.NickName,
+		Status:     1,
+		Source:     emailRegisterSource,
+		RegisterIP: registerIP,
+		VerifiedAt: &now,
+	}
+	if user.Nickname == "" {
+		user.Nickname = email
+	}
+	user.SetPassword(req.Password)
+
+	if err = i.userRepo.WithContext(ctx).Save(&user); err != nil {
+		return err
+	}
+
+	_ = i.redisClient.Del(ctx, codeKey).Err()
+	return nil
+}
+
+// Register 注册用户（保留兼容，请使用 RegisterByEmail）
 func (i *UserService) Register(ctx context.Context, req *model.User) error {
 	if err := i.validate.Struct(req); err != nil {
 		return err
@@ -489,6 +641,19 @@ func (i *UserService) Register(ctx context.Context, req *model.User) error {
 	}
 
 	return i.userRepo.WithContext(ctx).Save(&user)
+}
+
+func generateNumericCode(length int) (string, error) {
+	const digits = "0123456789"
+	var sb strings.Builder
+	for n := 0; n < length; n++ {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(digits))))
+		if err != nil {
+			return "", err
+		}
+		sb.WriteByte(digits[num.Int64()])
+	}
+	return sb.String(), nil
 }
 
 // UpdateUser 更新用户

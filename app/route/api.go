@@ -140,6 +140,9 @@ func InitApi(app foundation.Application, appName string) {
 
 			r.Use(middleware.RateLimiter(time.Second*1, 2)).Post("/users/login", router.AccessPublic, userHandle.Login).Name("用户登录").WithoutOperateLog().Build()
 
+			r.Use(middleware.RateLimiter(time.Second*1, 2)).Post("/users/register/send-code", router.AccessPublic, userHandle.SendRegisterCode).Name("发送注册验证码").WithoutOperateLog().Build()
+			r.Use(middleware.RateLimiter(time.Second*1, 2)).Post("/users/register", router.AccessPublic, userHandle.Register).Name("邮箱注册").WithoutOperateLog().Build()
+
 			r.Put("/users/me/password", router.AccessAuthenticated, userHandle.ChangePassword).Name("修改我的密码").Build()
 			r.Get("/users/me/menus", router.AccessAuthenticated, userHandle.GetMyMenus).Name("我的菜单").Build()
 			r.Get("/users/me/permissions", router.AccessAuthenticated, userHandle.GetMyPermissions).Name("我的权限").Build()

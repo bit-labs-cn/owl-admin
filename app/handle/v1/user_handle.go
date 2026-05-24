@@ -380,8 +380,49 @@ func (i *UserHandle) Login(ctx *gin.Context) {
 	})
 	router.Success(ctx, login)
 }
-func (i *UserHandle) Register(ctx *gin.Context) {
 
+// @Summary		发送注册验证码
+// @Description	向邮箱发送注册验证码
+// @Tags			用户管理
+// @Accept			json
+// @Produce		json
+// @Param			request	body		service.SendRegisterCodeReq	true	"发送验证码请求"
+// @Success		200		{object}	router.Resp					"操作成功"
+// @Failure		400		{object}	router.Resp					"参数错误"
+// @Router			/api/v1/users/register/send-code [POST]
+func (i *UserHandle) SendRegisterCode(ctx *gin.Context) {
+	var req service.SendRegisterCodeReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	if err := i.userSvc.SendRegisterCode(ctx.Request.Context(), &req); err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	router.Success(ctx, nil)
+}
+
+// @Summary		邮箱注册
+// @Description	使用邮箱验证码完成注册
+// @Tags			用户管理
+// @Accept			json
+// @Produce		json
+// @Param			request	body		service.EmailRegisterReq	true	"注册请求"
+// @Success		200		{object}	router.Resp				"操作成功"
+// @Failure		400		{object}	router.Resp				"参数错误"
+// @Router			/api/v1/users/register [POST]
+func (i *UserHandle) Register(ctx *gin.Context) {
+	var req service.EmailRegisterReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	if err := i.userSvc.RegisterByEmail(ctx.Request.Context(), &req, ctx.ClientIP()); err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	router.Success(ctx, nil)
 }
 
 // @Summary		获取当前用户信息
