@@ -129,6 +129,6 @@ func (i DeptService) RetrieveDepts(ctx context.Context, req *RetrieveDeptReq) (c
 
 	return i.deptRepo.WithContext(ctx).Retrieve(req.Page, req.PageSize, func(tx *gorm.DB) {
 		db.AppendWhereFromStruct(tx, req)
-		tx.Order("created_at desc")
+		tx.Order("sort asc, id asc")
 	})
 }
