@@ -18,6 +18,7 @@ import (
 	"bit-labs.cn/owl-admin/app/repository"
 	errContract "bit-labs.cn/owl/contract/errors"
 	mailerContract "bit-labs.cn/owl/contract/mailer"
+	"bit-labs.cn/owl/provider/captcha"
 	"bit-labs.cn/owl/provider/conf"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/mailer"
@@ -40,6 +41,7 @@ const (
 	CodeEmailCodeInvalid  = "EMAIL_CODE_INVALID"
 	CodeEmailCodeTooOften = "EMAIL_CODE_TOO_OFTEN"
 	CodeEmailSendFailed   = "EMAIL_SEND_FAILED"
+	CodeCaptchaInvalid    = "CAPTCHA_INVALID"
 
 	emailRegisterSource    = "email"
 	registerCodeKeyPrefix  = "register:code:"
@@ -47,6 +49,7 @@ const (
 	registerCodeTTL        = 10 * time.Minute
 	registerCooldownTTL    = 60 * time.Second
 	registerCodeLength     = 6
+	trustedDeviceTTL       = 7 * 24 * time.Hour
 )
 
 func UserExists() *errContract.BizError {
@@ -67,6 +70,10 @@ func EmailCodeTooOften() *errContract.BizError {
 
 func EmailSendFailed() *errContract.BizError {
 	return errContract.NewBizError(CodeEmailSendFailed, "邮件发送失败")
+}
+
+func CaptchaInvalid() *errContract.BizError {
+	return errContract.NewBizError(CodeCaptchaInvalid, "验证码错误或已过期")
 }
 
 type UserBatchFields struct {
@@ -104,8 +111,25 @@ type RetrieveUserReq struct {
 }
 
 type LoginReq struct {
-	Username string `json:"username" validate:"required" label:"用户名"` // 用户名
-	Password string `json:"password" validate:"required" label:"密码"`  // 密码
+	Username string         `json:"username" validate:"required" label:"用户名"` // 用户名
+	Password string         `json:"password" validate:"required" label:"密码"`  // 密码
+	DeviceID string         `json:"deviceId" validate:"omitempty,max=64" label:"设备指纹"`
+	Captcha  *CaptchaAnswer `json:"captcha" validate:"omitempty" label:"验证码"`
+}
+
+// CaptchaAnswer 登录验证码答案（字段随 type 不同而使用）
+type CaptchaAnswer struct {
+	CaptchaId string               `json:"captchaId" validate:"required" label:"验证码ID"`
+	X         int                  `json:"x" label:"滑块X坐标"`
+	Y         int                  `json:"y" label:"滑块Y坐标"`
+	Angle     int                  `json:"angle" label:"旋转角度"`
+	Points    []captcha.ClickPoint `json:"points" label:"点选坐标"`
+}
+
+// LoginContext 登录请求上下文（由 handle 注入）
+type LoginContext struct {
+	IP        string
+	UserAgent string
 }
 
 // SendRegisterCodeReq 发送注册验证码
@@ -123,7 +147,9 @@ type EmailRegisterReq struct {
 
 type LoginResp struct {
 	*model.User
-	AccessToken string `json:"accessToken"` // 访问令牌
+	AccessToken string `json:"accessToken,omitempty"` // 访问令牌
+	NeedCaptcha bool   `json:"needCaptcha,omitempty"` // 是否需要验证码
+	CaptchaType string `json:"captchaType,omitempty"` // 验证码类型
 }
 
 type ChangePasswordReq struct {
@@ -159,19 +185,23 @@ type UserService struct {
 	menuManger *router.MenuRepository
 	jwtSvc     *jwt.JWTService
 	db.BaseRepository[model.User]
-	roleSvc     *RoleService
-	userRepo    repository.UserRepositoryInterface
-	eventBus    EventBus.Bus
-	configure   *conf.Configure
-	locker      owlredis.LockerFactory
-	validate    *validatorv10.Validate
-	redisClient redis.UniversalClient
-	mailer      *mailer.MailerManager
+	roleSvc           *RoleService
+	userRepo          repository.UserRepositoryInterface
+	trustedDeviceRepo repository.TrustedDeviceRepositoryInterface
+	captchaSvc        *captcha.Service
+	eventBus          EventBus.Bus
+	configure         *conf.Configure
+	locker            owlredis.LockerFactory
+	validate          *validatorv10.Validate
+	redisClient       redis.UniversalClient
+	mailer            *mailer.MailerManager
 }
 
 func NewUserService(
 	roleSvc *RoleService,
 	userRepo repository.UserRepositoryInterface,
+	trustedDeviceRepo repository.TrustedDeviceRepositoryInterface,
+	captchaSvc *captcha.Service,
 	tx *gorm.DB,
 	eventBus EventBus.Bus,
 	configure *conf.Configure,
@@ -183,23 +213,25 @@ func NewUserService(
 	mailerMgr *mailer.MailerManager,
 ) *UserService {
 	return &UserService{
-		db:             tx,
-		roleSvc:        roleSvc,
-		userRepo:       userRepo,
-		BaseRepository: db.NewBaseRepository[model.User](tx),
-		eventBus:       eventBus,
-		configure:      configure,
-		jwtSvc:         jwtSvc,
-		menuManger:     menuManager,
-		locker:         locker,
-		validate:       validate,
-		redisClient:    redisClient,
-		mailer:         mailerMgr,
+		db:                tx,
+		roleSvc:           roleSvc,
+		userRepo:          userRepo,
+		trustedDeviceRepo: trustedDeviceRepo,
+		captchaSvc:        captchaSvc,
+		BaseRepository:    db.NewBaseRepository[model.User](tx),
+		eventBus:          eventBus,
+		configure:         configure,
+		jwtSvc:            jwtSvc,
+		menuManger:        menuManager,
+		locker:            locker,
+		validate:          validate,
+		redisClient:       redisClient,
+		mailer:            mailerMgr,
 	}
 }
 
 // Login 用户登录
-func (i *UserService) Login(ctx context.Context, req *LoginReq) (resp *LoginResp, err error) {
+func (i *UserService) Login(ctx context.Context, req *LoginReq, loginCtx *LoginContext) (resp *LoginResp, err error) {
 	if err := i.validate.Struct(req); err != nil {
 		return nil, err
 	}
@@ -209,16 +241,120 @@ func (i *UserService) Login(ctx context.Context, req *LoginReq) (resp *LoginResp
 		return nil, err
 	}
 
-	// 校验密码是否正确
+	ip := ""
+	ua := ""
+	if loginCtx != nil {
+		ip = loginCtx.IP
+		ua = loginCtx.UserAgent
+	}
+
+	needCaptcha := i.evaluateRisk(ctx, user.ID, req.DeviceID, ip)
+	captchaVerified := false
+	if needCaptcha && i.captchaSvc.Enabled() {
+		captchaType := i.captchaSvc.DefaultType()
+		if req.Captcha == nil || req.Captcha.CaptchaId == "" {
+			return &LoginResp{
+				NeedCaptcha: true,
+				CaptchaType: captchaType,
+			}, nil
+		}
+		ok, verifyErr := i.captchaSvc.Verify(ctx, &captcha.VerifyReq{
+			Type:      captchaType,
+			CaptchaId: req.Captcha.CaptchaId,
+			X:         req.Captcha.X,
+			Y:         req.Captcha.Y,
+			Angle:     req.Captcha.Angle,
+			Points:    req.Captcha.Points,
+		})
+		if verifyErr != nil {
+			return nil, verifyErr
+		}
+		if !ok {
+			return nil, CaptchaInvalid()
+		}
+		captchaVerified = true
+	}
+
 	if ok := utils.BcryptCheck(req.Password, user.Password); !ok {
 		return nil, ErrLogin
 	}
 
 	token, err := i.jwtSvc.GenerateToken(user)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.DeviceID != "" {
+		i.recordTrustedDevice(ctx, user.ID, req.DeviceID, ip, ua, captchaVerified)
+	}
+
 	return &LoginResp{
 		User:        user,
 		AccessToken: token,
-	}, err
+	}, nil
+}
+
+// evaluateRisk 判定当前登录是否需要验证码
+func (i *UserService) evaluateRisk(ctx context.Context, userID uint, deviceID, ip string) bool {
+	if deviceID == "" {
+		return true
+	}
+
+	device, err := i.trustedDeviceRepo.WithContext(ctx).FindByUserAndDevice(userID, deviceID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return true
+		}
+		return true
+	}
+
+	if !sameIPSegment(device.LastIP, ip) {
+		return true
+	}
+
+	if time.Since(device.VerifiedAt) > trustedDeviceTTL {
+		return true
+	}
+
+	return false
+}
+
+// recordTrustedDevice 登录成功后更新可信设备记录
+func (i *UserService) recordTrustedDevice(ctx context.Context, userID uint, deviceID, ip, ua string, captchaVerified bool) {
+	now := time.Now()
+	record := &model.TrustedDevice{
+		UserID:      userID,
+		DeviceID:    deviceID,
+		LastIP:      ip,
+		LastUA:      ua,
+		LastLoginAt: now,
+	}
+
+	if captchaVerified {
+		record.VerifiedAt = now
+	} else {
+		existing, err := i.trustedDeviceRepo.WithContext(ctx).FindByUserAndDevice(userID, deviceID)
+		if err == nil {
+			record.VerifiedAt = existing.VerifiedAt
+		} else {
+			record.VerifiedAt = now
+		}
+	}
+
+	_ = i.trustedDeviceRepo.WithContext(ctx).Upsert(record)
+}
+
+// sameIPSegment 比较两个 IP 是否处于同一网段（IPv4 /24）
+func sameIPSegment(a, b string) bool {
+	if a == b {
+		return true
+	}
+	partsA := strings.Split(a, ".")
+	partsB := strings.Split(b, ".")
+	if len(partsA) == 4 && len(partsB) == 4 {
+		return partsA[0] == partsB[0] && partsA[1] == partsB[1] && partsA[2] == partsB[2]
+	}
+	return false
 }
 
 // LoginByThirdParty 第三方用户登录

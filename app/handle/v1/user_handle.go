@@ -360,9 +360,16 @@ func (i *UserHandle) Login(ctx *gin.Context) {
 		return
 	}
 
-	login, err := i.userSvc.Login(ctx.Request.Context(), &req)
+	login, err := i.userSvc.Login(ctx.Request.Context(), &req, &service.LoginContext{
+		IP:        ctx.ClientIP(),
+		UserAgent: ctx.GetHeader("User-Agent"),
+	})
 	if err != nil {
 		router.Fail(ctx, err)
+		return
+	}
+	if login.NeedCaptcha {
+		router.Success(ctx, login)
 		return
 	}
 	// 记录登录日志

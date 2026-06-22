@@ -104,6 +104,7 @@ func (i *SubAppAdmin) Binds() []any {
 		repository.NewRoleRepository,
 		repository.NewPositionRepository,
 		repository.NewUserRepository,
+		repository.NewTrustedDeviceRepository,
 		repository.NewAreaRepository,
 		repository.NewAppVersionRepository,
 		service.NewPositionService,

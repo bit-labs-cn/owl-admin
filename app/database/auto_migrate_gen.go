@@ -29,5 +29,6 @@ func Migrate(db *gorm.DB) {
 		&UserGroup{},
 		&UserGroupUser{},
 		&UserDept{},
+		&TrustedDevice{},
 	)
 }
