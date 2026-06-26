@@ -13,6 +13,7 @@ const props = withDefaults(
       id: "",
       name: "",
       code: "",
+      sort: 0,
       status: 1,
       remark: ""
     }),
@@ -140,6 +141,17 @@ watch(
               v-model="newFormInline.code"
               clearable
               placeholder="请输入用户组编码"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="排序">
+            <el-input-number
+              v-model="newFormInline.sort"
+              class="!w-full"
+              :min="0"
+              :max="9999"
+              controls-position="right"
             />
           </el-form-item>
         </el-col>

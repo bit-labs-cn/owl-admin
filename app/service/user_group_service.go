@@ -31,9 +31,10 @@ func UserGroupNotFound() *errContract.BizError {
 type CreateUserGroupReq struct {
 	Name    string   `json:"name" validate:"required,min=2,max=32" label:"用户组名称"`          // 用户组名称
 	Code    string   `json:"code" validate:"required,alphanum,min=2,max=32" label:"用户组编码"` // 用户组编码
-	Status  int      `json:"status" validate:"omitempty,oneof=1 2" label:"状态"`              // 状态(1启用,2禁用)
-	Remark  string   `json:"remark" validate:"omitempty,max=255" label:"备注"`                // 备注
-	UserIDs []string `json:"userIDs"`                                                        // 关联用户ID列表
+	Sort    uint     `json:"sort" validate:"omitempty" label:"排序"`                         // 排序
+	Status  int      `json:"status" validate:"omitempty,oneof=1 2" label:"状态"`             // 状态(1启用,2禁用)
+	Remark  string   `json:"remark" validate:"omitempty,max=255" label:"备注"`               // 备注
+	UserIDs []string `json:"userIDs"`                                                      // 关联用户ID列表
 }
 
 type UpdateUserGroupReq struct {
@@ -45,14 +46,13 @@ type RetrieveUserGroupReq struct {
 	router.PageReq
 	NameLike string `json:"name" form:"name" validate:"omitempty,max=32" label:"用户组名称"`          // 名称模糊搜索
 	CodeLike string `json:"code" form:"code" validate:"omitempty,alphanum,max=32" label:"用户组编码"` // 编码模糊搜索
-	Status   uint8  `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"`       // 状态(1启用,2禁用)
+	Status   uint8  `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"`      // 状态(1启用,2禁用)
 }
 
 type AssignUsersToGroupReq struct {
 	GroupID uint     `json:"groupID,string" validate:"required" label:"用户组ID"` // 用户组ID
 	UserIDs []string `json:"userIDs" validate:"required" label:"用户ID列表"`       // 用户ID列表
 }
-
 
 type UserGroupService struct {
 	db.BaseRepository[model.UserGroup]
@@ -164,7 +164,7 @@ func (i *UserGroupService) RetrieveUserGroups(ctx context.Context, req *Retrieve
 
 	return i.repo.WithContext(ctx).Retrieve(req.Page, req.PageSize, func(tx *gorm.DB) {
 		db.AppendWhereFromStruct(tx, req)
-		tx.Order("created_at desc")
+		tx.Order("sort asc, id asc")
 	})
 }
 

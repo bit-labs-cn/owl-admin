@@ -13,6 +13,7 @@ type UserGroup struct {
 	db.BaseModel
 	Name   string `gorm:"comment:用户组名称;type:string;size:128" json:"name"`
 	Code   string `gorm:"comment:用户组编码;type:string;size:64" json:"code"`
+	Sort   uint   `gorm:"comment:排序" json:"sort"`
 	Status int    `gorm:"comment:状态(1启用,2禁用)" json:"status"`
 	Remark string `gorm:"comment:用户组描述" json:"remark"`
 

@@ -17,6 +17,7 @@ export function createColumns({
     tableIndexColumn(pagination),
     { label: "用户组名称", prop: "name", minWidth: 120 },
     { label: "用户组编码", prop: "code", minWidth: 120 },
+    { label: "排序", prop: "sort", minWidth: 70 },
     {
       label: "状态",
       cellRenderer: scope => (

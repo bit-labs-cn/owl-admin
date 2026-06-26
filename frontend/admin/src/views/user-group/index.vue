@@ -77,6 +77,7 @@ async function openDialog(title = "新增", row?: UserGroupFormData) {
         id: row?.id ?? "",
         name: row?.name ?? "",
         code: row?.code ?? "",
+        sort: row?.sort ?? 0,
         status: row?.status ?? 1,
         remark: row?.remark ?? ""
       },

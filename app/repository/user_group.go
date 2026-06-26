@@ -89,7 +89,7 @@ type UserGroupItem struct {
 }
 
 func (i *UserGroupRepository) Options() (result []UserGroupItem, err error) {
-	err = i.db.Model(&model.UserGroup{}).Where("status = 1").Scan(&result).Error
+	err = i.db.Model(&model.UserGroup{}).Where("status = 1").Order("sort asc, id asc").Scan(&result).Error
 	return
 }
 
