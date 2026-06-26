@@ -1,15 +1,18 @@
 import dayjs from "dayjs";
 import userAvatar from "@bit-labs.cn/owl-ui/assets/user.jpg";
 import type { Ref } from "vue";
+import { tableIndexColumn, type TablePaginationInput } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
 
 export function createColumns({
   switchLoadMap,
   switchStyle,
-  onChange
+  onChange,
+  pagination
 }: {
   switchLoadMap: Ref<Record<number, { loading: boolean }>>;
   switchStyle: Ref<Record<string, string>>;
   onChange: (scope: any) => void;
+  pagination?: TablePaginationInput;
 }): TableColumnList {
   return [
     {
@@ -18,6 +21,7 @@ export function createColumns({
       fixed: "left",
       reserveSelection: true
     },
+    tableIndexColumn(pagination),
     {
       label: "用户头像",
       prop: "avatar",

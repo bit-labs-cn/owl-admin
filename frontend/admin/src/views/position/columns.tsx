@@ -1,14 +1,18 @@
 import dayjs from "dayjs";
 import type { Ref } from "vue";
+import { tableIndexColumn, type TablePaginationInput } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
 
 export function createColumns({
   switchLoadMap,
-  onChange
+  onChange,
+  pagination
 }: {
   switchLoadMap: Ref<Record<number, { loading: boolean }>>;
   onChange: (scope: any) => void;
+  pagination?: TablePaginationInput;
 }): TableColumnList {
   return [
+    tableIndexColumn(pagination),
     { label: "岗位编号", prop: "id", width: 100 },
     { label: "岗位名称", prop: "name", minWidth: 160 },
     { label: "备注", prop: "remark", align: "left", minWidth: 200 },

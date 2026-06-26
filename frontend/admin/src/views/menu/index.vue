@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, h } from "vue";
 import { useMenuList } from "./useMenuList";
-import { columns } from "./columns";
+import { createColumns } from "./columns";
 import MenuForm from "./MenuForm.vue";
 import type { MenuFormData } from "./types";
 import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
@@ -33,6 +33,7 @@ const {
   formatHigherMenuOptions,
   handleSelectionChange
 } = useMenuList();
+const columns = createColumns();
 
 function onFullscreen() {
   tableRef.value.setAdaptive();

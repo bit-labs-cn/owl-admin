@@ -1,10 +1,13 @@
 import { h } from "vue";
 import { transformI18n } from "@bit-labs.cn/owl-ui/plugins/i18n";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
+import { tableIndexColumn } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
 
-export const columns: TableColumnList = [
-  {
-    label: "菜单名称",
+export function createColumns(): TableColumnList {
+  return [
+    tableIndexColumn(),
+    {
+      label: "菜单名称",
     prop: "title",
     align: "left",
     cellRenderer: ({ row }) => (
@@ -53,4 +56,5 @@ export const columns: TableColumnList = [
     )
   },
   { label: "排序", prop: "rank", width: 100 }
-];
+  ];
+}

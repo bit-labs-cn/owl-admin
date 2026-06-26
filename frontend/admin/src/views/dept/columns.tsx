@@ -1,8 +1,10 @@
 import dayjs from "dayjs";
 import type { Ref } from "vue";
+import { tableIndexColumn } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
 
 export function createColumns(tagStyle: Ref<(status: number) => Record<string, string>>): TableColumnList {
   return [
+    tableIndexColumn(),
     {
       label: "部门名称",
       prop: "name",

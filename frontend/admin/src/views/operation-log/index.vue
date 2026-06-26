@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useOperationLogList } from "./useOperationLogList";
-import { columns } from "./columns";
+import { createColumns } from "./columns";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 
@@ -23,6 +23,7 @@ const {
   handleSizeChange,
   handleCurrentChange
 } = useOperationLogList();
+const columns = computed(() => createColumns(pagination));
 </script>
 
 <template>

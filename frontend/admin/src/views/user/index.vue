@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import DeptTree from "./DeptTree.vue";
 import { useUserList } from "./useUserList";
 import { createColumns } from "./columns";
@@ -50,7 +50,7 @@ const {
   handleSelectionChange
 } = useUserList(tableRef, treeRef);
 
-const columns = createColumns({ switchLoadMap, switchStyle, onChange });
+const columns = computed(() => createColumns({ switchLoadMap, switchStyle, onChange, pagination }));
 </script>
 
 <template>

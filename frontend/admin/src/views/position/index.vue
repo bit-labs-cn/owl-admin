@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, h } from "vue";
+import { ref, h, computed } from "vue";
 import { usePositionList } from "./usePositionList";
 import { createColumns } from "./columns";
 import PositionForm from "./PositionForm.vue";
@@ -34,7 +34,7 @@ const {
   handleCurrentChange
 } = usePositionList();
 
-const columns = createColumns({ switchLoadMap, onChange });
+const columns = computed(() => createColumns({ switchLoadMap, onChange, pagination }));
 
 function openDialog(title = "新增", row?: PositionFormData) {
   addDialog({

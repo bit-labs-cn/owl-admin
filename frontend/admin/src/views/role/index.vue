@@ -90,7 +90,7 @@ const {
   handleSelectionChange
 } = useRoleList(treeRef);
 
-const columns = createColumns({ switchLoadMap, switchStyle, onChange });
+const columns = computed(() => createColumns({ switchLoadMap, switchStyle, onChange, pagination }));
 
 function tearDownTreeWrapObserver() {
   treeWrapResizeObserver?.disconnect();

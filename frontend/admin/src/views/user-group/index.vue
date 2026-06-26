@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, h } from "vue";
+import { ref, h, computed } from "vue";
 import { useUserGroupList } from "./useUserGroupList";
 import { createColumns } from "./columns";
 import UserGroupForm from "./UserGroupForm.vue";
@@ -41,7 +41,9 @@ const {
   handleCurrentChange
 } = useUserGroupList();
 
-const columns = createColumns({ switchLoadMap, switchStyle, onBeforeStatusChange });
+const columns = computed(() =>
+  createColumns({ switchLoadMap, switchStyle, onBeforeStatusChange, pagination })
+);
 
 function openUserListDialog(row) {
   addDialog({

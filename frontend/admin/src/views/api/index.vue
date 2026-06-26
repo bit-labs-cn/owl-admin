@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useApiList } from "./useApiList";
-import { columns } from "./columns";
+import { createColumns } from "./columns";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 
@@ -15,6 +15,7 @@ const formRef = ref();
 const tableRef = ref();
 const { form, loading, dataList, onSearch, resetForm, handleSelectionChange } =
   useApiList();
+const columns = createColumns();
 </script>
 
 <template>
