@@ -153,6 +153,7 @@ const columns = createColumns({ switchLoadMap, switchStyle, onChange });
             </el-popconfirm>
           </div>
           <pure-table
+            border
             ref="tableRef"
             row-key="id"
             adaptive

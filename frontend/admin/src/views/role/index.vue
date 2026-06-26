@@ -266,6 +266,7 @@ function openDialog(title = "新增", row?: RoleFormData) {
         </template>
         <template v-slot="{ size, dynamicColumns }">
           <pure-table
+            border
             ref="tableRef"
             align-whole="center"
             showOverflowTooltip

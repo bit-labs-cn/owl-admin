@@ -133,6 +133,7 @@ function handleDelete(row) {
       </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
+          border
           ref="tableRef"
           adaptive
           :adaptiveConfig="{ offsetBottom: 108 }"

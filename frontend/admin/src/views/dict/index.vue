@@ -79,6 +79,7 @@ function resetForm(el) {
           </div>
         </div>
         <pure-table
+          border
           id="dictTable"
           row-key="id"
           :data="dict.data()"
@@ -113,6 +114,7 @@ function resetForm(el) {
           </div>
         </div>
         <pure-table
+          border
           id="dictItemTable"
           row-key="id"
           :data="dict.itemData()"

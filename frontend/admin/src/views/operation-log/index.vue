@@ -104,6 +104,7 @@ const {
     <PureTableBar title="操作日志" :columns="columns" @refresh="onSearch">
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
+          border
           ref="tableRef"
           adaptive
           :adaptiveConfig="{ offsetBottom: 108 }"

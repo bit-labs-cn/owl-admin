@@ -56,6 +56,7 @@ const { form, loading, dataList, onSearch, resetForm, handleSelectionChange } =
     >
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
+          border
           ref="tableRef"
           adaptive
           :adaptiveConfig="{ offsetBottom: 45 }"
