@@ -5,7 +5,7 @@ import "time"
 type LoginLog struct {
 	Id        int        `json:"id,string" gorm:"primaryKey"`
 	Ip        string     `json:"ip" gorm:"column:ip"`
-	LoginTime int        `json:"loginTime" gorm:"column:login_time"`
+	LoginTime string     `json:"loginTime" gorm:"column:login_time;type:string;size:19"`
 	UserId    int        `json:"userId" gorm:"column:user_id"`
 	UserName  string     `json:"userName" gorm:"column:user_name"`
 	UserType  string     `json:"userType" gorm:"column:user_type"`

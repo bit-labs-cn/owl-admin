@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"time"
-
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/provider/db"
@@ -18,19 +16,17 @@ type UserHandle struct {
 	userSvc  *service.UserService
 	roleSvc  *service.RoleService
 	menuRepo *router.MenuRepository
-	logSvc   *service.LogService
 }
 
 func (i *UserHandle) ModuleName() (string, string) {
 	return "user", "用户管理"
 }
 
-func NewUserHandle(userService *service.UserService, roleService *service.RoleService, manager *router.MenuRepository, logSvc *service.LogService) *UserHandle {
+func NewUserHandle(userService *service.UserService, roleService *service.RoleService, manager *router.MenuRepository) *UserHandle {
 	return &UserHandle{
 		userSvc:  userService,
 		roleSvc:  roleService,
 		menuRepo: manager,
-		logSvc:   logSvc,
 	}
 }
 
@@ -368,23 +364,6 @@ func (i *UserHandle) Login(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
-	if login.NeedCaptcha {
-		router.Success(ctx, login)
-		return
-	}
-	// 记录登录日志
-	var uType = "user"
-	if login.User != nil && login.User.IsSuperAdmin {
-		uType = "super_admin"
-	}
-	_ = i.logSvc.CreateLoginLog(ctx.Request.Context(), &service.CreateLoginLogReq{
-		UserId:    int(login.User.ID),
-		UserName:  login.User.Username,
-		UserType:  uType,
-		LoginTime: int(time.Now().Unix()),
-		Ip:        ctx.ClientIP(),
-		UserAgent: ctx.GetHeader("User-Agent"),
-	})
 	router.Success(ctx, login)
 }
 

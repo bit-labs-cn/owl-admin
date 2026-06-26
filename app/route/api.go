@@ -8,9 +8,11 @@ import (
 	v1 "bit-labs.cn/owl-admin/app/handle/v1"
 	middleware2 "bit-labs.cn/owl-admin/app/middleware"
 	"bit-labs.cn/owl-admin/app/provider/jwt"
+	"bit-labs.cn/owl-admin/app/repository"
 	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/contract/foundation"
 	"bit-labs.cn/owl/contract/log"
+	"bit-labs.cn/owl/provider/captcha"
 	"bit-labs.cn/owl/provider/router"
 	"bit-labs.cn/owl/provider/router/middleware"
 	"bit-labs.cn/owl/provider/storage"
@@ -115,6 +117,9 @@ func InitApi(app foundation.Application, appName string) {
 		jwtSvc *jwt.JWTService,
 		logService *service.LogService,
 		log log.Logger,
+		captchaSvc *captcha.Service,
+		userSvc *service.UserService,
+		trustedDeviceRepo repository.TrustedDeviceRepositoryInterface,
 	) {
 
 		gv1 := engine.Group("/api/v1", middleware2.PermissionCheck(enforcer, jwtSvc))
@@ -138,10 +143,16 @@ func InitApi(app foundation.Application, appName string) {
 				Icon:          "ep:user",
 			})
 
-			r.Use(middleware.RateLimiter(time.Second*1, 2)).Post("/users/login", router.AccessPublic, userHandle.Login).Name("用户登录").WithoutOperateLog().Build()
+			r.Use(middleware.RateLimiter(time.Second*1, 2)).
+				Use(middleware2.LoginCaptchaGuard(userSvc, trustedDeviceRepo, captchaSvc)).
+				Post("/users/login", router.AccessPublic, userHandle.Login).Name("用户登录").WithoutOperateLog().Build()
 
-			r.Use(middleware.RateLimiter(time.Second*1, 2)).Post("/users/register/send-code", router.AccessPublic, userHandle.SendRegisterCode).Name("发送注册验证码").WithoutOperateLog().Build()
-			r.Use(middleware.RateLimiter(time.Second*1, 2)).Post("/users/register", router.AccessPublic, userHandle.Register).Name("邮箱注册").WithoutOperateLog().Build()
+			r.Use(middleware.RateLimiter(time.Second*1, 2)).
+				Use(captcha.GuardAlways(captchaSvc)).
+				Post("/users/register/send-code", router.AccessPublic, userHandle.SendRegisterCode).Name("发送注册验证码").WithoutOperateLog().Build()
+			r.Use(middleware.RateLimiter(time.Second*1, 2)).
+				Use(captcha.GuardAlways(captchaSvc)).
+				Post("/users/register", router.AccessPublic, userHandle.Register).Name("邮箱注册").WithoutOperateLog().Build()
 
 			r.Put("/users/me/password", router.AccessAuthenticated, userHandle.ChangePassword).Name("修改我的密码").Build()
 			r.Get("/users/me/menus", router.AccessAuthenticated, userHandle.GetMyMenus).Name("我的菜单").Build()

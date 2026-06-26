@@ -40,9 +40,7 @@ export function useLoginLogList() {
     if (!isAllEmpty(form.ip)) payload.ip = form.ip;
     if (!isAllEmpty(form.userType)) payload.userType = form.userType;
     if (form.loginTime && form.loginTime.length === 2) {
-      const start = Math.floor(new Date(form.loginTime[0]).getTime() / 1000);
-      const end = Math.floor(new Date(form.loginTime[1]).getTime() / 1000);
-      payload.loginTime = `${start},${end}`;
+      payload.loginTime = `${form.loginTime[0]},${form.loginTime[1]}`;
     }
 
     const { data, pageSize, currentPage, total } =

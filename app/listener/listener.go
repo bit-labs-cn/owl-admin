@@ -1,6 +1,8 @@
 package listener
 
 import (
+	"context"
+
 	"bit-labs.cn/owl"
 	"bit-labs.cn/owl-admin/app/event"
 	"bit-labs.cn/owl-admin/app/service"
@@ -13,7 +15,8 @@ import (
 )
 
 func Init(app foundation.Application) {
-	err := app.Invoke(func(bus EventBus.Bus, enforcer *casbin.SyncedEnforcer, log log.Logger, menuRepo *router.MenuRepository) {
+	err := app.Invoke(func(bus EventBus.Bus, enforcer *casbin.SyncedEnforcer, log log.Logger, menuRepo *router.MenuRepository, logSvc *service.LogService) {
+
 		bus.Subscribe(event.AssignRoleToUser, func(req *service.AssignRoleToUser) {
 			userID := cast.ToString(req.UserID)
 			var rules [][]string
@@ -40,6 +43,30 @@ func Init(app foundation.Application) {
 			}
 			_, err = enforcer.AddPolicies(rules)
 			if err != nil {
+				log.Error(err)
+			}
+		})
+
+		bus.Subscribe(event.UserLoginSuccess, func(evt *service.LoginSuccessEvent) {
+			if evt == nil {
+				return
+			}
+			uType := "user"
+			if evt.IsSuperAdmin {
+				uType = "super_admin"
+			}
+			reqCtx := evt.Ctx
+			if reqCtx == nil {
+				reqCtx = context.Background()
+			}
+			if err := logSvc.CreateLoginLog(reqCtx, &service.CreateLoginLogReq{
+				UserId:    int(evt.UserID),
+				UserName:  evt.Username,
+				UserType:  uType,
+				LoginTime: evt.LoginTime,
+				Ip:        evt.IP,
+				UserAgent: evt.UserAgent,
+			}); err != nil {
 				log.Error(err)
 			}
 		})

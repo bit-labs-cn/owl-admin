@@ -1,9 +1,10 @@
 package model
 
 import (
-	"bit-labs.cn/owl/utils"
 	"errors"
 	"time"
+
+	"bit-labs.cn/owl/utils"
 
 	"bit-labs.cn/owl/provider/db"
 
@@ -93,8 +94,8 @@ func (i *User) GetDeptIDs() []string {
 
 func NewSuperUser() User {
 	return User{
-		BaseModel:    db.BaseModel{ID: 19941996},
-		Username:     "glen",
+		BaseModel:    db.BaseModel{ID: 761297884},
+		Username:     "admin",
 		Nickname:     "超级管理员",
 		IsSuperAdmin: true,
 		Permissions:  []string{"*:*:*"},

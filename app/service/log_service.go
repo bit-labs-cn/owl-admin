@@ -41,7 +41,7 @@ type CreateLoginLogReq struct {
 	UserId    int    `json:"userId" validate:"required,gte=1" label:"用户编号"`            // 用户编号
 	UserName  string `json:"userName" validate:"required,max=64" label:"用户名称"`         // 用户名称
 	UserType  string `json:"userType" validate:"required,max=32" label:"用户类型"`         // 用户类型（user/super_admin）
-	LoginTime int    `json:"loginTime" validate:"required,gte=1" label:"登录时间"`         // 登录时间（Unix 秒）
+	LoginTime string `json:"loginTime" validate:"required" label:"登录时间"`               // 登录时间（Y-m-d H:i:s）
 	Ip        string `json:"ip" validate:"omitempty,max=64" label:"IP"`                // 客户端 IP
 	UserAgent string `json:"userAgent" validate:"omitempty,max=255" label:"UserAgent"` // 客户端 UA
 }
@@ -79,7 +79,7 @@ type RetrieveLoginLogsReq struct {
 	UserNameLike     string `json:"userName"`  // 用户名模糊
 	Ip               string `json:"ip"`        // IP 地址
 	UserType         string `json:"userType"`  // 用户类型（user/super_admin）
-	LoginTimeBetween string `json:"loginTime"` // 登录时间区间（Unix 秒，逗号分隔 "start,end"）
+	LoginTimeBetween string `json:"loginTime"` // 登录时间区间（Y-m-d H:i:s，逗号分隔 "start,end"）
 }
 
 func (i *LogService) RetrieveLoginLogs(ctx context.Context, req *RetrieveLoginLogsReq) (count int64, list []model.LoginLog, err error) {
