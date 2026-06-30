@@ -151,7 +151,6 @@ func InitApi(app foundation.Application, appName string) {
 				Use(captcha.GuardAlways(captchaSvc)).
 				Post("/users/register/send-code", router.AccessPublic, userHandle.SendRegisterCode).Name("发送注册验证码").WithoutOperateLog().Build()
 			r.Use(middleware.RateLimiter(time.Second*1, 2)).
-				Use(captcha.GuardAlways(captchaSvc)).
 				Post("/users/register", router.AccessPublic, userHandle.Register).Name("邮箱注册").WithoutOperateLog().Build()
 
 			r.Put("/users/me/password", router.AccessAuthenticated, userHandle.ChangePassword).Name("修改我的密码").Build()
