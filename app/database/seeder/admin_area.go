@@ -23,7 +23,6 @@ func InitAdminAreaData(db *gorm.DB) {
 		return
 	}
 	if count > 0 {
-		utils.PrintLnGreen("行政区划数据已存在，跳过初始化")
 		return
 	}
 
@@ -45,7 +44,5 @@ func InitAdminAreaData(db *gorm.DB) {
 
 	if err != nil {
 		utils.PrintLnRed("初始化行政区划数据失败: %v", err)
-	} else {
-		utils.PrintLnGreen("行政区划数据初始化成功")
 	}
 }
