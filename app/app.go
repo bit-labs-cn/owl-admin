@@ -19,7 +19,6 @@ import (
 	"bit-labs.cn/owl/provider/storage"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 
 	"bit-labs.cn/owl-admin/app/handle/oauth"
 	v1 "bit-labs.cn/owl-admin/app/handle/v1"
@@ -38,13 +37,17 @@ func (i *SubAppAdmin) Name() string {
 }
 
 func (i *SubAppAdmin) Bootstrap() {
-	i.app.Invoke(func(gdb *gorm.DB) {
-		migDB := gdb.Session(&gorm.Session{Logger: gdb.Config.Logger.LogMode(logger.Error)})
-		go database.Migrate(migDB)
-		go seeder.InitAllDictData(migDB)
-		go seeder.InitAdminAreaData(migDB)
-		listener.Init(i.app)
-	})
+	listener.Init(i.app)
+}
+
+func (i *SubAppAdmin) RegisterMigrate() []any { return database.Models() }
+
+func (i *SubAppAdmin) BeforeMigrate(db *gorm.DB) error { return nil }
+
+func (i *SubAppAdmin) AfterMigrate(db *gorm.DB) error {
+	go seeder.InitAllDictData(db)
+	go seeder.InitAdminAreaData(db)
+	return nil
 }
 
 func (i *SubAppAdmin) ServiceProviders() []foundation.ServiceProvider {
@@ -60,11 +63,11 @@ func (i *SubAppAdmin) ServiceProviders() []foundation.ServiceProvider {
 		&mailer.MailerServiceProvider{},
 	}
 }
-func (i *SubAppAdmin) Menu() []*router.Menu {
+func (i *SubAppAdmin) RegisterMenus() []*router.Menu {
 	return route.InitMenu()
 }
 
-func (i *SubAppAdmin) Commands() []*cobra.Command {
+func (i *SubAppAdmin) RegisterCommands() []*cobra.Command {
 	return []*cobra.Command{
 		cmd.Version,
 		cmd.GenPwd,

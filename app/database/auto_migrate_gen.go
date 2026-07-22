@@ -3,12 +3,11 @@ package database
 
 import (
 	. "bit-labs.cn/owl-admin/app/model"
-	"gorm.io/gorm"
 )
 
-func Migrate(db *gorm.DB) {
-	_ = db.Migrator().AutoMigrate(
-
+// Models 返回待自动迁移的 model 列表。
+func Models() []any {
+	return []any{
 		&Dict{},
 		&DictItem{},
 
@@ -30,5 +29,5 @@ func Migrate(db *gorm.DB) {
 		&UserGroupUser{},
 		&UserDept{},
 		&TrustedDevice{},
-	)
+	}
 }
