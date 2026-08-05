@@ -336,6 +336,11 @@ func (i *UserService) GetUserByName(ctx context.Context, name string) (*model.Us
 	return &user, nil
 }
 
+// GetMe 从数据库加载当前用户完整信息（含头像）
+func (i *UserService) GetMe(ctx context.Context, userID uint) (*model.User, error) {
+	return i.userRepo.WithContext(ctx).FindById(userID)
+}
+
 // GetMyPermissions 获取当前用户的权限标识列表
 func (i *UserService) GetMyPermissions(ctx context.Context, userID uint, isSuperAdmin bool) ([]string, error) {
 	if isSuperAdmin {

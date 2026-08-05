@@ -412,12 +412,23 @@ func (i *UserHandle) Register(ctx *gin.Context) {
 }
 
 // @Summary		获取当前用户信息
-// @Description	返回当前登录用户的基本信息
+// @Description	从数据库返回当前登录用户的完整信息（含头像）
 // @Tags			用户管理
 // @Produce		json
 // @Success		200	{object}	router.Resp{Data=model.User}	"操作成功"
 // @Router			/api/v1/users/me [GET]
 func (i *UserHandle) Me(ctx *gin.Context) {
 	value, _ := ctx.Get("user")
-	router.Success(ctx, value)
+	current := value.(*model.User)
+	// 配置超管不在库中，直接返回 JWT 中的用户信息
+	if current.IsSuperAdmin {
+		router.Success(ctx, current)
+		return
+	}
+	user, err := i.userSvc.GetMe(ctx.Request.Context(), current.ID)
+	if err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	router.Success(ctx, user)
 }
