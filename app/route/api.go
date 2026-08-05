@@ -177,7 +177,7 @@ func InitApi(app foundation.Application, appName string) {
 
 			r.Get("/users/:id", router.AccessAuthorized, userHandle.Detail).Name("获取用户详情").Build()
 			r.Put("/users/:id/reset", router.AccessSuperAdmin, userHandle.ResetPassword).Name("重置用户密码").Build()
-			r.Put("/users/:id/avatar", router.AccessAuthorized, userHandle.ChangeAvatar).Name("修改用户头像").Build()
+			r.Put("/users/:id/avatar", router.AccessAuthorized, userHandle.ChangeAvatar).WithoutOperateLog().Name("修改用户头像").Build()
 
 			r.Post("/users/:id/roles", router.AccessAuthorized, userHandle.AssignRolesToUser).Deps(
 				[]router.Dep{

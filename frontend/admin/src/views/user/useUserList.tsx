@@ -13,7 +13,9 @@ import { handleTree } from "@bit-labs.cn/owl-ui/utils/tree";
 import { message } from "@bit-labs.cn/owl-ui/utils/message";
 import userAvatar from "@bit-labs.cn/owl-ui/assets/user.jpg";
 import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import ReCropperPreview from "@bit-labs.cn/owl-ui/components/ReCropperPreview";
 import { getKeyList, isAllEmpty, deviceDetection } from "@pureadmin/utils";
+import { zxcvbn } from "@zxcvbn-ts/core";
 import { deptAPI } from "@bit-labs.cn/owl-admin-ui/api/dept";
 import { userManageAPI as userAPI } from "@bit-labs.cn/owl-admin-ui/api/user";
 import { roleAPI } from "@bit-labs.cn/owl-admin-ui/api/role";
@@ -216,7 +218,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
               userAPI.updateUser(curData).then(() => {
                 if (curData.avatar && curData.id) {
                   return userAPI
-                    .changeAvatar(Number(curData.id), curData.avatar)
+                    .changeAvatar(String(curData.id), curData.avatar)
                     .then(() => chores());
                 }
                 chores();
@@ -240,7 +242,8 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
         h(ReCropperPreview, {
           ref: cropRef,
           imgSrc: initialAvatar || userAvatar,
-          onCropper: (info: string) => (avatarInfo.value = info)
+          onCropper: ({ base64 }: { base64: string }) =>
+            (avatarInfo.value = base64)
         }),
       beforeSure: done => {
         if (avatarInfo.value) onDone(avatarInfo.value);
