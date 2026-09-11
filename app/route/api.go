@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu *router.Menu
+var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu *router.Menu
 
 func InitMenu() []*router.Menu {
 	return []*router.Menu{
@@ -91,6 +91,7 @@ func InitMenu() []*router.Menu {
 				menuMenu,
 				apiMenu,
 				dictMenu,
+				appVersionMenu,
 			},
 		},
 	}
@@ -111,6 +112,7 @@ func InitApi(app foundation.Application, appName string) {
 		areaHandle *v1.AreaHandle,
 		logHandle *v1.LogHandle,
 		appUpgradeHandle *v1.AppUpgradeHandle,
+		appVersionHandle *v1.AppVersionHandle,
 		enforcer *casbin.SyncedEnforcer,
 		oauthHandle *oauth.Handle,
 		engine *gin.Engine,
@@ -176,7 +178,7 @@ func InitApi(app foundation.Application, appName string) {
 			).Name("分页获取用户").Build()
 
 			r.Get("/users/:id", router.AccessAuthorized, userHandle.Detail).Name("获取用户详情").Build()
-			r.Put("/users/:id/reset", router.AccessSuperAdmin, userHandle.ResetPassword).Name("重置用户密码").Build()
+			r.Put("/users/:id/reset", router.AccessAuthorized, userHandle.ResetPassword).Name("重置用户密码").Build()
 			r.Put("/users/:id/avatar", router.AccessAuthorized, userHandle.ChangeAvatar).WithoutOperateLog().Name("修改用户头像").Build()
 
 			r.Post("/users/:id/roles", router.AccessAuthorized, userHandle.AssignRolesToUser).Deps(
@@ -344,10 +346,27 @@ func InitApi(app foundation.Application, appName string) {
 			r.Post("/monitor/operation-logs", router.AccessAuthorized, logHandle.OperationLogs).Name("操作日志").WithoutOperateLog().Build()
 		}
 
-		// app upgrade
+		// app upgrade (public latest)
 		{
 			r := router.NewRouteInfoBuilder(appName, appUpgradeHandle, gv1, router.MenuOption{})
 			r.Get("/app/upgrade", router.AccessPublic, appUpgradeHandle.Upgrade).Name("获取最新版本").Build()
+		}
+
+		// app version (admin)
+		{
+			r := router.NewRouteInfoBuilder(appName, appVersionHandle, gv1, router.MenuOption{
+				ComponentName: "SystemAppVersion",
+				Path:          "/system/app-version/index",
+				Icon:          "ep:upload",
+			})
+			r.Post("/app-versions/upload", router.AccessAuthorized, appVersionHandle.Upload).Name("上传APP安装包").WithoutOperateLog().Build()
+			r.Post("/app-versions", router.AccessAuthorized, appVersionHandle.Create).Name("创建APP版本").Build()
+			r.Delete("/app-versions/:id", router.AccessAuthorized, appVersionHandle.Delete).Name("删除APP版本").Build()
+			r.Put("/app-versions/:id", router.AccessAuthorized, appVersionHandle.Update).Name("更新APP版本").Build()
+			r.Put("/app-versions/:id/status", router.AccessAuthorized, appVersionHandle.ChangeStatus).Name("修改APP版本状态").Build()
+			r.Get("/app-versions", router.AccessAuthorized, appVersionHandle.Retrieve).Name("APP版本列表").Build()
+
+			appVersionMenu = r.GetMenu()
 		}
 		// oauth
 
