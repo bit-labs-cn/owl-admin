@@ -46,18 +46,17 @@ func (i *UserRepository) WithContext(ctx context.Context) UserRepositoryInterfac
 }
 
 func (i *UserRepository) Save(user *model.User) error {
-	err := i.db.Omit("Roles", "Groups", "Depts").Save(&user).Error
+	err := i.db.Omit("Roles", "Groups", "Depts", "Menus").Save(user).Error
 	if err != nil {
 		return err
 	}
-	if err = i.db.Model(&user).Association("Roles").Replace(&user.Roles); err != nil {
+	if err = db.ReplaceJoinTable(i.db, user, "Roles", user.Roles); err != nil {
 		return err
 	}
-	if err = i.db.Model(&user).Association("Groups").Replace(&user.Groups); err != nil {
+	if err = db.ReplaceJoinTable(i.db, user, "Groups", user.Groups); err != nil {
 		return err
 	}
-	err = i.db.Model(&user).Association("Depts").Replace(&user.Depts)
-	return err
+	return db.ReplaceJoinTable(i.db, user, "Depts", user.Depts)
 }
 
 func (i *UserRepository) Unique(id uint, username string, source string) bool {

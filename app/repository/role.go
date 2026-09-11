@@ -36,13 +36,11 @@ func NewRoleRepository(d *gorm.DB) RoleRepositoryInterface {
 
 // Save 保存角色
 func (i *RoleRepository) Save(role *model.Role) error {
-	err := i.db.Save(&role).Error
+	err := i.db.Omit("Menus").Save(role).Error
 	if err != nil {
 		return err
 	}
-	err = i.db.Model(&role).Association("Menus").Replace(&role.Menus)
-
-	return err
+	return db.ReplaceJoinTable(i.db, role, "Menus", role.Menus)
 }
 
 // WithContext 设置上下文

@@ -42,12 +42,11 @@ func (i *UserGroupRepository) WithContext(ctx context.Context) UserGroupReposito
 }
 
 func (i *UserGroupRepository) Save(group *model.UserGroup) error {
-	err := i.db.Omit("Users").Save(&group).Error
+	err := i.db.Omit("Users").Save(group).Error
 	if err != nil {
 		return err
 	}
-	err = i.db.Model(&group).Association("Users").Replace(&group.Users)
-	return err
+	return db.ReplaceJoinTable(i.db, group, "Users", group.Users)
 }
 
 func (i *UserGroupRepository) Detail(id any) (*model.UserGroup, error) {

@@ -38,7 +38,7 @@ func (i *DeptRepository) WithContext(ctx context.Context) DeptRepositoryInterfac
 	return i
 }
 func (i *DeptRepository) Create(data *model.Dept) error {
-	return i.BaseRepository.Save(data)
+	return i.db.Omit("Children").Save(data).Error
 }
 
 func (i *DeptRepository) Update(data *model.Dept) error {
