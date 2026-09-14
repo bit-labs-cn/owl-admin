@@ -83,7 +83,6 @@ func (i *SubAppAdmin) Binds() []any {
 	return []any{
 		oauth.NewOauthHandle,
 		v1.NewApiHandle,
-		v1.NewAppUpgradeHandle,
 		v1.NewAppVersionHandle,
 		storage.NewFileHandle,
 		v1.NewDeptHandle,

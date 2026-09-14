@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"strconv"
+
 	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/router"
@@ -19,6 +21,37 @@ func NewAppVersionHandle(svc *service.AppVersionService) *AppVersionHandle {
 }
 
 func (i *AppVersionHandle) ModuleName() (string, string) { return "app-version", "APP升级" }
+
+// @Summary		获取最新版本
+// @Description	获取可用于升级的最新版本信息
+// @Tags			APP升级
+// @Produce		json
+// @Param			apkType	query		int	false	"安装包类型：1-ios、2-android"
+// @Success		200		{object}	router.Resp	"操作成功"
+// @Router			/api/v1/app/upgrade [GET]
+func (i *AppVersionHandle) Upgrade(ctx *gin.Context) {
+	var apkType *int32
+	if v := ctx.Query("apkType"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			router.BadRequest(ctx, "参数绑定失败")
+			return
+		}
+		t := int32(n)
+		apkType = &t
+	}
+
+	latest, err := i.svc.Latest(ctx.Request.Context(), apkType)
+	if err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	if latest != nil && latest.ApkURL != nil {
+		abs := absolutePublicURL(ctx, *latest.ApkURL)
+		latest.ApkURL = &abs
+	}
+	router.Success(ctx, latest)
+}
 
 // @Summary		上传APP安装包
 // @Description	上传 apk / ipa / aab，返回可访问地址
@@ -55,6 +88,7 @@ func (i *AppVersionHandle) Upload(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+	result.URL = absolutePublicURL(ctx, result.URL)
 	router.Success(ctx, result)
 }
 

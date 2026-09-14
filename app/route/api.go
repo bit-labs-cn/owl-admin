@@ -111,7 +111,6 @@ func InitApi(app foundation.Application, appName string) {
 		positionHandle *v1.PositionHandle,
 		areaHandle *v1.AreaHandle,
 		logHandle *v1.LogHandle,
-		appUpgradeHandle *v1.AppUpgradeHandle,
 		appVersionHandle *v1.AppVersionHandle,
 		enforcer *casbin.SyncedEnforcer,
 		oauthHandle *oauth.Handle,
@@ -346,19 +345,14 @@ func InitApi(app foundation.Application, appName string) {
 			r.Post("/monitor/operation-logs", router.AccessAuthorized, logHandle.OperationLogs).Name("操作日志").WithoutOperateLog().Build()
 		}
 
-		// app upgrade (public latest)
-		{
-			r := router.NewRouteInfoBuilder(appName, appUpgradeHandle, gv1, router.MenuOption{})
-			r.Get("/app/upgrade", router.AccessPublic, appUpgradeHandle.Upgrade).Name("获取最新版本").Build()
-		}
-
-		// app version (admin)
+		// app version (admin + public latest)
 		{
 			r := router.NewRouteInfoBuilder(appName, appVersionHandle, gv1, router.MenuOption{
 				ComponentName: "SystemAppVersion",
 				Path:          "/system/app-version/index",
 				Icon:          "ep:upload",
 			})
+			r.Get("/app/upgrade", router.AccessPublic, appVersionHandle.Upgrade).Name("获取最新版本").Build()
 			r.Post("/app-versions/upload", router.AccessAuthorized, appVersionHandle.Upload).Name("上传APP安装包").WithoutOperateLog().Build()
 			r.Post("/app-versions", router.AccessAuthorized, appVersionHandle.Create).Name("创建APP版本").Build()
 			r.Delete("/app-versions/:id", router.AccessAuthorized, appVersionHandle.Delete).Name("删除APP版本").Build()
