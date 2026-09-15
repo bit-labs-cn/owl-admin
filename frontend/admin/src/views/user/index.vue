@@ -13,6 +13,7 @@ import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import Refresh from "@iconify-icons/ep/refresh";
 import AddFill from "@iconify-icons/ri/add-circle-line";
+import Upload from "@iconify-icons/ep/upload";
 
 defineOptions({
   name: "SystemUser"
@@ -38,7 +39,11 @@ const {
   onSearch,
   resetForm,
   onbatchDel,
+  onBatchChangeStatus,
+  openBatchRoleDialog,
+  openBatchDeptDialog,
   openDialog,
+  openImportDialog,
   onTreeSelect,
   handleDelete,
   handleReset,
@@ -120,6 +125,13 @@ const columns = computed(() => createColumns({ switchLoadMap, switchStyle, onCha
       >
         <template #buttons>
           <el-button
+            type="success"
+            :icon="useRenderIcon(Upload)"
+            @click="openImportDialog"
+          >
+            批量导入
+          </el-button>
+          <el-button
             type="primary"
             :icon="useRenderIcon(AddFill)"
             @click="openDialog()"
@@ -131,26 +143,32 @@ const columns = computed(() => createColumns({ switchLoadMap, switchStyle, onCha
           <div
             v-if="selectedNum > 0"
             v-motion-fade
-            class="bg-[var(--el-fill-color-light)] w-full h-[46px] mb-2 pl-4 flex items-center"
+            class="bg-[var(--el-fill-color-light)] w-full h-[46px] mb-2 pl-4 pr-2 flex items-center gap-1"
           >
-            <div class="flex-auto">
-              <span
-                style="font-size: var(--el-font-size-base)"
-                class="text-[rgba(42,46,54,0.5)] dark:text-[rgba(220,220,242,0.5)]"
-              >
-                已选 {{ selectedNum }} 项
-              </span>
-              <el-button type="primary" text @click="onSelectionCancel">
-                取消选择
-              </el-button>
-            </div>
-            <el-popconfirm title="是否确认删除?" @confirm="onbatchDel">
-              <template #reference>
-                <el-button type="danger" text class="mr-1">
-                  批量删除
-                </el-button>
-              </template>
-            </el-popconfirm>
+            <span
+              style="font-size: var(--el-font-size-base)"
+              class="text-[rgba(42,46,54,0.5)] dark:text-[rgba(220,220,242,0.5)] mr-1"
+            >
+              已选 {{ selectedNum }} 项
+            </span>
+            <el-button type="primary" text @click="onSelectionCancel">
+              取消选择
+            </el-button>
+            <el-button type="success" text @click="onBatchChangeStatus(1)">
+              批量启用
+            </el-button>
+            <el-button type="warning" text @click="onBatchChangeStatus(0)">
+              批量停用
+            </el-button>
+            <el-button type="primary" text @click="openBatchRoleDialog">
+              批量改角色
+            </el-button>
+            <el-button type="primary" text @click="openBatchDeptDialog">
+              批量改部门
+            </el-button>
+            <el-button type="danger" text @click="onbatchDel">
+              批量删除
+            </el-button>
           </div>
           <pure-table
             border

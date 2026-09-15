@@ -26,3 +26,5 @@ export interface RoleFormItemProps {
   roleOptions: any[];
   ids: Record<number, unknown>[];
 }
+
+export type { ImportUserError, ImportUserResult } from "../../api/user";

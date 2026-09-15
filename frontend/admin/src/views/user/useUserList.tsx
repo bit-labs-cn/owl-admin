@@ -21,6 +21,9 @@ import { userManageAPI as userAPI } from "@bit-labs.cn/owl-admin-ui/api/user";
 import { roleAPI } from "@bit-labs.cn/owl-admin-ui/api/role";
 import UserForm from "./UserForm.vue";
 import UserRoleForm from "./UserRoleForm.vue";
+import UserImportForm from "./UserImportForm.vue";
+import BatchRoleForm from "./BatchRoleForm.vue";
+import BatchDeptForm from "./BatchDeptForm.vue";
 
 export function useUserList(tableRef: Ref, treeRef: Ref) {
   const form = reactive({
@@ -126,13 +129,141 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
     tableRef.value.getTableRef().clearSelection();
   }
 
-  function onbatchDel() {
-    const curSelected = tableRef.value.getTableRef().getSelectionRows();
-    message(`已删除用户编号为 ${getKeyList(curSelected, "id")} 的数据`, {
-      type: "success"
-    });
+  function getSelectedUsers() {
+    return tableRef.value?.getTableRef()?.getSelectionRows?.() ?? [];
+  }
+
+  function getSelectedIds() {
+    return getKeyList(getSelectedUsers(), "id") as Array<string | number>;
+  }
+
+  function clearSelectionAndRefresh() {
     tableRef.value.getTableRef().clearSelection();
+    selectedNum.value = 0;
     onSearch();
+  }
+
+  async function onbatchDel() {
+    const ids = getSelectedIds();
+    if (!ids.length) {
+      message("请先勾选用户", { type: "warning" });
+      return;
+    }
+    try {
+      await ElMessageBox.confirm(
+        `确认删除选中的 ${ids.length} 个用户吗？删除后不可恢复。`,
+        "批量删除",
+        {
+          confirmButtonText: "删除",
+          cancelButtonText: "取消",
+          type: "warning",
+          draggable: true
+        }
+      );
+    } catch {
+      return;
+    }
+    await userAPI.batchDeleteUsers(ids);
+    clearSelectionAndRefresh();
+  }
+
+  async function onBatchChangeStatus(status: 0 | 1) {
+    const ids = getSelectedIds();
+    if (!ids.length) {
+      message("请先勾选用户", { type: "warning" });
+      return;
+    }
+    const action = status === 1 ? "启用" : "停用";
+    try {
+      await ElMessageBox.confirm(
+        `确认${action}选中的 ${ids.length} 个用户吗？`,
+        `批量${action}`,
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+          draggable: true
+        }
+      );
+    } catch {
+      return;
+    }
+    await userAPI.batchChangeStatus(ids, status);
+    clearSelectionAndRefresh();
+  }
+
+  function openBatchRoleDialog() {
+    const ids = getSelectedIds();
+    if (!ids.length) {
+      message("请先勾选用户", { type: "warning" });
+      return;
+    }
+    const formRefLocal = ref();
+    addDialog({
+      title: "批量修改角色",
+      width: "480px",
+      draggable: true,
+      alignCenter: true,
+      closeOnClickModal: false,
+      fullscreen: deviceDetection(),
+      props: {
+        formInline: {
+          selectedCount: ids.length,
+          roleOptions: roleOptions.value ?? [],
+          ids: []
+        }
+      },
+      contentRenderer: ({ options }) =>
+        h(BatchRoleForm, {
+          ref: formRefLocal,
+          formInline: options.props.formInline
+        }),
+      beforeSure: done => {
+        const curData = formRefLocal.value.getFormData();
+        userAPI.batchAssignRoles(ids, curData.ids ?? []).then(() => {
+          done();
+          clearSelectionAndRefresh();
+        });
+      }
+    });
+  }
+
+  function openBatchDeptDialog() {
+    const ids = getSelectedIds();
+    if (!ids.length) {
+      message("请先勾选用户", { type: "warning" });
+      return;
+    }
+    const formRefLocal = ref();
+    addDialog({
+      title: "批量修改部门",
+      width: "480px",
+      draggable: true,
+      alignCenter: true,
+      closeOnClickModal: false,
+      fullscreen: deviceDetection(),
+      props: {
+        formInline: {
+          selectedCount: ids.length,
+          higherDeptOptions: formatHigherDeptOptions(higherDeptOptions.value),
+          parentId: ""
+        }
+      },
+      contentRenderer: ({ options }) =>
+        h(BatchDeptForm, {
+          ref: formRefLocal,
+          formInline: options.props.formInline
+        }),
+      beforeSure: done => {
+        const curData = formRefLocal.value.getFormData();
+        userAPI
+          .batchAssignDept(ids, curData.parentId ?? "")
+          .then(() => {
+            done();
+            clearSelectionAndRefresh();
+          });
+      }
+    });
   }
 
   async function onSearch() {
@@ -354,6 +485,23 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
     });
   }
 
+  function openImportDialog() {
+    addDialog({
+      title: "批量导入用户",
+      width: "560px",
+      draggable: true,
+      alignCenter: true,
+      hideFooter: true,
+      closeOnClickModal: false,
+      fullscreen: deviceDetection(),
+      fullscreenIcon: true,
+      contentRenderer: () =>
+        h(UserImportForm, {
+          onSuccess: () => onSearch()
+        })
+    });
+  }
+
   onMounted(async () => {
     treeLoading.value = true;
     onSearch();
@@ -380,7 +528,11 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
     onSearch,
     resetForm,
     onbatchDel,
+    onBatchChangeStatus,
+    openBatchRoleDialog,
+    openBatchDeptDialog,
     openDialog,
+    openImportDialog,
     onTreeSelect,
     handleDelete,
     handleReset,

@@ -14,6 +14,8 @@ type DeptRepositoryInterface interface {
 	// Unique 用于唯一性判断：当存在与 (parent_id, name) 匹配的其他记录时返回 true。
 	// id > 0 时会排除自身（id != ?），用于 update 场景。
 	Unique(id uint, parentID int, name string) bool
+	// ListAll 返回全部部门（用于导入路径解析）。
+	ListAll() ([]model.Dept, error)
 	contract.WithContext[DeptRepositoryInterface]
 }
 
@@ -50,6 +52,12 @@ func (i *DeptRepository) Unique(id uint, parentID int, name string) bool {
 		db.Where("parent_id = ? and name = ?", parentID, name)
 	})
 	return exists
+}
+
+func (i *DeptRepository) ListAll() ([]model.Dept, error) {
+	var list []model.Dept
+	err := i.db.Order("sort asc, id asc").Find(&list).Error
+	return list, err
 }
 
 func (i *DeptRepository) Delete(id uint) error {

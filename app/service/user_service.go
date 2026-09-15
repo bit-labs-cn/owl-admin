@@ -184,6 +184,8 @@ type UserService struct {
 	db.BaseRepository[model.User]
 	roleSvc           *RoleService
 	userRepo          repository.UserRepositoryInterface
+	deptRepo          repository.DeptRepositoryInterface
+	roleRepo          repository.RoleRepositoryInterface
 	trustedDeviceRepo repository.TrustedDeviceRepositoryInterface
 	eventBus          EventBus.Bus
 	configure         *conf.Configure
@@ -196,6 +198,8 @@ type UserService struct {
 func NewUserService(
 	roleSvc *RoleService,
 	userRepo repository.UserRepositoryInterface,
+	deptRepo repository.DeptRepositoryInterface,
+	roleRepo repository.RoleRepositoryInterface,
 	trustedDeviceRepo repository.TrustedDeviceRepositoryInterface,
 	tx *gorm.DB,
 	eventBus EventBus.Bus,
@@ -211,6 +215,8 @@ func NewUserService(
 		db:                tx,
 		roleSvc:           roleSvc,
 		userRepo:          userRepo,
+		deptRepo:          deptRepo,
+		roleRepo:          roleRepo,
 		trustedDeviceRepo: trustedDeviceRepo,
 		BaseRepository:    db.NewBaseRepository[model.User](tx),
 		eventBus:          eventBus,

@@ -15,6 +15,12 @@ type UserRepositoryInterface interface {
 	// id > 0 时会排除自身（id != ?），用于 update 场景。
 	Unique(id uint, username string, source string) bool
 	Save(user *model.User) error
+	// SaveBatch 在同一事务中批量保存用户及其角色/部门关联。
+	SaveBatch(users []*model.User) error
+	// ExistingUsernames 返回 (username, source) 已存在的用户名集合。
+	ExistingUsernames(usernames []string, source string) (map[string]struct{}, error)
+	// UpdateStatusByIDs 按 ID 列表批量更新状态。
+	UpdateStatusByIDs(ids []uint, status int) error
 	Delete(ids ...any) error
 	Retrieve(page, pageSize int, fn func(db *gorm.DB)) (count int64, list []model.User, err error)
 	GetByName(name string) (model.User, error)
@@ -57,6 +63,50 @@ func (i *UserRepository) Save(user *model.User) error {
 		return err
 	}
 	return db.ReplaceJoinTable(i.db, user, "Depts", user.Depts)
+}
+
+func (i *UserRepository) SaveBatch(users []*model.User) error {
+	if len(users) == 0 {
+		return nil
+	}
+	return i.db.Transaction(func(tx *gorm.DB) error {
+		repo := &UserRepository{
+			db:             tx,
+			ctx:            i.ctx,
+			BaseRepository: db.NewBaseRepository[model.User](tx),
+		}
+		for _, user := range users {
+			if err := repo.Save(user); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (i *UserRepository) ExistingUsernames(usernames []string, source string) (map[string]struct{}, error) {
+	out := map[string]struct{}{}
+	if len(usernames) == 0 {
+		return out, nil
+	}
+	var found []string
+	err := i.db.Model(&model.User{}).
+		Where("username IN ? AND source = ?", usernames, source).
+		Pluck("username", &found).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range found {
+		out[name] = struct{}{}
+	}
+	return out, nil
+}
+
+func (i *UserRepository) UpdateStatusByIDs(ids []uint, status int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	return i.db.Model(&model.User{}).Where("id IN ?", ids).Update("status", status).Error
 }
 
 func (i *UserRepository) Unique(id uint, username string, source string) bool {

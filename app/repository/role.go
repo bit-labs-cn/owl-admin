@@ -13,6 +13,8 @@ type RoleRepositoryInterface interface {
 	Save(role *model.Role) error
 	Detail(id any) (*model.Role, error)
 	Options() (list []RoleItem, err error)
+	// ListAll 返回全部角色（用于导入名称解析）。
+	ListAll() ([]model.Role, error)
 	GetRolesMenuIDs(roleID ...string) ([]string, error)
 	Unique(id uint, name string, code string) (*model.Role, bool)
 	Retrieve(page, pageSize int, fn func(db *gorm.DB)) (count int64, list []model.Role, err error)
@@ -83,4 +85,10 @@ type RoleItem struct {
 func (i *RoleRepository) Options() (result []RoleItem, err error) {
 	i.db.Model(&model.Role{}).Scan(&result)
 	return
+}
+
+func (i *RoleRepository) ListAll() ([]model.Role, error) {
+	var list []model.Role
+	err := i.db.Order("id asc").Find(&list).Error
+	return list, err
 }

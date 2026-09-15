@@ -159,6 +159,23 @@ func InitApi(app foundation.Application, appName string) {
 			r.Get("/users/me/permissions", router.AccessAuthenticated, userHandle.GetMyPermissions).Name("我的权限").Build()
 			r.Get("/users/me", router.AccessAuthenticated, userHandle.Me).Name("我的信息").Build()
 
+			r.Get("/users/import-template", router.AccessAuthorized, userHandle.ImportTemplate).Name("下载用户导入模板").WithoutOperateLog().Build()
+			r.Post("/users/import", router.AccessAuthorized, userHandle.Import).Name("批量导入用户").WithoutOperateLog().Build()
+			r.Post("/users/import-errors/export", router.AccessAuthorized, userHandle.ExportImportErrors).Name("导出用户导入失败明细").WithoutOperateLog().Build()
+
+			r.Post("/users/batch-delete", router.AccessAuthorized, userHandle.BatchDelete).Name("批量删除用户").Build()
+			r.Put("/users/batch-status", router.AccessAuthorized, userHandle.BatchChangeStatus).Name("批量修改用户状态").Build()
+			r.Put("/users/batch-roles", router.AccessAuthorized, userHandle.BatchAssignRoles).Deps(
+				[]router.Dep{
+					{Handler: roleHandle, Method: roleHandle.RoleOptions},
+				}...,
+			).Name("批量分配用户角色").Build()
+			r.Put("/users/batch-dept", router.AccessAuthorized, userHandle.BatchAssignDept).Deps(
+				[]router.Dep{
+					{Handler: deptHandle, Method: deptHandle.Retrieve},
+				}...,
+			).Name("批量设置用户部门").Build()
+
 			r.Post("/users", router.AccessAuthorized, userHandle.Create).Name("创建用户").Build()
 			r.Delete("/users/:id", router.AccessAuthorized, userHandle.Delete).Name("删除用户").Build()
 
