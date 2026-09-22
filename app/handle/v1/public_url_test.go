@@ -75,6 +75,46 @@ func TestAbsolutePublicURL(t *testing.T) {
 			in:   "/storage/a.apk",
 			want: "https://dl.example.com/storage/a.apk",
 		},
+		{
+			name:   "host without port uses X-Forwarded-Port",
+			target: "http://113.250.189.253/api/v1/app-versions/upload",
+			headers: map[string]string{
+				"X-Forwarded-Port": "10049",
+			},
+			in:   "/storage/app-versions/2026/09/16/xxx.apk",
+			want: "http://113.250.189.253:10049/storage/app-versions/2026/09/16/xxx.apk",
+		},
+		{
+			name:   "forwarded host without port uses X-Forwarded-Port",
+			target: "http://127.0.0.1:8080/api/v1/app-versions/upload",
+			headers: map[string]string{
+				"X-Forwarded-Host": "113.250.189.253",
+				"X-Forwarded-Port": "10049",
+			},
+			in:   "/storage/a.apk",
+			want: "http://113.250.189.253:10049/storage/a.apk",
+		},
+		{
+			name:   "default forwarded port 80 not appended",
+			target: "http://113.250.189.253/api/v1/app-versions/upload",
+			headers: map[string]string{
+				"X-Forwarded-Port": "80",
+			},
+			in:   "/storage/a.apk",
+			want: "http://113.250.189.253/storage/a.apk",
+		},
+		{
+			name:   "absolute same host missing port restored",
+			target: "http://113.250.189.253:10049/api/v1/app/upgrade",
+			in:     "http://113.250.189.253/storage/app-versions/xxx.apk",
+			want:   "http://113.250.189.253:10049/storage/app-versions/xxx.apk",
+		},
+		{
+			name:   "absolute other host unchanged",
+			target: "http://113.250.189.253:10049/api/v1/app/upgrade",
+			in:     "https://cdn.example.com/app.apk",
+			want:   "https://cdn.example.com/app.apk",
+		},
 	}
 
 	for _, tt := range tests {
