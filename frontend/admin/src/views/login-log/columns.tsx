@@ -12,6 +12,14 @@ export function createColumns(pagination?: TablePaginationInput): TableColumnLis
       label: "登录时间",
       prop: "loginTime",
       minWidth: 160
+    },
+    {
+      label: "操作",
+      fixed: "right",
+      width: 120,
+      align: "center",
+      showOverflowTooltip: false,
+      slot: "operation"
     }
   ];
 }
