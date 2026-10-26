@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, h } from "vue";
 import { useOperationLogList } from "./useOperationLogList";
 import { createColumns } from "./columns";
+import OperationLogDetail from "./OperationLogDetail.vue";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
+import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 
 import Refresh from "@iconify-icons/ep/refresh";
+import View from "@iconify-icons/ep/view";
 
 defineOptions({
   name: "SystemOperationLog"
@@ -24,6 +27,18 @@ const {
   handleCurrentChange
 } = useOperationLogList();
 const columns = computed(() => createColumns(pagination));
+
+function openDetail(row) {
+  addDialog({
+    title: "操作日志详情",
+    width: "720px",
+    draggable: true,
+    alignCenter: true,
+    hideFooter: true,
+    closeOnClickModal: true,
+    contentRenderer: () => h(OperationLogDetail, { log: row })
+  });
+}
 </script>
 
 <template>
@@ -124,7 +139,20 @@ const columns = computed(() => createColumns(pagination));
           }"
           @page-size-change="handleSizeChange"
           @page-current-change="handleCurrentChange"
-        />
+        >
+          <template #operation="{ row }">
+            <el-button
+              class="reset-margin"
+              link
+              type="primary"
+              :size="size"
+              :icon="useRenderIcon(View)"
+              @click="openDetail(row)"
+            >
+              详情
+            </el-button>
+          </template>
+        </pure-table>
       </template>
     </PureTableBar>
   </div>
