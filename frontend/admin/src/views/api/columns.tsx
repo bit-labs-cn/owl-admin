@@ -29,6 +29,15 @@ export function createColumns(): TableColumnList {
           </el-tag>
         </>
       )
+    },
+    {
+      label: "操作日志",
+      prop: "operateLog",
+      cellRenderer: ({ row }) => (
+        <el-tag type={row.operateLog ? "success" : "info"}>
+          {row.operateLog ? "记录" : "不记录"}
+        </el-tag>
+      )
     }
   ];
 }
