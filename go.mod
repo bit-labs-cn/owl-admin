@@ -3,7 +3,7 @@ module bit-labs.cn/owl-admin
 go 1.26.0
 
 require (
-	bit-labs.cn/owl v1.0.0
+	bit-labs.cn/owl v0.0.0-20261026135105-210a2f3d678b
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/casbin/casbin/v3 v3.10.0
 	github.com/gin-gonic/gin v1.12.0
