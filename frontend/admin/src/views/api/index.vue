@@ -34,6 +34,30 @@ const columns = createColumns();
           class="!w-[180px]"
         />
       </el-form-item>
+      <el-form-item label="请求方式：" prop="method">
+        <el-select
+          v-model="form.method"
+          placeholder="请选择"
+          clearable
+          class="!w-[120px]"
+        >
+          <el-option label="GET" value="GET" />
+          <el-option label="POST" value="POST" />
+          <el-option label="PUT" value="PUT" />
+          <el-option label="DELETE" value="DELETE" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="操作日志：" prop="operateLog">
+        <el-select
+          v-model="form.operateLog"
+          placeholder="请选择"
+          clearable
+          class="!w-[120px]"
+        >
+          <el-option label="记录" value="1" />
+          <el-option label="不记录" value="0" />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button
           type="primary"
