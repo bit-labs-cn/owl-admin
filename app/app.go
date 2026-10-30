@@ -20,7 +20,6 @@ import (
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 
-	"bit-labs.cn/owl-admin/app/handle/oauth"
 	v1 "bit-labs.cn/owl-admin/app/handle/v1"
 	"bit-labs.cn/owl-admin/app/repository"
 	"bit-labs.cn/owl-admin/app/service"
@@ -81,7 +80,6 @@ func (i *SubAppAdmin) RegisterRouters() {
 
 func (i *SubAppAdmin) Binds() []any {
 	return []any{
-		oauth.NewOauthHandle,
 		v1.NewApiHandle,
 		v1.NewAppVersionHandle,
 		storage.NewFileHandle,

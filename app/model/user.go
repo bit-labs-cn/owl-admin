@@ -11,6 +11,20 @@ import (
 	"github.com/spf13/cast"
 )
 
+// 用户状态。与字典 user_status 一致。
+const (
+	UserStatusEnabled  = 1 // 启用
+	UserStatusDisabled = 2 // 禁用
+	UserStatusPending  = 3 // 待审核
+)
+
+// 用户性别。与字典 gender 一致。
+const (
+	UserSexMale    = 1 // 男
+	UserSexFemale  = 2 // 女
+	UserSexUnknown = 3 // 未知
+)
+
 type User struct {
 	db.BaseModel
 	Avatar     string     `gorm:"comment:用户头像" json:"avatar"`

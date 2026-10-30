@@ -303,9 +303,9 @@ func (i *UserService) recordTrustedDevice(ctx context.Context, userID uint, devi
 }
 
 // LoginByThirdParty 第三方用户登录
-func (i *UserService) LoginByThirdParty(ctx context.Context, username, provider string) (resp *LoginResp, err error) {
+func (i *UserService) LoginByThirdParty(ctx context.Context, username, provider, sourceID string) (resp *LoginResp, err error) {
 
-	thirdProvider, err := i.userRepo.WithContext(ctx).GetByNameAndThirdProvider(username, provider)
+	thirdProvider, err := i.userRepo.WithContext(ctx).GetByNameAndThirdProvider(username, provider, sourceID)
 	if err != nil {
 		return nil, err
 	}
@@ -583,7 +583,7 @@ func (i *UserService) CreateUser(ctx context.Context, req *CreateUserReq) error 
 	defer l.Unlock()
 
 	// 创建前做唯一性校验，避免 repository 直接返回“业务已存在”错误。
-	if i.userRepo.WithContext(ctx).Unique(0, req.Username, req.Source) {
+	if i.userRepo.WithContext(ctx).Unique(0, req.Username, req.Source, req.SourceID) {
 		return UserExists()
 	}
 
@@ -681,7 +681,7 @@ func (i *UserService) RegisterByEmail(ctx context.Context, req *EmailRegisterReq
 	if i.userRepo.WithContext(ctx).UniqueByEmail(0, email) {
 		return UserExists()
 	}
-	if i.userRepo.WithContext(ctx).Unique(0, email, emailRegisterSource) {
+	if i.userRepo.WithContext(ctx).Unique(0, email, emailRegisterSource, "") {
 		return UserExists()
 	}
 
@@ -690,7 +690,7 @@ func (i *UserService) RegisterByEmail(ctx context.Context, req *EmailRegisterReq
 		Username:   email,
 		Email:      email,
 		Nickname:   req.NickName,
-		Status:     1,
+		Status:     model.UserStatusEnabled,
 		Source:     emailRegisterSource,
 		RegisterIP: registerIP,
 		VerifiedAt: &now,
@@ -754,8 +754,8 @@ func (i *UserService) UpdateUser(ctx context.Context, req *UpdateUserReq) error 
 	}
 	defer l.Unlock()
 
-	// 更新前做唯一性校验：当 (username, source) 存在且不是自身记录时返回“已存在”业务异常。
-	if i.userRepo.WithContext(ctx).Unique(req.ID, req.Username, req.Source) {
+	// 更新前做唯一性校验：当 (username, source, source_id) 存在且不是自身记录时返回“已存在”业务异常。
+	if i.userRepo.WithContext(ctx).Unique(req.ID, req.Username, req.Source, req.SourceID) {
 		return UserExists()
 	}
 

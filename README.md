@@ -179,9 +179,9 @@ curl -X POST "http://127.0.0.1:8080/api/v1/monitor/operation-logs" ^
 浏览器访问：
 
 ```text
-GET /api/v1/oauth/github/login
-GET /api/v1/oauth/google/login
-GET /api/v1/oauth/gitee/login
+GET /oauth2/github/login
+GET /oauth2/google/login
+GET /oauth2/gitee/login
 ```
 
 并确保 `conf/oauth.yaml` 中的 `redirect-url` 与前端/回调地址一致。

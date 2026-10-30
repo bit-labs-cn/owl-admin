@@ -11,9 +11,9 @@ import (
 
 type UserRepositoryInterface interface {
 	FindById(id any) (*model.User, error)
-	// Unique 用于唯一性判断：当存在与 (username, source) 匹配的其他记录时返回 true。
-	// id > 0 时会排除自身（id != ?），用于 update 场景。
-	Unique(id uint, username string, source string) bool
+	// Unique 用于唯一性判断：当存在与 (username, source, source_id) 匹配的其他记录时返回 true。
+	// id > 0 时会排除自身（id != ?），用于 update 场景。source_id 为空时与本地账号、邮箱注册一致。
+	Unique(id uint, username string, source string, sourceID string) bool
 	Save(user *model.User) error
 	// SaveBatch 在同一事务中批量保存用户及其角色/部门关联。
 	SaveBatch(users []*model.User) error
@@ -26,7 +26,7 @@ type UserRepositoryInterface interface {
 	GetByName(name string) (model.User, error)
 	GetByEmail(email string) (model.User, error)
 	UniqueByEmail(id uint, email string) bool
-	GetByNameAndThirdProvider(name string, provider string) (model.User, error)
+	GetByNameAndThirdProvider(name string, provider string, sourceID string) (model.User, error)
 	contract.WithContext[UserRepositoryInterface]
 }
 
@@ -109,9 +109,9 @@ func (i *UserRepository) UpdateStatusByIDs(ids []uint, status int) error {
 	return i.db.Model(&model.User{}).Where("id IN ?", ids).Update("status", status).Error
 }
 
-func (i *UserRepository) Unique(id uint, username string, source string) bool {
+func (i *UserRepository) Unique(id uint, username string, source string, sourceID string) bool {
 	_, exists := i.BaseRepository.Unique(id, func(db *gorm.DB) {
-		db.Where("username", username).Where("source", source)
+		db.Where("username", username).Where("source", source).Where("source_id", sourceID)
 	})
 	return exists
 }
@@ -142,8 +142,8 @@ func (i *UserRepository) UniqueByEmail(id uint, email string) bool {
 	return exists
 }
 
-func (i *UserRepository) GetByNameAndThirdProvider(name string, provider string) (model.User, error) {
+func (i *UserRepository) GetByNameAndThirdProvider(name string, provider string, sourceID string) (model.User, error) {
 	var user model.User
-	err := i.db.Where("username = ?", name).Where("source = ?", provider).Preload("Roles").First(&user).Error
+	err := i.db.Where("username = ?", name).Where("source = ?", provider).Where("source_id = ?", sourceID).Preload("Roles").First(&user).Error
 	return user, err
 }

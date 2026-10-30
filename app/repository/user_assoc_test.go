@@ -164,3 +164,34 @@ func TestReplaceJoinTableDedupesRoles(t *testing.T) {
 		t.Fatalf("want 1 role/join, got assigned=%d joins=%d", len(reloaded.Roles), joinCount)
 	}
 }
+
+func TestUniqueIncludesSourceID(t *testing.T) {
+	gdb := setupAssocDB(t)
+	repo := NewUserRepository(gdb)
+
+	first := model.User{Username: "sam", Source: "owl", SourceID: "1", Status: 1}
+	second := model.User{Username: "sam", Source: "owl", SourceID: "2", Status: 1}
+	first.SetPassword("Passw0rd")
+	second.SetPassword("Passw0rd")
+	if err := gdb.Create(&first).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := gdb.Create(&second).Error; err != nil {
+		t.Fatal(err)
+	}
+
+	if !repo.Unique(0, "sam", "owl", "1") {
+		t.Fatal("same source id should exist")
+	}
+	if repo.Unique(0, "sam", "owl", "3") {
+		t.Fatal("different source id should be another user")
+	}
+	if repo.Unique(first.ID, "sam", "owl", "1") {
+		t.Fatal("update should ignore self")
+	}
+
+	got, err := repo.GetByNameAndThirdProvider("sam", "owl", "2")
+	if err != nil || got.ID != second.ID {
+		t.Fatalf("got id=%d err=%v", got.ID, err)
+	}
+}
