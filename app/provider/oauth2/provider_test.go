@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"net/url"
+	"strings"
 	"testing"
 
 	xoauth2 "golang.org/x/oauth2"
@@ -25,11 +26,12 @@ func TestFindProvider(t *testing.T) {
 
 func TestPickIdentity(t *testing.T) {
 	github := pickIdentity(map[string]any{
-		"login": "octocat",
-		"name":  "The Octocat",
-		"email": "octo@example.com",
-		"bio":   "hi",
-		"id":    float64(42),
+		"login":        "octocat",
+		"name":         "The Octocat",
+		"email":        "octo@example.com",
+		"bio":          "hi",
+		"id":           float64(42),
+		"access_token": "secret",
 	}, identityFields{
 		username: []string{"login"},
 		nickName: []string{"name"},
@@ -39,6 +41,9 @@ func TestPickIdentity(t *testing.T) {
 	})
 	if github.Username != "octocat" || github.SourceID != "42" || github.Remark != "hi" {
 		t.Fatalf("github identity = %+v", github)
+	}
+	if !strings.Contains(github.Raw, `"login":"octocat"`) || strings.Contains(github.Raw, "access_token") {
+		t.Fatalf("github raw = %s", github.Raw)
 	}
 
 	google := pickIdentity(map[string]any{
@@ -142,6 +147,9 @@ func TestParseOwlIdentity(t *testing.T) {
 	}
 	if id.Username != "zhangsan" || id.NickName != "张三" || id.Phone != "13800000000" || id.Email != "a@b.c" || id.SourceID != "U1" {
 		t.Fatalf("identity = %+v", id)
+	}
+	if !strings.Contains(id.Raw, `"username":"zhangsan"`) || strings.Contains(id.Raw, "access_token") || strings.Contains(id.Raw, "tok") {
+		t.Fatalf("owl raw = %s", id.Raw)
 	}
 
 	if _, err = parseOwlIdentity([]byte(`{"success":false,"msg":"授权码无效或已过期"}`)); err == nil {

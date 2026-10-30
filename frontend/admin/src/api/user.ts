@@ -18,6 +18,10 @@ class UserManageAPI {
   getUserList = (params?: object) => {
     return http.request<ResultTable>("get", "/api/v1/users", { params }, { silentMessage: true });
   };
+  /** 已有用户来源，供列表筛选 */
+  getUserSources = () => {
+    return http.request<Result>("get", "/api/v1/users/sources", {}, { silentMessage: true });
+  };
   /** 创建用户 */
   createUser = (data?: object) => {
     return http.request<Result>("post", "/api/v1/users", { data });

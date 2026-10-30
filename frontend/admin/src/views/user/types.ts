@@ -28,3 +28,9 @@ export interface RoleFormItemProps {
 }
 
 export type { ImportUserError, ImportUserResult } from "../../api/user";
+
+export interface UserSourceOption {
+  value: string;
+  stored: string;
+  label: string;
+}

@@ -143,6 +143,7 @@ func (i *UserHandle) ChangeStatus(ctx *gin.Context) {
 // @Param			pageSize	query		int				false	"每页数量"
 // @Param			keyword		query		string			false	"综合关键词（登录名、昵称模糊）"
 // @Param			username		query		string			false	"用户名模糊"
+// @Param			source		query		string			false	"来源，本地用户传 local"
 // @Success		200			{object}	router.PageResp	"操作成功"
 // @Failure		500			{object}	router.Resp		"服务器内部错误"
 // @Router			/api/v1/users [GET]
@@ -158,6 +159,22 @@ func (i *UserHandle) Retrieve(ctx *gin.Context) {
 		return
 	}
 	router.PageSuccess(ctx, count, req.Page, req.PageSize, list)
+}
+
+// @Summary		用户来源选项
+// @Description	返回已有用户的来源，供列表筛选
+// @Tags			用户管理
+// @Produce		json
+// @Success		200	{object}	router.Resp	"操作成功"
+// @Failure		500	{object}	router.Resp	"服务器内部错误"
+// @Router			/api/v1/users/sources [GET]
+func (i *UserHandle) SourceOptions(ctx *gin.Context) {
+	list, err := i.userSvc.ListUserSourceOptions(ctx.Request.Context())
+	if err != nil {
+		router.Fail(ctx, err)
+		return
+	}
+	router.Success(ctx, list)
 }
 
 // @Summary		分配角色给用户

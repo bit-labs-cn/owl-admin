@@ -123,7 +123,8 @@ func (i *Handle) Callback(c *gin.Context) {
 			Source:   provider,
 			SourceID: id.SourceID,
 		},
-		Password: password,
+		Password:  password,
+		SourceRaw: id.Raw,
 	}
 	err = i.userSvc.CreateUser(c.Request.Context(), createUser)
 	if err != nil {
@@ -136,7 +137,7 @@ func (i *Handle) Callback(c *gin.Context) {
 		}
 	}
 
-	generateToken, err := i.userSvc.LoginByThirdParty(c.Request.Context(), createUser.Username, provider, createUser.SourceID)
+	generateToken, err := i.userSvc.LoginByThirdParty(c.Request.Context(), createUser.Username, provider, createUser.SourceID, id.Raw)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, router.Resp{Success: false, Msg: err.Error()})
 		return

@@ -27,6 +27,10 @@ type UserRepositoryInterface interface {
 	GetByEmail(email string) (model.User, error)
 	UniqueByEmail(id uint, email string) bool
 	GetByNameAndThirdProvider(name string, provider string, sourceID string) (model.User, error)
+	// UpdateSourceRaw 写入第三方登录带回的原始用户资料。
+	UpdateSourceRaw(id uint, raw string) error
+	// ListSources 按 source 分组，返回已经出现过的来源。空字符串表示本地用户。
+	ListSources() ([]string, error)
 	contract.WithContext[UserRepositoryInterface]
 }
 
@@ -146,4 +150,27 @@ func (i *UserRepository) GetByNameAndThirdProvider(name string, provider string,
 	var user model.User
 	err := i.db.Where("username = ?", name).Where("source = ?", provider).Where("source_id = ?", sourceID).Preload("Roles").First(&user).Error
 	return user, err
+}
+
+func (i *UserRepository) UpdateSourceRaw(id uint, raw string) error {
+	return i.db.Model(&model.User{}).Where("id = ?", id).Update("source_raw", raw).Error
+}
+
+func (i *UserRepository) ListSources() ([]string, error) {
+	type sourceRow struct {
+		Source string `gorm:"column:source"`
+	}
+	var rows []sourceRow
+	err := i.db.Model(&model.User{}).
+		Select("COALESCE(source, '') AS source").
+		Group("COALESCE(source, '')").
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	sources := make([]string, 0, len(rows))
+	for _, row := range rows {
+		sources = append(sources, row.Source)
+	}
+	return sources, nil
 }

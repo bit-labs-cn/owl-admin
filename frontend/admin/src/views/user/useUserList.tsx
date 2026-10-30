@@ -1,7 +1,7 @@
 import "./reset.css";
 import { type Ref, h, ref, toRaw, watch, reactive, computed, onMounted } from "vue";
 import type { PaginationProps } from "@pureadmin/table";
-import type { UserFormData, RoleFormItemProps } from "./types";
+import type { UserFormData, RoleFormItemProps, UserSourceOption } from "./types";
 import {
   ElForm,
   ElInput,
@@ -30,7 +30,16 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
     deptId: "",
     username: "",
     phone: "",
-    status: ""
+    status: "",
+    source: ""
+  });
+  const sourceOptions = ref<UserSourceOption[]>([]);
+  const sourceLabelMap = computed(() => {
+    const map: Record<string, string> = {};
+    for (const opt of sourceOptions.value) {
+      map[opt.stored ?? ""] = opt.label;
+    }
+    return map;
   });
   const formRef = ref();
   const ruleFormRef = ref();
@@ -268,11 +277,12 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
 
   async function onSearch() {
     loading.value = true;
-    const params = {
+    const params: Record<string, unknown> = {
       ...toRaw(form),
       page: pagination.currentPage,
       pageSize: pagination.pageSize
     };
+    if (!params.source) delete params.source;
     const res = await userAPI.getUserList(params);
     dataList.value = res?.data?.list ?? [];
     pagination.total = res?.total ?? 0;
@@ -485,6 +495,15 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
     });
   }
 
+  async function loadSourceOptions() {
+    try {
+      const res = await userAPI.getUserSources();
+      sourceOptions.value = Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      sourceOptions.value = [];
+    }
+  }
+
   function openImportDialog() {
     addDialog({
       title: "批量导入用户",
@@ -505,6 +524,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
   onMounted(async () => {
     treeLoading.value = true;
     onSearch();
+    loadSourceOptions();
 
     const { data } = await deptAPI.getDepts();
     higherDeptOptions.value = handleTree(data);
@@ -516,6 +536,8 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
 
   return {
     form,
+    sourceOptions,
+    sourceLabelMap,
     loading,
     dataList,
     treeData,

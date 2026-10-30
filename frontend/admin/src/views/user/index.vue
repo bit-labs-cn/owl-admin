@@ -27,6 +27,8 @@ const { switchStyle } = usePublicHooks();
 
 const {
   form,
+  sourceOptions,
+  sourceLabelMap,
   loading,
   dataList,
   treeData,
@@ -55,7 +57,15 @@ const {
   handleSelectionChange
 } = useUserList(tableRef, treeRef);
 
-const columns = computed(() => createColumns({ switchLoadMap, switchStyle, onChange, pagination }));
+const columns = computed(() =>
+  createColumns({
+    switchLoadMap,
+    switchStyle,
+    onChange,
+    pagination,
+    sourceLabelMap: sourceLabelMap.value
+  })
+);
 </script>
 
 <template>
@@ -101,6 +111,21 @@ const columns = computed(() => createColumns({ switchLoadMap, switchStyle, onCha
           >
             <el-option label="已开启" value="1" />
             <el-option label="已关闭" value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="来源：" prop="source">
+          <el-select
+            v-model="form.source"
+            placeholder="请选择"
+            clearable
+            class="!w-[180px]"
+          >
+            <el-option
+              v-for="item in sourceOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
         </el-form-item>
         <el-form-item>

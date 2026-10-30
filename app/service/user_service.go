@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
 	"strings"
 	"time"
 
@@ -43,7 +44,6 @@ const (
 	CodeEmailCodeTooOften = "EMAIL_CODE_TOO_OFTEN"
 	CodeEmailSendFailed   = "EMAIL_SEND_FAILED"
 
-	emailRegisterSource    = "email"
 	registerCodeKeyPrefix  = "register:code:"
 	registerCooldownPrefix = "register:cooldown:"
 	registerCodeTTL        = 10 * time.Minute
@@ -87,7 +87,8 @@ type UserBatchFields struct {
 // CreateUserReq 创建用户
 type CreateUserReq struct {
 	UserBatchFields
-	Password string `json:"password" validate:"required,min=6,max=64" label:"密码"` // 密码
+	Password  string `json:"password" validate:"required,min=6,max=64" label:"密码"` // 密码
+	SourceRaw string `json:"-"`                                                    // 第三方登录原始信息，仅服务内部写入
 }
 
 type UpdateUserReq struct {
@@ -103,6 +104,14 @@ type RetrieveUserReq struct {
 	PhoneLike    string `json:"phone" form:"phone" validate:"omitempty,max=32" label:"手机号"`       // 手机号模糊
 	Status       int    `json:"status" form:"status" validate:"omitempty,oneof=1 2" label:"状态"`   // 状态
 	DeptID       string `json:"deptId" form:"deptId" validate:"omitempty"`                        // 部门筛选
+	Source       string `json:"source" form:"source" validate:"omitempty,max=32" label:"来源"`      // 来源。后台添加传 local
+}
+
+// UserSourceOption 来源下拉中的一项。
+type UserSourceOption struct {
+	Value  string `json:"value"`  // 查询参数
+	Stored string `json:"stored"` // 用户记录上的 source
+	Label  string `json:"label"`
 }
 
 type LoginReq struct {
@@ -302,12 +311,18 @@ func (i *UserService) recordTrustedDevice(ctx context.Context, userID uint, devi
 	_ = i.trustedDeviceRepo.WithContext(ctx).Upsert(record)
 }
 
-// LoginByThirdParty 第三方用户登录
-func (i *UserService) LoginByThirdParty(ctx context.Context, username, provider, sourceID string) (resp *LoginResp, err error) {
+// LoginByThirdParty 第三方用户登录。sourceRaw 非空时覆盖该用户保存的原始资料。
+func (i *UserService) LoginByThirdParty(ctx context.Context, username, provider, sourceID, sourceRaw string) (resp *LoginResp, err error) {
 
 	thirdProvider, err := i.userRepo.WithContext(ctx).GetByNameAndThirdProvider(username, provider, sourceID)
 	if err != nil {
 		return nil, err
+	}
+	if strings.TrimSpace(sourceRaw) != "" {
+		if err = i.userRepo.WithContext(ctx).UpdateSourceRaw(thirdProvider.ID, sourceRaw); err != nil {
+			return nil, err
+		}
+		thirdProvider.SourceRaw = sourceRaw
 	}
 
 	token, err := i.jwtSvc.GenerateToken(&thirdProvider)
@@ -521,6 +536,7 @@ func (i *UserService) RetrieveUsers(ctx context.Context, req *RetrieveUserReq) (
 		db.AppendWhereFromStruct(tx, &flt)
 		tx.Preload("Roles")
 		tx.Preload("Depts")
+		applyUserSourceFilter(tx, req.Source)
 		tx.Order("created_at desc")
 
 		if deptID != "" {
@@ -532,6 +548,65 @@ func (i *UserService) RetrieveUsers(ctx context.Context, req *RetrieveUserReq) (
 
 	req.DeptID = deptID
 	return cast.ToInt(c), u, e
+}
+
+// ListUserSourceOptions 返回已有用户的来源，供列表下拉筛选。
+func (i *UserService) ListUserSourceOptions(ctx context.Context) ([]UserSourceOption, error) {
+	sources, err := i.userRepo.WithContext(ctx).ListSources()
+	if err != nil {
+		return nil, err
+	}
+	return listUserSourceOptions(sources), nil
+}
+
+func listUserSourceOptions(sources []string) []UserSourceOption {
+	seen := map[string]struct{}{}
+	opts := make([]UserSourceOption, 0, len(sources))
+	for _, source := range sources {
+		value := model.UserSourceQueryValue(source)
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		opts = append(opts, UserSourceOption{
+			Value:  value,
+			Stored: source,
+			Label:  model.UserSourceLabel(source),
+		})
+	}
+	sort.Slice(opts, func(i, j int) bool {
+		ri, rj := sourceOptionRank(opts[i].Stored), sourceOptionRank(opts[j].Stored)
+		if ri != rj {
+			return ri < rj
+		}
+		return strings.ToLower(opts[i].Label) < strings.ToLower(opts[j].Label)
+	})
+	return opts
+}
+
+func sourceOptionRank(stored string) int {
+	switch strings.TrimSpace(stored) {
+	case model.UserSourceLocal:
+		return 0
+	case model.UserSourcePhoneRegister:
+		return 1
+	case model.UserSourceEmailRegister:
+		return 2
+	default:
+		return 3
+	}
+}
+
+func applyUserSourceFilter(tx *gorm.DB, query string) {
+	stored, ok := model.ParseUserSourceQuery(strings.TrimSpace(query))
+	if !ok {
+		return
+	}
+	if stored == model.UserSourceLocal {
+		tx.Where("(admin_user.source = ? OR admin_user.source IS NULL)", model.UserSourceLocal)
+		return
+	}
+	tx.Where("admin_user.source = ?", stored)
 }
 
 // getDescendantDeptIDs 收集指定部门及所有子孙部门的 ID 集合
@@ -681,7 +756,7 @@ func (i *UserService) RegisterByEmail(ctx context.Context, req *EmailRegisterReq
 	if i.userRepo.WithContext(ctx).UniqueByEmail(0, email) {
 		return UserExists()
 	}
-	if i.userRepo.WithContext(ctx).Unique(0, email, emailRegisterSource, "") {
+	if i.userRepo.WithContext(ctx).Unique(0, email, model.UserSourceEmailRegister, "") {
 		return UserExists()
 	}
 
@@ -691,7 +766,7 @@ func (i *UserService) RegisterByEmail(ctx context.Context, req *EmailRegisterReq
 		Email:      email,
 		Nickname:   req.NickName,
 		Status:     model.UserStatusEnabled,
-		Source:     emailRegisterSource,
+		Source:     model.UserSourceEmailRegister,
 		RegisterIP: registerIP,
 		VerifiedAt: &now,
 	}

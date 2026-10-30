@@ -123,15 +123,9 @@ func (p *owlProvider) Identity(ctx context.Context, code string) (*Identity, err
 
 func parseOwlIdentity(body []byte) (*Identity, error) {
 	var envelope struct {
-		Success bool   `json:"success"`
-		Msg     string `json:"msg"`
-		Data    struct {
-			UserID   string `json:"user_id"`
-			Username string `json:"username"`
-			Nickname string `json:"nickname"`
-			Mobile   string `json:"mobile"`
-			Email    string `json:"email"`
-		} `json:"data"`
+		Success bool           `json:"success"`
+		Msg     string         `json:"msg"`
+		Data    map[string]any `json:"data"`
 	}
 	if err := json.Unmarshal(body, &envelope); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrExchange, err)
@@ -144,11 +138,12 @@ func parseOwlIdentity(body []byte) (*Identity, error) {
 		return nil, fmt.Errorf("%w: %s", ErrExchange, msg)
 	}
 	id := &Identity{
-		Username: strings.TrimSpace(envelope.Data.Username),
-		NickName: strings.TrimSpace(envelope.Data.Nickname),
-		Email:    strings.TrimSpace(envelope.Data.Email),
-		Phone:    strings.TrimSpace(envelope.Data.Mobile),
-		SourceID: strings.TrimSpace(envelope.Data.UserID),
+		Username: strings.TrimSpace(cast.ToString(envelope.Data["username"])),
+		NickName: strings.TrimSpace(cast.ToString(envelope.Data["nickname"])),
+		Email:    strings.TrimSpace(cast.ToString(envelope.Data["email"])),
+		Phone:    strings.TrimSpace(cast.ToString(envelope.Data["mobile"])),
+		SourceID: strings.TrimSpace(cast.ToString(envelope.Data["user_id"])),
+		Raw:      profileRaw(envelope.Data),
 	}
 	if id.Username == "" || id.SourceID == "" {
 		return nil, fmt.Errorf("%w: incomplete user info", ErrUserInfo)

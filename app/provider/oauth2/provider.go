@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sort"
 	"strings"
@@ -19,6 +20,7 @@ type Identity struct {
 	Phone    string
 	Remark   string
 	SourceID string
+	Raw      string // 第三方返回的用户资料原文，不含令牌
 }
 
 // Provider 一个可注册的登录提供方。新增提供方实现该接口并 register，不必改登录和回调。
@@ -109,6 +111,26 @@ func (c *Catalog) List() []ProviderView {
 		list = append(list, ProviderView{Provider: p.Name(), Name: label})
 	}
 	return list
+}
+
+func profileRaw(raw map[string]any) string {
+	if len(raw) == 0 {
+		return ""
+	}
+	cleaned := make(map[string]any, len(raw))
+	for key, value := range raw {
+		switch strings.ToLower(key) {
+		case "access_token", "refresh_token", "id_token", "token", "client_secret":
+			continue
+		default:
+			cleaned[key] = value
+		}
+	}
+	body, err := json.Marshal(cleaned)
+	if err != nil {
+		return ""
+	}
+	return string(body)
 }
 
 func firstString(raw map[string]any, keys ...string) string {

@@ -185,6 +185,7 @@ func InitApi(app foundation.Application, appName string) {
 
 			r.Put("/users/:id/status", router.AccessAuthorized, userHandle.ChangeStatus).Name("启用，禁用用户").Build()
 
+			r.Get("/users/sources", router.AccessAuthenticated, userHandle.SourceOptions).Name("用户来源选项").WithoutOperateLog().Build()
 			r.Get("/users", router.AccessAuthorized, userHandle.Retrieve).Deps(
 				[]router.Dep{
 					{Handler: deptHandle, Method: deptHandle.Retrieve},

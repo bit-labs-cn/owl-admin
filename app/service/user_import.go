@@ -24,9 +24,8 @@ const (
 	UserImportMaxRows  = 2000
 	UserImportMaxErrs  = 100
 
-	UserImportTemplateName    = "user-import-template.xlsx"
-	UserImportErrorsFileName  = "user-import-errors.xlsx"
-	userImportSource          = ""
+	UserImportTemplateName   = "user-import-template.xlsx"
+	UserImportErrorsFileName = "user-import-errors.xlsx"
 
 	CodeImportFileInvalid = "USER_IMPORT_FILE_INVALID"
 	CodeImportEmpty       = "USER_IMPORT_EMPTY"
@@ -96,17 +95,17 @@ func (r *ImportUserResult) addErr(row int, username, reason string) {
 }
 
 type userImportDraft struct {
-	Line     int
-	Username string
-	Nickname string
-	Password string
-	Phone    string
-	Email    string
-	SexRaw   string
+	Line      int
+	Username  string
+	Nickname  string
+	Password  string
+	Phone     string
+	Email     string
+	SexRaw    string
 	StatusRaw string
-	DeptPath string
-	RolesRaw string
-	Remark   string
+	DeptPath  string
+	RolesRaw  string
+	Remark    string
 }
 
 type userImportPrepared struct {
@@ -353,8 +352,8 @@ func (i *UserService) ImportUsers(ctx context.Context, filename string, data []b
 }
 
 type userImportCatalog struct {
-	existing map[string]struct{}
-	roles    map[string]model.Role // name -> role（同名多条时标歧义）
+	existing  map[string]struct{}
+	roles     map[string]model.Role // name -> role（同名多条时标歧义）
 	roleAmbig map[string]struct{}
 	deptPaths map[string]model.Dept // path -> dept
 	deptAmbig map[string]struct{}
@@ -367,7 +366,7 @@ func (i *UserService) loadUserImportCatalog(ctx context.Context, drafts []userIm
 			names = append(names, d.Username)
 		}
 	}
-	existing, err := i.userRepo.WithContext(ctx).ExistingUsernames(uniqueImportStrings(names), userImportSource)
+	existing, err := i.userRepo.WithContext(ctx).ExistingUsernames(uniqueImportStrings(names), model.UserSourceLocal)
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +453,7 @@ func prepareUserImportDraft(d userImportDraft, cat *userImportCatalog) (*userImp
 		Sex:      sex,
 		Status:   status,
 		Remark:   d.Remark,
-		Source:   userImportSource,
+		Source:   model.UserSourceLocal,
 	}
 	user.SetPassword(d.Password)
 

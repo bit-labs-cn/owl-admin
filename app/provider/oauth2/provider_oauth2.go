@@ -161,5 +161,6 @@ func pickIdentity(raw map[string]any, fields identityFields) *Identity {
 		Phone:    firstString(raw, fields.phone...),
 		Remark:   firstString(raw, fields.remark...),
 		SourceID: firstString(raw, fields.id...),
+		Raw:      profileRaw(raw),
 	}
 }

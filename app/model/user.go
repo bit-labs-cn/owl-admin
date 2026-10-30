@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"bit-labs.cn/owl/utils"
@@ -25,6 +26,67 @@ const (
 	UserSexUnknown = 3 // 未知
 )
 
+// 用户来源，表示账号是怎么来的，不是联系邮箱或手机号。
+// 空字符串是后台添加和批量导入。邮箱注册、手机号注册、Oauth2 提供方各自写入对应标识。
+const (
+	UserSourceLocal         = ""      // 后台添加、批量导入
+	UserSourceEmailRegister = "email" // 邮箱验证码注册
+	UserSourcePhoneRegister = "phone" // 手机号注册
+	UserSourceGitHub        = "github"
+	UserSourceGitee         = "gitee"
+	UserSourceGoogle        = "google"
+	UserSourceOwl           = "owl"
+
+	// UserSourceQueryLocal 列表筛选后台添加用户时的查询值。
+	// 库中这类用户的 source 为空，空查询参数表示不按来源筛选。
+	UserSourceQueryLocal = "local"
+)
+
+// UserSourceLabel 把库存的 source 转成给人看的名称。
+func UserSourceLabel(source string) string {
+	switch source {
+	case UserSourceLocal:
+		return "后台添加"
+	case UserSourceEmailRegister:
+		return "邮箱注册"
+	case UserSourcePhoneRegister:
+		return "手机号注册"
+	case UserSourceGitHub:
+		return "GitHub"
+	case UserSourceGitee:
+		return "Gitee"
+	case UserSourceGoogle:
+		return "Google"
+	case UserSourceOwl:
+		return "统一身份认证"
+	default:
+		if strings.TrimSpace(source) == "" {
+			return "后台添加"
+		}
+		return source
+	}
+}
+
+// UserSourceQueryValue 把库存 source 转成列表查询参数。
+func UserSourceQueryValue(source string) string {
+	if strings.TrimSpace(source) == "" {
+		return UserSourceQueryLocal
+	}
+	return source
+}
+
+// ParseUserSourceQuery 解析列表查询参数。空字符串表示不筛选。
+func ParseUserSourceQuery(query string) (stored string, ok bool) {
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return "", false
+	}
+	if query == UserSourceQueryLocal {
+		return UserSourceLocal, true
+	}
+	return query, true
+}
+
 type User struct {
 	db.BaseModel
 	Avatar     string     `gorm:"comment:用户头像" json:"avatar"`
@@ -40,6 +102,7 @@ type User struct {
 	RegisterIP string     `gorm:"comment:注册IP;type:string;size:64" json:"register_ip"`
 	Source     string     `gorm:"comment:用户来源" json:"source"`
 	SourceID   string     `gorm:"comment:第三方用户唯一标识" json:"sourceID"`
+	SourceRaw  string     `gorm:"comment:第三方登录原始信息;type:text" json:"sourceRaw,omitempty"`
 
 	Roles  []Role      `gorm:"many2many:admin_user_role;joinForeignKey:user_id;References:id;JoinReferences:role_id" json:"roles"`
 	Menus  []Menu      `gorm:"many2many:admin_user_menu;joinForeignKey:user_id;References:id;JoinReferences:menu_id" json:"menus"`

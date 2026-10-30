@@ -3,16 +3,42 @@ import userAvatar from "@bit-labs.cn/owl-ui/assets/user.jpg";
 import type { Ref } from "vue";
 import { tableIndexColumn, type TablePaginationInput } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
 
+/** 与后端 model.UserSourceLabel 保持一致，来源选项接口返回前先显示中文。 */
+function sourceText(source: string | undefined, labels: Record<string, string>) {
+  const key = source ?? "";
+  if (labels[key]) return labels[key];
+  switch (key) {
+    case "":
+      return "后台添加";
+    case "email":
+      return "邮箱注册";
+    case "phone":
+      return "手机号注册";
+    case "github":
+      return "GitHub";
+    case "gitee":
+      return "Gitee";
+    case "google":
+      return "Google";
+    case "owl":
+      return "统一身份认证";
+    default:
+      return key;
+  }
+}
+
 export function createColumns({
   switchLoadMap,
   switchStyle,
   onChange,
-  pagination
+  pagination,
+  sourceLabelMap = {}
 }: {
   switchLoadMap: Ref<Record<number, { loading: boolean }>>;
   switchStyle: Ref<Record<string, string>>;
   onChange: (scope: any) => void;
   pagination?: TablePaginationInput;
+  sourceLabelMap?: Record<string, string>;
 }): TableColumnList {
   return [
     {
@@ -84,6 +110,12 @@ export function createColumns({
       )
     },
     { label: "手机号码", prop: "phone", minWidth: 90 },
+    {
+      label: "来源",
+      prop: "source",
+      minWidth: 120,
+      cellRenderer: ({ row }) => sourceText(row.source, sourceLabelMap)
+    },
     {
       label: "状态",
       prop: "status",
