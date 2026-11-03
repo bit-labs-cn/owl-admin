@@ -8,6 +8,7 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/provider/jwt"
@@ -88,6 +89,12 @@ func (i *Handle) Login(c *gin.Context) {
 // @Failure		500			{object}	router.Resp	"服务器内部错误"
 // @Router			/oauth2/{provider}/callback [GET]
 func (i *Handle) Callback(c *gin.Context) {
+	if strings.TrimSpace(c.Query("error")) == "access_denied" {
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		c.String(http.StatusOK, closeWindowPage)
+		return
+	}
+
 	provider := c.Param("provider")
 	p := i.catalog.Find(provider)
 	if p == nil {
@@ -171,6 +178,15 @@ func renderLoginSuccess(token, state string) string {
 	}{Message: template.JS(raw)})
 	return buf.String()
 }
+
+const closeWindowPage = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script>window.close();</script>
+</head>
+<body></body>
+</html>`
 
 var loginSuccessTmpl = template.Must(template.New("login-success").Parse(`<!DOCTYPE html>
 <html>
