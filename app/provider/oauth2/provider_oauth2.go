@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"bit-labs.cn/owl/provider/conf"
+	"github.com/spf13/cast"
 	xoauth2 "golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
@@ -80,6 +82,21 @@ func init() {
 			},
 		)
 	})
+	registerFactory("owl", func() Provider {
+		return newOAuth2Provider(
+			"owl",
+			xoauth2.Endpoint{},
+			[]string{"openid", "profile", "email", "phone"},
+			"",
+			identityFields{
+				username: []string{"username"},
+				nickName: []string{"nickname"},
+				email:    []string{"email"},
+				phone:    []string{"mobile"},
+				id:       []string{"user_id"},
+			},
+		)
+	})
 }
 
 func newOAuth2Provider(name string, endpoint xoauth2.Endpoint, scopes []string, userInfoURL string, fields identityFields) *oauth2Provider {
@@ -105,13 +122,93 @@ func (p *oauth2Provider) Load(configure *conf.Configure) {
 		ClientID     string `json:"client-id"`
 		ClientSecret string `json:"client-secret"`
 		RedirectURL  string `json:"redirect-url"`
+		UserInfoURL  string `json:"user-info-url"`
+		Scopes       any    `json:"scopes"`
+		Endpoint     struct {
+			AuthURL       string `json:"auth-url"`
+			TokenURL      string `json:"token-url"`
+			DeviceAuthURL string `json:"device-auth-url"`
+			AuthStyle     any    `json:"auth-style"`
+		} `json:"endpoint"`
 	}
-	_ = configure.GetConfig("oauth."+p.name, &creds)
+	_ = configure.GetConfig("oauth2."+p.name, &creds)
 	p.enable = creds.Enable
 	p.displayName = strings.TrimSpace(creds.Name)
 	p.cfg.ClientID = strings.TrimSpace(creds.ClientID)
 	p.cfg.ClientSecret = strings.TrimSpace(creds.ClientSecret)
 	p.cfg.RedirectURL = strings.TrimSpace(creds.RedirectURL)
+	if scopes := scopesFrom(creds.Scopes); len(scopes) > 0 {
+		p.cfg.Scopes = scopes
+	}
+	if auth := strings.TrimSpace(creds.Endpoint.AuthURL); auth != "" {
+		p.cfg.Endpoint.AuthURL = auth
+	}
+	if token := strings.TrimSpace(creds.Endpoint.TokenURL); token != "" {
+		p.cfg.Endpoint.TokenURL = token
+	}
+	if device := strings.TrimSpace(creds.Endpoint.DeviceAuthURL); device != "" {
+		p.cfg.Endpoint.DeviceAuthURL = device
+	}
+	if style := strings.TrimSpace(cast.ToString(creds.Endpoint.AuthStyle)); style != "" {
+		p.cfg.Endpoint.AuthStyle = authStyleFrom(creds.Endpoint.AuthStyle)
+	}
+	if info := strings.TrimSpace(creds.UserInfoURL); info != "" {
+		p.userInfoURL = info
+	} else if p.userInfoURL == "" {
+		p.userInfoURL = userInfoFromTokenURL(p.cfg.Endpoint.TokenURL)
+	}
+}
+
+func authStyleFrom(value any) xoauth2.AuthStyle {
+	switch strings.ToLower(strings.TrimSpace(cast.ToString(value))) {
+	case "1", "in-params", "params":
+		return xoauth2.AuthStyleInParams
+	case "2", "in-header", "header":
+		return xoauth2.AuthStyleInHeader
+	default:
+		return xoauth2.AuthStyleAutoDetect
+	}
+}
+
+func scopesFrom(value any) []string {
+	switch v := value.(type) {
+	case string:
+		return splitScopes(v)
+	case []string:
+		out := make([]string, 0, len(v))
+		for _, item := range v {
+			out = append(out, splitScopes(item)...)
+		}
+		return out
+	case []any:
+		out := make([]string, 0, len(v))
+		for _, item := range v {
+			out = append(out, splitScopes(cast.ToString(item))...)
+		}
+		return out
+	default:
+		return nil
+	}
+}
+
+func splitScopes(raw string) []string {
+	return strings.Fields(strings.ReplaceAll(raw, ",", " "))
+}
+
+// userInfoFromTokenURL 在未单独配置身份地址时，把以 /token 结尾的令牌地址换成同级 /userinfo。
+func userInfoFromTokenURL(tokenURL string) string {
+	u, err := url.Parse(strings.TrimSpace(tokenURL))
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return ""
+	}
+	path := strings.TrimSuffix(u.Path, "/")
+	if !strings.HasSuffix(path, "/token") {
+		return ""
+	}
+	u.Path = strings.TrimSuffix(path, "/token") + "/userinfo"
+	u.RawQuery = ""
+	u.Fragment = ""
+	return u.String()
 }
 
 func (p *oauth2Provider) Enabled() bool {

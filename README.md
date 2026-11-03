@@ -13,7 +13,7 @@ owl-admin/
 ├─ README.md                     # 项目说明
 ├─ conf/                         # 运行配置目录（启动时会自动生成模板配置）
 │  ├─ .gitignore                 # 默认忽略 *.yaml 配置，避免提交敏感信息
-│  └─ oauth.example.yaml         # OAuth 示例配置（需复制为 oauth.yaml 才会生效）
+│  └─ oauth2.yaml                # 第三方登录（首次启动自动生成）
 └─ app/                          # 业务子应用（admin）
    ├─ app.go                     # 子应用注册：服务提供者、路由、绑定、启动钩子
    ├─ cmd/                       # CLI 命令（子应用级别；切换为 ConsoleShell 模式后可用）
@@ -104,8 +104,8 @@ go mod download
   - `mode`、`single.host`、`single.port`、`single.password` 等
 - `conf/jwt.yaml`
   - `signing-key`、`issuer`、`expire`
-- `conf/oauth.yaml`（可选）
-  - 将 `conf/oauth.example.yaml` 复制为 `conf/oauth.yaml` 并填写各 provider 的 `client-id/client-secret/redirect-url`
+- `conf/oauth2.yaml`（可选）
+  - 首次启动自动生成。填写各 provider 的 `client-id`、`client-secret`、`redirect-url`
 
 另外，本项目支持 `.env` 文件加载（按优先级依次尝试：`.env.local`、`.env.<APP_ENV>`、`.env`），也支持通过环境变量覆盖配置（Viper 会将 `-` 与 `.` 映射为 `_`，并以配置文件名作为前缀，例如：`DATABASE_HOST`、`JWT_SIGNING_KEY` 等）。
 
@@ -182,9 +182,10 @@ curl -X POST "http://127.0.0.1:8080/api/v1/monitor/operation-logs" ^
 GET /oauth2/github/login
 GET /oauth2/google/login
 GET /oauth2/gitee/login
+GET /oauth2/owl/login
 ```
 
-并确保 `conf/oauth.yaml` 中的 `redirect-url` 与前端/回调地址一致。
+并确保 `conf/oauth2.yaml` 中的 `redirect-url` 与前端/回调地址一致。owl 走标准授权码：`endpoint` 指向 owl-oauth 的 authorize / token，身份从 `user-info-url` 读取。
 
 ## 技术栈与依赖
 

@@ -4,6 +4,7 @@ gitee:
   client-id: ""
   client-secret: ""
   redirect-url: "https://arkshell.bit-labs.cn/oauth2/gitee/callback"
+  scopes: ""
 
 github:
   enable: false
@@ -11,6 +12,7 @@ github:
   client-id: ""
   client-secret: ""
   redirect-url: "https://arkshell.bit-labs.cn/oauth2/github/callback"
+  scopes: ""
 
 google:
   enable: false
@@ -18,6 +20,7 @@ google:
   client-id: ""
   client-secret: ""
   redirect-url: "https://arkshell.bit-labs.cn/oauth2/google/callback"
+  scopes: ""
 
 owl:
   enable: false
@@ -25,6 +28,9 @@ owl:
   client-id: ""
   client-secret: ""
   redirect-url: "https://arkshell.bit-labs.cn/oauth2/owl/callback"
+  scopes: "openid profile email phone"
+
+  user-info-url: "http://127.0.0.1:8080/api/v1/oauth/userinfo"
   endpoint:
     auth-url: "http://127.0.0.1:8080/api/v1/oauth/authorize"
     token-url: "http://127.0.0.1:8080/api/v1/oauth/token"

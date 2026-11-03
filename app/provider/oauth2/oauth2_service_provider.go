@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Oauth2ServiceProvider 登记第三方登录，并在首次启动时生成 oauth.yaml。
+// Oauth2ServiceProvider 登记第三方登录，并在首次启动时生成 oauth2.yaml。
 type Oauth2ServiceProvider struct {
 	app foundation.Application
 }
