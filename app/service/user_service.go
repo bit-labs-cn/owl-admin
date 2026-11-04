@@ -43,12 +43,12 @@ const (
 	CodeEmailCodeInvalid  = "EMAIL_CODE_INVALID"
 	CodeEmailCodeTooOften = "EMAIL_CODE_TOO_OFTEN"
 	CodeEmailSendFailed   = "EMAIL_SEND_FAILED"
+	CodeRegisterDisabled  = "REGISTER_DISABLED"
 
 	registerCodeKeyPrefix  = "register:code:"
 	registerCooldownPrefix = "register:cooldown:"
-	registerCodeTTL        = 10 * time.Minute
-	registerCooldownTTL    = 60 * time.Second
 	registerCodeLength     = 6
+	registerCodeTTL        = 10 * time.Minute
 )
 
 func UserExists() *errContract.BizError {
@@ -69,6 +69,10 @@ func EmailCodeTooOften() *errContract.BizError {
 
 func EmailSendFailed() *errContract.BizError {
 	return errContract.NewBizError(CodeEmailSendFailed, "邮件发送失败")
+}
+
+func RegisterDisabled() *errContract.BizError {
+	return errContract.NewBizError(CodeRegisterDisabled, "注册已关闭")
 }
 
 type UserBatchFields struct {
@@ -202,6 +206,7 @@ type UserService struct {
 	validate          *validatorv10.Validate
 	redisClient       redis.UniversalClient
 	mailer            *mailer.MailerManager
+	settings          *SettingService
 }
 
 func NewUserService(
@@ -219,6 +224,7 @@ func NewUserService(
 	validate *validatorv10.Validate,
 	redisClient redis.UniversalClient,
 	mailerMgr *mailer.MailerManager,
+	settings *SettingService,
 ) *UserService {
 	return &UserService{
 		db:                tx,
@@ -236,6 +242,7 @@ func NewUserService(
 		validate:          validate,
 		redisClient:       redisClient,
 		mailer:            mailerMgr,
+		settings:          settings,
 	}
 }
 
@@ -684,6 +691,13 @@ func (i *UserService) SendRegisterCode(ctx context.Context, req *SendRegisterCod
 	if err := i.validate.Struct(req); err != nil {
 		return err
 	}
+	if err := i.ensureRegisterOpen(ctx); err != nil {
+		return err
+	}
+	codeTTL, cooldown, err := i.registerTiming(ctx)
+	if err != nil {
+		return err
+	}
 
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 	if i.userRepo.WithContext(ctx).UniqueByEmail(0, email) {
@@ -691,7 +705,7 @@ func (i *UserService) SendRegisterCode(ctx context.Context, req *SendRegisterCod
 	}
 
 	cooldownKey := registerCooldownPrefix + email
-	ok, err := i.redisClient.SetNX(ctx, cooldownKey, "1", registerCooldownTTL).Result()
+	ok, err := i.redisClient.SetNX(ctx, cooldownKey, "1", cooldown).Result()
 	if err != nil {
 		return err
 	}
@@ -705,13 +719,14 @@ func (i *UserService) SendRegisterCode(ctx context.Context, req *SendRegisterCod
 	}
 
 	codeKey := registerCodeKeyPrefix + email
-	if err = i.redisClient.Set(ctx, codeKey, code, registerCodeTTL).Err(); err != nil {
+	if err = i.redisClient.Set(ctx, codeKey, code, codeTTL).Err(); err != nil {
 		return err
 	}
 
+	minutes := int(codeTTL.Minutes())
 	subject := "注册验证码"
-	body := fmt.Sprintf("您的注册验证码为：%s，%d 分钟内有效。如非本人操作请忽略。", code, int(registerCodeTTL.Minutes()))
-	htmlBody := fmt.Sprintf("<p>您的注册验证码为：<strong>%s</strong>，%d 分钟内有效。</p><p>如非本人操作请忽略。</p>", code, int(registerCodeTTL.Minutes()))
+	body := fmt.Sprintf("您的注册验证码为：%s，%d 分钟内有效。如非本人操作请忽略。", code, minutes)
+	htmlBody := fmt.Sprintf("<p>您的注册验证码为：<strong>%s</strong>，%d 分钟内有效。</p><p>如非本人操作请忽略。</p>", code, minutes)
 
 	if err = i.mailer.Send(ctx, &mailerContract.Message{
 		To:      []string{email},
@@ -729,6 +744,9 @@ func (i *UserService) SendRegisterCode(ctx context.Context, req *SendRegisterCod
 // RegisterByEmail 邮箱验证码注册
 func (i *UserService) RegisterByEmail(ctx context.Context, req *EmailRegisterReq, registerIP string) error {
 	if err := i.validate.Struct(req); err != nil {
+		return err
+	}
+	if err := i.ensureRegisterOpen(ctx); err != nil {
 		return err
 	}
 
@@ -788,6 +806,9 @@ func (i *UserService) Register(ctx context.Context, req *model.User) error {
 	if err := i.validate.Struct(req); err != nil {
 		return err
 	}
+	if err := i.ensureRegisterOpen(ctx); err != nil {
+		return err
+	}
 
 	l := i.locker.New()
 	if err := l.Lock("user:register"); err != nil {
@@ -802,6 +823,25 @@ func (i *UserService) Register(ctx context.Context, req *model.User) error {
 	}
 
 	return i.userRepo.WithContext(ctx).Save(&user)
+}
+
+func (i *UserService) ensureRegisterOpen(ctx context.Context) error {
+	open, err := i.settings.Bool(ctx, subsystemAdmin, keyRegisterEnabled)
+	if err != nil {
+		return err
+	}
+	if !open {
+		return RegisterDisabled()
+	}
+	return nil
+}
+
+func (i *UserService) registerTiming(ctx context.Context) (ttl, cooldown time.Duration, err error) {
+	seconds, err := i.settings.Int(ctx, subsystemAdmin, keyRegisterCooldownSeconds)
+	if err != nil {
+		return 0, 0, err
+	}
+	return registerCodeTTL, time.Duration(seconds) * time.Second, nil
 }
 
 func generateNumericCode(length int) (string, error) {

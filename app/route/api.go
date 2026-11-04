@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu *router.Menu
+var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu, settingMenu *router.Menu
 
 func InitMenu() []*router.Menu {
 	return []*router.Menu{
@@ -57,6 +57,7 @@ func InitMenu() []*router.Menu {
 				dictMenu,
 				appVersionMenu,
 				legalMenu,
+				settingMenu,
 			},
 		},
 		{
@@ -113,6 +114,7 @@ func InitApi(app foundation.Application, appName string) {
 		logHandle *v1.LogHandle,
 		appVersionHandle *v1.AppVersionHandle,
 		legalHandle *v1.LegalHandle,
+		settingHandle *v1.SettingHandle,
 		enforcer *casbin.SyncedEnforcer,
 		engine *gin.Engine,
 		jwtSvc *jwt.JWTService,
@@ -416,6 +418,18 @@ func InitApi(app foundation.Application, appName string) {
 			r.Get("/legal/events", router.AccessAuthorized, legalHandle.RetrieveEvents).Name("同意记录").WithoutOperateLog().Build()
 
 			legalMenu = r.GetMenu()
+		}
+
+		{
+			r := router.NewRouteInfoBuilder(appName, settingHandle, gv1, router.MenuOption{
+				ComponentName: "SystemSetting",
+				Path:          "/system/setting/index",
+				Icon:          "ep:operation",
+			})
+			r.Get("/setting", router.AccessSuperAdmin, settingHandle.Retrieve).Name("读取系统配置").Build()
+			r.Put("/setting", router.AccessSuperAdmin, settingHandle.Update).Name("保存系统配置").Build()
+			r.Get("/setting/public", router.AccessPublic, settingHandle.Public).Name("公开系统配置").WithoutOperateLog().Build()
+			settingMenu = r.GetMenu()
 		}
 	})
 	owl.PanicIf(err)

@@ -15,6 +15,7 @@ import (
 	"bit-labs.cn/owl/provider/permission"
 	"bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
+	"bit-labs.cn/owl/provider/setting"
 	"bit-labs.cn/owl/provider/socketio"
 	"bit-labs.cn/owl/provider/storage"
 	"github.com/spf13/cobra"
@@ -67,6 +68,10 @@ func (i *SubAppAdmin) RegisterMenus() []*router.Menu {
 	return route.InitMenu()
 }
 
+func (i *SubAppAdmin) RegisterConfigs() setting.Catalog {
+	return service.AdminSettingCatalog()
+}
+
 func (i *SubAppAdmin) RegisterCommands() []*cobra.Command {
 	return []*cobra.Command{
 		cmd.Version,
@@ -115,5 +120,8 @@ func (i *SubAppAdmin) Binds() []any {
 		repository.NewUserGroupRepository,
 		repository.NewLegalRepository,
 		service.NewLegalService,
+		repository.NewSettingRepository,
+		service.NewSettingService,
+		v1.NewSettingHandle,
 	}
 }

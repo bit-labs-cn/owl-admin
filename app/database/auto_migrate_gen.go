@@ -34,5 +34,6 @@ func Models() []any {
 		&LegalScene{},
 		&LegalSceneItem{},
 		&LegalEvent{},
+		&Setting{},
 	}
 }
