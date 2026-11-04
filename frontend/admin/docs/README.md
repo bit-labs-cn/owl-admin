@@ -1,6 +1,6 @@
 # Owl-Admin-UI 开发文档
 
-本目录为 **@bit-labs.cn/owl-admin-ui** 的开发者手册，面向 AI 开发工具与人工开发者。Owl-Admin-UI 是**后台前端子系统包**，依赖 `@bit-labs.cn/owl-ui`，通过 `defineSubsystem()` 注册，提供后台管理相关视图与 API；路由与菜单由宿主 + 后端驱动，本包不定义静态业务路由。
+本目录为 **@bit-labs.cn/owl-admin-ui** 的开发者手册，面向 AI 开发工具与人工开发者。Owl-Admin-UI 是**后台前端子系统包**，依赖 `@bit-labs.cn/owl-ui`，通过 `defineSubsystem()` 注册，提供后台管理相关视图与 API；路由与菜单由宿主 + 后端驱动，本包不定义静态业务路由。本仓库同时带宿主入口，在 `frontend/admin` 执行 `pnpm dev` 即可单独启动。
 
 **适用范围**：本文档适用于**在 owl-admin-ui 包内扩展**（新增/修改后台管理页面、API、目录规范）。若要新建**独立前端子系统包**（与 owl-admin-ui 平级的另一个 npm 包，由宿主通过 `createFlexAdmin({ subsystems: [yourSubsystem] })` 注册），请阅读 **owl-ui** 的 `docs/03-subsystem-contract.md` 与 `docs/08-minimal-subsystem-template.md`。
 

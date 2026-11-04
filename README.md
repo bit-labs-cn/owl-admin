@@ -119,6 +119,17 @@ go mod download
 go run .
 ```
 
+### 单独启动前端
+
+前端在 `frontend/admin`，与后端同仓。需要同级目录有 `owl-ui-builder` 与 `owl-ui`（`d:/project/bit-labs/` 下）。
+
+```bash
+cd frontend/admin
+pnpm dev
+```
+
+默认打开 `http://localhost:8848/`，接口代理到 `http://localhost:8080/`（见 `frontend/admin/.env`）。构建用 `pnpm build`，产物在 `frontend/admin/dist/`。
+
 启动后：
 
 - HTTP 服务会按照 `conf/router.yaml` 的 `server.host/port` 监听
