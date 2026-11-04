@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu, settingMenu *router.Menu
+var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu, settingMenu, passwordToolMenu, serverMonitorMenu *router.Menu
 
 func InitMenu() []*router.Menu {
 	return []*router.Menu{
@@ -95,6 +95,32 @@ func InitMenu() []*router.Menu {
 				},
 			},
 		},
+		{
+			Path: "/system/tools",
+			Name: "SystemToolbox",
+			Meta: router.Meta{
+				Title:      "系统工具",
+				Icon:       "ep:tools",
+				ShowParent: true,
+				ShowLink:   true,
+			},
+			MenuType: router.MenuTypeDir,
+			Children: []*router.Menu{
+				passwordToolMenu,
+				serverMonitorMenu,
+				{
+					Path: "/system/tools/codec/index",
+					Name: "SystemCodecTool",
+					Meta: router.Meta{
+						Title:      "编码转换",
+						Icon:       "ep:edit",
+						ShowParent: true,
+						ShowLink:   true,
+					},
+					MenuType: router.MenuTypeMenu,
+				},
+			},
+		},
 	}
 }
 
@@ -115,6 +141,8 @@ func InitApi(app foundation.Application, appName string) {
 		appVersionHandle *v1.AppVersionHandle,
 		legalHandle *v1.LegalHandle,
 		settingHandle *v1.SettingHandle,
+		passwordToolHandle *v1.PasswordToolHandle,
+		serverMonitorHandle *v1.ServerMonitorHandle,
 		enforcer *casbin.SyncedEnforcer,
 		engine *gin.Engine,
 		jwtSvc *jwt.JWTService,
@@ -430,6 +458,27 @@ func InitApi(app foundation.Application, appName string) {
 			r.Put("/setting", router.AccessSuperAdmin, settingHandle.Update).Name("保存系统配置").Build()
 			r.Get("/setting/public", router.AccessPublic, settingHandle.Public).Name("公开系统配置").WithoutOperateLog().Build()
 			settingMenu = r.GetMenu()
+		}
+
+		{
+			r := router.NewRouteInfoBuilder(appName, passwordToolHandle, gv1, router.MenuOption{
+				ComponentName: "SystemPasswordTool",
+				Path:          "/system/tools/password/index",
+				Icon:          "ep:key",
+			})
+			r.Post("/tools/passwords", router.AccessAuthorized, passwordToolHandle.Generate).Name("生成密码").WithoutOperateLog().Build()
+			r.Post("/tools/password-hashes", router.AccessAuthorized, passwordToolHandle.Hash).Name("计算密文").WithoutOperateLog().Build()
+			passwordToolMenu = r.GetMenu()
+		}
+
+		{
+			r := router.NewRouteInfoBuilder(appName, serverMonitorHandle, gv1, router.MenuOption{
+				ComponentName: "SystemServerMonitor",
+				Path:          "/system/tools/server/index",
+				Icon:          "ep:odometer",
+			})
+			r.Get("/tools/server", router.AccessAuthorized, serverMonitorHandle.Snapshot).Name("运行概况").WithoutOperateLog().Build()
+			serverMonitorMenu = r.GetMenu()
 		}
 	})
 	owl.PanicIf(err)

@@ -12,7 +12,7 @@
 
 - 子系统定义与导出：`src/index.ts`（`defineSubsystem({ name: "admin", viewModulesPathPrefix: "/system", viewModules: import.meta.glob(...) })`）
 - 静态路由（当前为空）：`src/routes/index.ts`
-- 视图目录：`src/views/`（user、role、dept、position、menu、dict、api、login-log、operation-log 等）
+- 视图目录：`src/views/`（user、role、dept、position、menu、dict、api、login-log、operation-log、tools/password、tools/server、tools/codec 等）
 
 ## 宿主接入
 

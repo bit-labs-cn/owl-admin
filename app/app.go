@@ -123,5 +123,9 @@ func (i *SubAppAdmin) Binds() []any {
 		repository.NewSettingRepository,
 		service.NewSettingService,
 		v1.NewSettingHandle,
+		service.NewPasswordToolService,
+		v1.NewPasswordToolHandle,
+		service.NewServerMonitorService,
+		v1.NewServerMonitorHandle,
 	}
 }

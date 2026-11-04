@@ -19,6 +19,7 @@
 - **api、login-log、operation-log**：多为只读列表，无新增/编辑表单，不要当成标准 CRUD 模板。
 - **调试代码**：如 setTimeout 模拟 loading、零散的 console.log，不要当作规范写入新代码。
 - **系统配置**：`src/views/setting/` 按接口返回的子系统、分组和配置项渲染，不要在页面里写死配置键，也不要做成可增删的参数表。左边是子系统、一级分组和可选的二级分组，最多这三层。右边编辑当前叶子分组，标题旁边显示配置键。不要改回默认的 el-tree 加左标签表单。`image` 用选择文件，不要改成地址输入框。
+- **系统工具**不是 CRUD：`src/views/tools/password/` 菜单 name `SystemPasswordTool`，path `/system/tools/password/index`；`src/views/tools/server/` 菜单 name `SystemServerMonitor`，path `/system/tools/server/index`；`src/views/tools/codec/` 菜单 name `SystemCodecTool`，path `/system/tools/codec/index`。视图目录必须和菜单 path 去掉 `/system` 前缀后一致，否则页面是空白。编码转换在浏览器内完成，不要为它补空接口。
 
 ## AI 自检清单
 
