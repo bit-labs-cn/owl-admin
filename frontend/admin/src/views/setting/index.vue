@@ -99,7 +99,8 @@ function chooseImage(item: SettingItem) {
                 :aria-current="group.id === currentNodeKey ? 'page' : undefined"
                 @click="onNode(group)"
               >
-                {{ group.label }}
+                <span>{{ group.label }}</span>
+                <code v-if="group.key" class="setting-nav-key">{{ group.key }}</code>
               </button>
               <button
                 v-for="child in group.children"
@@ -110,7 +111,8 @@ function chooseImage(item: SettingItem) {
                 :aria-current="child.id === currentNodeKey ? 'page' : undefined"
                 @click="onNode(child)"
               >
-                {{ child.label }}
+                <span>{{ child.label }}</span>
+                <code v-if="child.key" class="setting-nav-key">{{ child.key }}</code>
               </button>
             </template>
           </section>
@@ -225,6 +227,10 @@ function chooseImage(item: SettingItem) {
 }
 
 .setting-link {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
   width: calc(100% - 18px);
   margin-left: 18px;
   padding: 8px 10px;
@@ -233,6 +239,13 @@ function chooseImage(item: SettingItem) {
   color: var(--el-text-color-regular);
   font-size: 14px;
   line-height: 22px;
+}
+
+.setting-link .setting-nav-key {
+  color: var(--el-text-color-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .setting-link--nested {

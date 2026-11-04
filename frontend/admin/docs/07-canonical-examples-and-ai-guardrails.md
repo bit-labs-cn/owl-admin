@@ -18,7 +18,7 @@
 - **menu 模块**：部分成功提示或界面逻辑可能与后端 API 未完全对接，仅作菜单字段与 auths 的参考。
 - **api、login-log、operation-log**：多为只读列表，无新增/编辑表单，不要当成标准 CRUD 模板。
 - **调试代码**：如 setTimeout 模拟 loading、零散的 console.log，不要当作规范写入新代码。
-- **系统配置**：`src/views/setting/` 按接口返回的子系统、分组和配置项渲染，不要在页面里写死配置键，也不要做成可增删的参数表。左边是子系统、一级分组和可选的二级分组，最多这三层。右边编辑当前叶子分组，标题旁边显示配置键。不要改回默认的 el-tree 加左标签表单。`image` 用选择文件，不要改成地址输入框。
+- **系统配置**：`src/views/setting/` 按接口返回的子系统、分组和配置项渲染，不要在页面里写死配置键，也不要做成可增删的参数表。左边是子系统、一级分组和可选的二级分组，最多这三层，分组名称旁边显示分组键。右边编辑当前叶子分组，配置项标题旁边显示配置键。其他页面用 `settingValue("admin.site.siteName")` 读取（`@bit-labs.cn/owl-ui/config/settings`，`useSetting.ts` 再导出），路径是子系统、分组和配置键，有二级分组时再多一段。公开项由 owl-ui 启动时请求 `GET /api/v1/setting/public` 写入；非公开项要等设置页加载过完整配置。不要在页面里再请求公开配置，也不要自己拆接口树。不要改回默认的 el-tree 加左标签表单。`image` 用选择文件，不要改成地址输入框。
 - **系统工具**不是 CRUD：`src/views/tools/password/` 菜单 name `SystemPasswordTool`，path `/system/tools/password/index`；`src/views/tools/server/` 菜单 name `SystemServerMonitor`，path `/system/tools/server/index`；`src/views/tools/codec/` 菜单 name `SystemCodecTool`，path `/system/tools/codec/index`。视图目录必须和菜单 path 去掉 `/system` 前缀后一致，否则页面是空白。编码转换在浏览器内完成，不要为它补空接口。
 
 ## AI 自检清单

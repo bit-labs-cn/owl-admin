@@ -29,10 +29,11 @@ export interface SettingView {
   subsystems: SettingSubsystem[];
 }
 
-/** 左侧导航的一个节点。叶子分组带 group，系统和一级目录只用来展开。 */
+/** 左侧导航的一个节点。分组带 key；叶子分组再带 group，系统和一级目录只用来展开。 */
 export interface SettingTreeNode {
   id: string;
   label: string;
+  key?: string;
   subsystem: string;
   group?: string;
   children?: SettingTreeNode[];

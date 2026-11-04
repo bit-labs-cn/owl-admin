@@ -24,7 +24,7 @@
 ## 注意事项
 
 - 新页面不需要在本包 `routes/index.ts` 里手工注册；只需在 `views/` 下新增文件，并保证后端菜单的 component/name 与之一致。
-- 本包无 Pinia store，状态均为页面级（ref/reactive/computed、useXList 等 composable）。
+- 本包无 Pinia store。页面状态用 ref/reactive/computed、useXList。公开配置由 owl-ui 在启动时请求 `GET /api/v1/setting/public` 写入 `config/settings`。用 `settingValue("admin.site.siteName")` 读取。设置页保存后会再请求一次，再用完整配置覆盖缓存。
 
 ## 完成定义
 

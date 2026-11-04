@@ -1,8 +1,12 @@
 import { computed, ref } from "vue";
 import { ElMessageBox } from "element-plus";
+import { rememberSettings, settingValue } from "@bit-labs.cn/owl-ui/config/settings";
 import { settingAPI } from "@bit-labs.cn/owl-admin-ui/api/setting";
-import { loadPublicSite } from "@bit-labs.cn/owl-admin-ui/loadPublicSite";
+import { loadPublicSettings } from "@bit-labs.cn/owl-ui/config/loadPublicSettings";
+import { indexSettingValues } from "./settingPaths";
 import type { SettingGroup, SettingSubsystem, SettingTreeNode } from "./types";
+
+export { settingValue };
 
 export function useSetting() {
   const loading = ref(false);
@@ -47,6 +51,7 @@ export function useSetting() {
       const res = await settingAPI.get();
       const list = res.data?.subsystems ?? [];
       subsystems.value = list;
+      rememberSettings(indexSettingValues(list), "replace");
       keepSelection(list);
     } finally {
       loading.value = false;
@@ -67,7 +72,7 @@ export function useSetting() {
     saving.value = true;
     try {
       await settingAPI.update({ subsystem: current.name, values });
-      await loadPublicSite();
+      await loadPublicSettings();
       await load();
     } finally {
       saving.value = false;
@@ -112,11 +117,12 @@ function toTreeNode(subsystem: string, group: SettingGroup, parentKey?: string):
     return {
       id,
       label: group.title,
+      key: group.key,
       subsystem,
       children: group.groups.map(child => toTreeNode(subsystem, child, group.key))
     };
   }
-  return { id, label: group.title, subsystem, group: group.key };
+  return { id, label: group.title, key: group.key, subsystem, group: group.key };
 }
 
 function findGroup(groups: SettingGroup[], key: string): SettingGroup | undefined {
