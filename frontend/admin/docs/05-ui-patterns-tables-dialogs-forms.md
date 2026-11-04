@@ -20,6 +20,10 @@
 2. 在 Form.vue 中接收 `formInline`，用 `defineExpose({ getRef })` 暴露表单 ref，校验规则写在 Form 内或 rules.ts。
 3. 表格列用 columns.tsx 的 createColumns，操作列用 slot 在 index.vue 里写编辑/删除按钮。
 
+## 页内 Tab
+
+同一页里切换几张列表时，切换条放在表格工具栏左侧，也就是 `PureTableBar` 标题所在的位置，用 `#title` 插槽。不要在搜索框上方再铺一条 Tab，也不要让 Tab 直接落在页面灰底上。参考 `src/views/legal/LegalSwitch.vue`。
+
 ## 注意事项
 
 - `formInline` 在 addDialog 的 props 中传入，用于区分新增（空/默认值）与编辑（行数据）；contentRenderer 里可传 `formInline: null`，实际数据从 options.props.formInline 取。
