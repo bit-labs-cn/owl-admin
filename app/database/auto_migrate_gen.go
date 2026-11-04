@@ -29,5 +29,10 @@ func Models() []any {
 		&UserGroupUser{},
 		&UserDept{},
 		&TrustedDevice{},
+		&LegalDocument{},
+		&LegalVersion{},
+		&LegalScene{},
+		&LegalSceneItem{},
+		&LegalEvent{},
 	}
 }

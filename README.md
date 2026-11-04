@@ -70,6 +70,7 @@ owl-admin/
   - 文件上传（由 owl storage provider 提供存储能力）
   - APP 升级检查：查询最新可升级版本
   - 第三方 OAuth 登录：GitHub / Google / Gitee（可配）
+  - 条款管理：条款、不可变版本、阅读/同意场景、只追加的同意记录。手机和 PC 用同一套公开 JSON。注册页尚未接入，见 [docs/user/legal.md](docs/user/legal.md)
 
 ## 快速开始
 

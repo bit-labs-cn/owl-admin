@@ -19,7 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu *router.Menu
+var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu *router.Menu
 
 func InitMenu() []*router.Menu {
 	return []*router.Menu{
@@ -39,6 +39,24 @@ func InitMenu() []*router.Menu {
 				userGroupMenu,
 				deptMenu,
 				positionMenu,
+			},
+		},
+		{
+			Path: "/system",
+			Name: "System",
+			Meta: router.Meta{
+				Title:      "系统管理",
+				Icon:       "ep:setting",
+				ShowParent: true,
+				ShowLink:   true,
+			},
+			MenuType: router.MenuTypeDir,
+			Children: []*router.Menu{
+				menuMenu,
+				apiMenu,
+				dictMenu,
+				appVersionMenu,
+				legalMenu,
 			},
 		},
 		{
@@ -76,23 +94,6 @@ func InitMenu() []*router.Menu {
 				},
 			},
 		},
-		{
-			Path: "/system",
-			Name: "System",
-			Meta: router.Meta{
-				Title:      "系统管理",
-				Icon:       "ep:setting",
-				ShowParent: true,
-				ShowLink:   true,
-			},
-			MenuType: router.MenuTypeDir,
-			Children: []*router.Menu{
-				menuMenu,
-				apiMenu,
-				dictMenu,
-				appVersionMenu,
-			},
-		},
 	}
 }
 
@@ -111,6 +112,7 @@ func InitApi(app foundation.Application, appName string) {
 		areaHandle *v1.AreaHandle,
 		logHandle *v1.LogHandle,
 		appVersionHandle *v1.AppVersionHandle,
+		legalHandle *v1.LegalHandle,
 		enforcer *casbin.SyncedEnforcer,
 		engine *gin.Engine,
 		jwtSvc *jwt.JWTService,
@@ -377,6 +379,43 @@ func InitApi(app foundation.Application, appName string) {
 			r.Get("/app-versions", router.AccessAuthorized, appVersionHandle.Retrieve).Name("APP版本列表").Build()
 
 			appVersionMenu = r.GetMenu()
+		}
+
+		// legal
+		{
+			r := router.NewRouteInfoBuilder(appName, legalHandle, gv1, router.MenuOption{
+				ComponentName: "SystemLegal",
+				Path:          "/system/legal/index",
+				Icon:          "ep:document",
+			})
+
+			r.Get("/legal/scenes/:key", router.AccessPublic, legalHandle.PublicScene).Name("阅读场景").WithoutOperateLog().Build()
+			r.Get("/legal/documents/:key/versions/:version", router.AccessPublic, legalHandle.PublicDocumentVersion).Name("历史正文").WithoutOperateLog().Build()
+			r.Get("/legal/documents/:key", router.AccessPublic, legalHandle.PublicDocument).Name("当前正文").WithoutOperateLog().Build()
+			r.Get("/legal/status", router.AccessAuthenticated, legalHandle.Status).Name("补签状态").WithoutOperateLog().Build()
+			r.Post("/legal/acceptances", router.AccessAuthenticated, legalHandle.Accept).Name("提交同意").Build()
+
+			r.Post("/legal/documents", router.AccessAuthorized, legalHandle.CreateDocument).Name("创建条款").Build()
+			r.Put("/legal/documents/:id", router.AccessAuthorized, legalHandle.UpdateDocument).Name("更新条款").Build()
+			r.Delete("/legal/documents/:id", router.AccessAuthorized, legalHandle.DeleteDocument).Name("删除条款").Build()
+			r.Get("/legal/documents", router.AccessAuthorized, legalHandle.RetrieveDocuments).Name("条款列表").Build()
+			r.Get("/legal/document-options", router.AccessAuthorized, legalHandle.DocumentOptions).Name("条款选项").WithoutOperateLog().Build()
+
+			r.Post("/legal/versions", router.AccessAuthorized, legalHandle.CreateVersion).Name("创建版本草稿").Build()
+			r.Put("/legal/versions/:id", router.AccessAuthorized, legalHandle.UpdateVersion).Name("更新版本草稿").Build()
+			r.Delete("/legal/versions/:id", router.AccessAuthorized, legalHandle.DeleteVersion).Name("删除版本草稿").Build()
+			r.Post("/legal/versions/:id/publish", router.AccessAuthorized, legalHandle.PublishVersion).Name("发布版本").Build()
+			r.Get("/legal/versions", router.AccessAuthorized, legalHandle.RetrieveVersions).Name("版本列表").Build()
+
+			r.Post("/legal/scenes", router.AccessAuthorized, legalHandle.CreateScene).Name("创建场景").Build()
+			r.Put("/legal/scenes/:id", router.AccessAuthorized, legalHandle.UpdateScene).Name("更新场景").Build()
+			r.Delete("/legal/scenes/:id", router.AccessAuthorized, legalHandle.DeleteScene).Name("删除场景").Build()
+			r.Get("/legal/scenes", router.AccessAuthorized, legalHandle.RetrieveScenes).Name("场景列表").Build()
+			r.Get("/legal/scene-options", router.AccessAuthorized, legalHandle.SceneOptions).Name("场景选项").WithoutOperateLog().Build()
+
+			r.Get("/legal/events", router.AccessAuthorized, legalHandle.RetrieveEvents).Name("同意记录").WithoutOperateLog().Build()
+
+			legalMenu = r.GetMenu()
 		}
 	})
 	owl.PanicIf(err)

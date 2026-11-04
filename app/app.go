@@ -46,6 +46,7 @@ func (i *SubAppAdmin) BeforeMigrate(db *gorm.DB) error { return nil }
 func (i *SubAppAdmin) AfterMigrate(db *gorm.DB) error {
 	go seeder.InitAllDictData(db)
 	go seeder.InitAdminAreaData(db)
+	go seeder.InitLegalData(db)
 	return nil
 }
 
@@ -92,6 +93,7 @@ func (i *SubAppAdmin) Binds() []any {
 		v1.NewLogHandle,
 		v1.NewUserHandle,
 		v1.NewUserGroupHandle,
+		v1.NewLegalHandle,
 		service.NewDeptService,
 		service.NewDictService,
 		service.NewRoleService,
@@ -111,5 +113,7 @@ func (i *SubAppAdmin) Binds() []any {
 		service.NewPositionService,
 		service.NewUserGroupService,
 		repository.NewUserGroupRepository,
+		repository.NewLegalRepository,
+		service.NewLegalService,
 	}
 }
