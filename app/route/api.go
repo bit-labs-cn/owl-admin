@@ -100,7 +100,7 @@ func InitMenu() []*router.Menu {
 			Name: "SystemToolbox",
 			Meta: router.Meta{
 				Title:      "系统工具",
-				Icon:       "ep:tools",
+				Icon:       "ri:tools-line",
 				ShowParent: true,
 				ShowLink:   true,
 			},
