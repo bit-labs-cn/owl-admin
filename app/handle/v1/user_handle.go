@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"strings"
+
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/service"
 	"bit-labs.cn/owl/provider/db"
@@ -247,20 +249,22 @@ func (i *UserHandle) AssignMenuToUser(ctx *gin.Context) {
 }
 
 // @Summary		获取当前用户菜单
-// @Description	根据用户角色返回可见菜单列表
+// @Description	根据用户角色返回可见菜单列表。app 为空时返回全部；多个子系统用逗号分隔，如 app=user,sms。
 // @Tags			用户管理
 // @Produce		json
+// @Param			app	query		string		false	"子系统名称，多个用逗号分隔"
 // @Success		200	{object}	router.Resp	"操作成功"
 // @Router			/api/v1/users/me/menus [GET]
 func (i *UserHandle) GetMyMenus(ctx *gin.Context) {
-
+	app := strings.Join(ctx.QueryArray("app"), ",")
 	user, _ := ctx.Get("user")
+	var menus []*router.Menu
 	if user.(*model.User).IsSuperAdmin {
-		router.Success(ctx, i.menuRepo.GetMenuWithoutBtn())
-		return
+		menus = i.menuRepo.GetMenuWithoutBtn()
+	} else {
+		menus = i.userSvc.GetUserMenus(ctx.Request.Context(), user.(*model.User).ID)
 	}
-	menus := i.userSvc.GetUserMenus(ctx.Request.Context(), user.(*model.User).ID)
-	router.Success(ctx, menus)
+	router.Success(ctx, router.FilterMenusBySubApp(menus, app))
 }
 
 // @Summary		获取当前用户权限
