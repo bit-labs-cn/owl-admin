@@ -121,7 +121,7 @@ go run .
 
 ### 单独启动前端
 
-前端在 `frontend/admin`，与后端同仓。需要同级目录有 `owl-ui-builder` 与 `owl-ui`（`d:/project/bit-labs/` 下）。
+前端在 `frontend/admin`，与后端同仓。需要同级目录有 `owl-ui`（工具链在其 `builder/` 下，`d:/project/bit-labs/` 下）。
 
 ```bash
 cd frontend/admin

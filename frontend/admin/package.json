@@ -5,8 +5,8 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "node ../../../owl-ui-builder/scripts/run-project.mjs dev",
-    "build": "node ../../../owl-ui-builder/scripts/run-project.mjs build"
+    "dev": "node ../../../owl-ui/builder/scripts/run-project.mjs dev",
+    "build": "node ../../../owl-ui/builder/scripts/run-project.mjs build"
   },
   "exports": {
     ".": "./src/index.ts",
