@@ -4,7 +4,7 @@ import { useLoginLogList } from "./useLoginLogList";
 import { createColumns } from "./columns";
 import LoginLogDetail from "./LoginLogDetail.vue";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 
 import Refresh from "@iconify-icons/ep/refresh";
@@ -29,7 +29,7 @@ const {
 const columns = computed(() => createColumns(pagination));
 
 function openDetail(row) {
-  addDialog({
+  dialogService.open({
     title: "登录日志详情",
     width: "720px",
     draggable: true,

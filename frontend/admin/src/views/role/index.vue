@@ -5,7 +5,7 @@ import RoleForm from "./RoleForm.vue";
 import RoleUserListDialog from "./RoleUserListDialog.vue";
 import type { RoleFormData } from "./types";
 import { roleAPI } from "@bit-labs.cn/owl-admin-ui/api/role";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import {
   ref,
   h,
@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
 });
 
 function openRoleUserDialog(row) {
-  addDialog({
+  dialogService.open({
     title: `拥有【${row.name}】角色的用户`,
     width: "60%",
     draggable: true,
@@ -150,7 +150,7 @@ function openRoleUserDialog(row) {
 }
 
 function openDialog(title = "新增", row?: RoleFormData) {
-  addDialog({
+  dialogService.open({
     title: `${title}角色`,
     props: {
       formInline: {

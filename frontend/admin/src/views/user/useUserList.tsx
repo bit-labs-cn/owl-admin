@@ -12,7 +12,7 @@ import {
 import { handleTree } from "@bit-labs.cn/owl-ui/utils/tree";
 import { message } from "@bit-labs.cn/owl-ui/utils/message";
 import userAvatar from "@bit-labs.cn/owl-ui/assets/user.jpg";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import ReCropperPreview from "@bit-labs.cn/owl-ui/components/ReCropperPreview";
 import { getKeyList, isAllEmpty, deviceDetection } from "@pureadmin/utils";
 import { zxcvbn } from "@zxcvbn-ts/core";
@@ -208,7 +208,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
       return;
     }
     const formRefLocal = ref();
-    addDialog({
+    dialogService.open({
       title: "批量修改角色",
       width: "480px",
       draggable: true,
@@ -244,7 +244,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
       return;
     }
     const formRefLocal = ref();
-    addDialog({
+    dialogService.open({
       title: "批量修改部门",
       width: "480px",
       draggable: true,
@@ -318,7 +318,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
   }
 
   function openDialog(title = "新增", row?: UserFormData) {
-    addDialog({
+    dialogService.open({
       title: `${title}用户`,
       props: {
         formInline: {
@@ -374,7 +374,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
   const cropRef = ref();
   /** 打开裁剪头像弹窗，用于修改用户表单内更换头像 */
   function openCropDialog(initialAvatar: string, onDone: (url: string) => void) {
-    addDialog({
+    dialogService.open({
       title: "裁剪、上传头像",
       width: "40%",
       closeOnClickModal: false,
@@ -401,7 +401,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
   );
 
   function handleReset(row) {
-    addDialog({
+    dialogService.open({
       title: `重置 ${row.username} 用户的密码`,
       width: "30%",
       draggable: true,
@@ -467,7 +467,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
 
   async function handleRole(row) {
     const ids = (await userAPI.getRoleIds(row.id)).data ?? [];
-    addDialog({
+    dialogService.open({
       title: `分配 ${row.username} 用户的角色`,
       props: {
         formInline: {
@@ -505,7 +505,7 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
   }
 
   function openImportDialog() {
-    addDialog({
+    dialogService.open({
       title: "批量导入用户",
       width: "560px",
       draggable: true,

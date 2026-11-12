@@ -6,7 +6,7 @@ import { usePublicHooks } from "../hooks";
 import DeptForm from "./DeptForm.vue";
 import type { DeptFormData } from "./types";
 import { deptAPI } from "@bit-labs.cn/owl-admin-ui/api/dept";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog/index";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog/index";
 
 import { cloneDeep, deviceDetection } from "@pureadmin/utils";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
@@ -55,7 +55,7 @@ function openDialog(title = "新增", row?: DeptFormData) {
     status: row?.status ?? 1,
     description: row?.description ?? ""
   };
-  addDialog({
+  dialogService.open({
     title: `${title}部门`,
     props: { formInline },
     width: "40%",

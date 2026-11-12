@@ -6,7 +6,7 @@ import DocumentForm from "./DocumentForm.vue";
 import LegalSwitch from "./LegalSwitch.vue";
 import type { LegalDocumentForm, LegalDocumentRow } from "./types";
 import { legalAPI } from "@bit-labs.cn/owl-admin-ui/api/legal";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 
@@ -34,7 +34,7 @@ const {
 const columns = computed(() => createDocumentColumns({ switchLoadMap, onChange, pagination }));
 
 function openDialog(title = "新增", row?: LegalDocumentRow) {
-  addDialog({
+  dialogService.open({
     title: `${title}条款`,
     props: {
       formInline: {

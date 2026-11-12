@@ -5,7 +5,7 @@ import { createColumns } from "./columns";
 import PositionForm from "./PositionForm.vue";
 import type { PositionFormData } from "./types";
 import { positionAPI } from "@bit-labs.cn/owl-admin-ui/api/position";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
@@ -37,7 +37,7 @@ const {
 const columns = computed(() => createColumns({ switchLoadMap, onChange, pagination }));
 
 function openDialog(title = "新增", row?: PositionFormData) {
-  addDialog({
+  dialogService.open({
     title: `${title}岗位`,
     props: {
       formInline: {

@@ -5,7 +5,7 @@ import { createEventColumns } from "./eventColumns";
 import EventDetail from "./EventDetail.vue";
 import LegalSwitch from "./LegalSwitch.vue";
 import type { LegalEventRow } from "./types";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 import Refresh from "@iconify-icons/ep/refresh";
@@ -15,7 +15,7 @@ const { form, documents, scenes, loading, dataList, pagination, onSearch, resetF
   useEventList();
 
 function openUser(row: LegalEventRow) {
-  addDialog({
+  dialogService.open({
     title: row.userLabel || "用户",
     width: "720px",
     draggable: true,

@@ -6,7 +6,7 @@ import SceneForm from "./SceneForm.vue";
 import LegalSwitch from "./LegalSwitch.vue";
 import type { LegalSceneForm, LegalSceneRow } from "./types";
 import { legalAPI } from "@bit-labs.cn/owl-admin-ui/api/legal";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 import { ElMessage } from "element-plus";
@@ -22,7 +22,7 @@ const { form, loading, dataList, pagination, onSearch, resetForm, handleSizeChan
 const columns = computed(() => createSceneColumns(pagination));
 
 function openDialog(title = "新增", row?: LegalSceneRow) {
-  addDialog({
+  dialogService.open({
     title: `${title}场景`,
     props: {
       formInline: {

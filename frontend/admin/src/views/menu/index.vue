@@ -4,7 +4,7 @@ import { useMenuList } from "./useMenuList";
 import { createColumns } from "./columns";
 import MenuForm from "./MenuForm.vue";
 import type { MenuFormData } from "./types";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { message } from "@bit-labs.cn/owl-ui/utils/message";
 import { transformI18n } from "@bit-labs.cn/owl-ui/plugins/i18n";
 import { cloneDeep, deviceDetection } from "@pureadmin/utils";
@@ -40,7 +40,7 @@ function onFullscreen() {
 }
 
 function openDialog(title = "新增", row?: MenuFormData) {
-  addDialog({
+  dialogService.open({
     title: `${title}菜单`,
     props: {
       formInline: {

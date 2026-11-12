@@ -8,7 +8,7 @@ import VersionContent from "./VersionContent.vue";
 import LegalSwitch from "./LegalSwitch.vue";
 import type { LegalVersionForm, LegalVersionRow } from "./types";
 import { legalAPI } from "@bit-labs.cn/owl-admin-ui/api/legal";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 
@@ -26,7 +26,7 @@ const { documents, form, loading, dataList, pagination, loadDocuments, onSearch,
 const columns = computed(() => createVersionColumns(pagination));
 
 function openDialog(title = "新增", row?: LegalVersionRow) {
-  addDialog({
+  dialogService.open({
     title: `${title}草稿`,
     props: {
       formInline: {
@@ -71,7 +71,7 @@ function openDialog(title = "新增", row?: LegalVersionRow) {
 }
 
 function openPublish(row: LegalVersionRow) {
-  addDialog({
+  dialogService.open({
     title: `发布 ${row.version}`,
     width: "520px",
     draggable: true,
@@ -93,7 +93,7 @@ function openPublish(row: LegalVersionRow) {
 }
 
 function openContent(row: LegalVersionRow) {
-  addDialog({
+  dialogService.open({
     title: "查看正文",
     width: "720px",
     draggable: true,

@@ -6,7 +6,7 @@ import UserGroupForm from "./UserGroupForm.vue";
 import UserGroupUserListDialog from "./UserGroupUserListDialog.vue";
 import type { UserGroupFormData } from "./types";
 import { userGroupAPI } from "@bit-labs.cn/owl-admin-ui/api/user-group";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 import { deviceDetection } from "@pureadmin/utils";
@@ -46,7 +46,7 @@ const columns = computed(() =>
 );
 
 function openUserListDialog(row) {
-  addDialog({
+  dialogService.open({
     title: `【${row.name}】用户组的成员`,
     width: "60%",
     draggable: true,
@@ -70,7 +70,7 @@ async function openDialog(title = "新增", row?: UserGroupFormData) {
     initialUserIDs = res?.data ?? [];
   }
 
-  addDialog({
+  dialogService.open({
     title: `${title}用户组`,
     props: {
       formInline: {

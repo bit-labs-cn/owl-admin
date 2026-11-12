@@ -4,7 +4,7 @@ import { useOperationLogList } from "./useOperationLogList";
 import { createColumns } from "./columns";
 import OperationLogDetail from "./OperationLogDetail.vue";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
-import { addDialog } from "@bit-labs.cn/owl-ui/components/ReDialog";
+import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 
 import Refresh from "@iconify-icons/ep/refresh";
@@ -29,7 +29,7 @@ const {
 const columns = computed(() => createColumns(pagination));
 
 function openDetail(row) {
-  addDialog({
+  dialogService.open({
     title: "操作日志详情",
     width: "720px",
     draggable: true,
