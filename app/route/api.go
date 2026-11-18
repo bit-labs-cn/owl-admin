@@ -19,7 +19,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu, settingMenu, passwordToolMenu, serverMonitorMenu *router.Menu
+var (
+	userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu, settingMenu, passwordToolMenu, serverMonitorMenu *router.Menu
+	eventWorkbenchMenu, eventLogMenu                                                                                                                                    *router.Menu
+)
 
 func InitMenu() []*router.Menu {
 	return []*router.Menu{
@@ -96,6 +99,21 @@ func InitMenu() []*router.Menu {
 			},
 		},
 		{
+			Path: "/system/event",
+			Name: "EventBus",
+			Meta: router.Meta{
+				Title:      "事件总线",
+				Icon:       "ep:connection",
+				ShowParent: true,
+				ShowLink:   true,
+			},
+			MenuType: router.MenuTypeDir,
+			Children: []*router.Menu{
+				eventWorkbenchMenu,
+				eventLogMenu,
+			},
+		},
+		{
 			Path: "/system/tools",
 			Name: "SystemToolbox",
 			Meta: router.Meta{
@@ -143,6 +161,7 @@ func InitApi(app foundation.Application, appName string) {
 		settingHandle *v1.SettingHandle,
 		passwordToolHandle *v1.PasswordToolHandle,
 		serverMonitorHandle *v1.ServerMonitorHandle,
+		eventHandle *v1.EventHandle,
 		enforcer *casbin.SyncedEnforcer,
 		engine *gin.Engine,
 		jwtSvc *jwt.JWTService,
@@ -391,6 +410,36 @@ func InitApi(app foundation.Application, appName string) {
 			})
 			r.Post("/monitor/login-logs", router.AccessAuthorized, logHandle.LoginLogs).Name("登录日志").WithoutOperateLog().Build()
 			r.Post("/monitor/operation-logs", router.AccessAuthorized, logHandle.OperationLogs).Name("操作日志").WithoutOperateLog().Build()
+		}
+
+		// event bus workbench
+		{
+			r := router.NewRouteInfoBuilder(appName, eventHandle, gv1, router.MenuOption{
+				ComponentName: "EventBusWorkbench",
+				Path:          "/system/event/workbench/index",
+				Icon:          "ep:data-line",
+			})
+			r.Get("/events/workbench", router.AccessAuthorized, eventHandle.Workbench).Name("事件总线工作台").WithoutOperateLog().Build()
+			eventWorkbenchMenu = r.GetMenu()
+			eventWorkbenchMenu.Meta.Title = "工作台"
+		}
+
+		// event bus log
+		{
+			r := router.NewRouteInfoBuilder(appName, eventHandle, gv1, router.MenuOption{
+				ComponentName: "EventBusLog",
+				Path:          "/system/event/log/index",
+				Icon:          "ep:list",
+			})
+			r.Get("/events/outbox", router.AccessAuthorized, eventHandle.RetrieveOutbox).Name("发件箱列表").WithoutOperateLog().Build()
+			r.Get("/events/outbox/:id", router.AccessAuthorized, eventHandle.OutboxDetail).Name("发件箱详情").WithoutOperateLog().Build()
+			r.Post("/events/outbox/:id/retry", router.AccessAuthorized, eventHandle.RetryOutbox).Name("重投发件箱事件").Build()
+			r.Post("/events/cleanup", router.AccessAuthorized, eventHandle.Cleanup).Name("清理事件历史").Build()
+			r.Post("/events/consumers/cleanup", router.AccessAuthorized, eventHandle.CleanupConsumers).Name("清理僵尸消费者").Build()
+			r.Get("/events/inbox", router.AccessAuthorized, eventHandle.RetrieveInbox).Name("收件箱列表").WithoutOperateLog().Build()
+			r.Get("/events/inbox/:id", router.AccessAuthorized, eventHandle.InboxDetail).Name("收件箱详情").WithoutOperateLog().Build()
+			eventLogMenu = r.GetMenu()
+			eventLogMenu.Meta.Title = "事件记录"
 		}
 
 		// app version (admin + public latest)

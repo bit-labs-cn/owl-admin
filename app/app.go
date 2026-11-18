@@ -127,5 +127,8 @@ func (i *SubAppAdmin) Binds() []any {
 		v1.NewPasswordToolHandle,
 		service.NewServerMonitorService,
 		v1.NewServerMonitorHandle,
+		repository.NewEventRepository,
+		service.NewEventService,
+		v1.NewEventHandle,
 	}
 }
