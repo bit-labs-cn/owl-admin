@@ -72,7 +72,7 @@ const columns = computed(() =>
   <div :class="['flex', 'justify-between', deviceDetection() && 'flex-wrap']">
     <DeptTree
       ref="treeRef"
-      :class="['mr-2', deviceDetection() ? 'w-full' : 'min-w-[200px]']"
+      :class="[deviceDetection() ? 'w-full' : 'min-w-[200px]']"
       :treeData="treeData"
       :treeLoading="treeLoading"
       @tree-select="onTreeSelect"
@@ -274,10 +274,6 @@ const columns = computed(() =>
 
 :deep(.el-button:focus-visible) {
   outline: none;
-}
-
-.main-content {
-  margin: 24px 24px 0 !important;
 }
 
 .search-form {

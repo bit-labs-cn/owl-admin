@@ -250,10 +250,6 @@ async function openDialog(title = "新增", row?: UserGroupFormData) {
   margin: 0;
 }
 
-.main-content {
-  margin: 24px 24px 0 !important;
-}
-
 .search-form {
   :deep(.el-form-item) {
     margin-bottom: 12px;
