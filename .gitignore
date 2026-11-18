@@ -1,2 +1,5 @@
 .idea
 storage
+.gocache
+*.exe
+
