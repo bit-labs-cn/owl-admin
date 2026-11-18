@@ -3,32 +3,55 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"bit-labs.cn/owl-admin/app-notification/contract"
+	notifEvent "bit-labs.cn/owl-admin/app-notification/event"
 	"bit-labs.cn/owl-admin/app-notification/model"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
 )
 
-// DispatchDue 领取到期投递并发送。
-func (s *TaskService) DispatchDue(ctx context.Context) error {
+// DispatchPendingScheduled 针对过了免打扰时段或定时重试的到期投递，通过事件总线进行补发。
+func (s *TaskService) DispatchPendingScheduled(ctx context.Context) error {
 	rows, err := s.deliveries.WithContext(ctx).ClaimDue(time.Now(), 50)
 	if err != nil {
 		return err
 	}
 	for _, row := range rows {
-		ok, err := s.deliveries.WithContext(ctx).TryStart(row.ID)
-		if err != nil || !ok {
-			continue
+		var topic string
+		switch row.Channel {
+		case model.ChannelEmail:
+			topic = notifEvent.TopicDispatchEmail
+		case model.ChannelSMS:
+			topic = notifEvent.TopicDispatchSMS
+		case model.ChannelApp:
+			topic = notifEvent.TopicDispatchApp
 		}
-		s.dispatchOne(ctx, row.ID)
+		if topic != "" && s.bus != nil {
+			evt, err := contractEvent.NewEvent(topic, notifEvent.DispatchPayload{
+				DeliveryID:    row.ID,
+				TaskID:        row.TaskID,
+				RecipientType: row.RecipientType,
+				RecipientID:   row.RecipientID,
+				Channel:       row.Channel,
+				Address:       row.Address,
+			}, contractEvent.WithSource("owl-notification"), contractEvent.WithSubject(fmt.Sprintf("delivery:%d", row.ID)), contractEvent.WithPriority(contractEvent.PriorityHigh))
+			if err == nil {
+				_ = s.bus.PublishTx(ctx, s.db, evt)
+				continue
+			}
+		}
+		// 无事件总线时降级本机执行
+		_ = s.DispatchOne(ctx, row.ID, row.Channel)
 	}
 	return nil
 }
 
-// Retry 把失败投递重新放回队列。
+// Retry 把失败投递重新放回队列，并通过事件总线触发重发。
 func (s *TaskService) Retry(ctx context.Context, id uint) error {
 	row, err := s.deliveries.WithContext(ctx).Detail(id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -47,25 +70,58 @@ func (s *TaskService) Retry(ctx context.Context, id uint) error {
 	if err := s.deliveries.WithContext(ctx).Save(row); err != nil {
 		return err
 	}
+
+	var topic string
+	switch row.Channel {
+	case model.ChannelEmail:
+		topic = notifEvent.TopicDispatchEmail
+	case model.ChannelSMS:
+		topic = notifEvent.TopicDispatchSMS
+	case model.ChannelApp:
+		topic = notifEvent.TopicDispatchApp
+	}
+	if topic != "" && s.bus != nil {
+		evt, err := contractEvent.NewEvent(topic, notifEvent.DispatchPayload{
+			DeliveryID:    row.ID,
+			TaskID:        row.TaskID,
+			RecipientType: row.RecipientType,
+			RecipientID:   row.RecipientID,
+			Channel:       row.Channel,
+			Address:       row.Address,
+		}, contractEvent.WithSource("owl-notification"), contractEvent.WithSubject(fmt.Sprintf("delivery:%d", row.ID)), contractEvent.WithPriority(contractEvent.PriorityHigh))
+		if err == nil {
+			_ = s.bus.PublishTx(ctx, s.db, evt)
+		}
+	} else {
+		_ = s.DispatchOne(ctx, row.ID, row.Channel)
+	}
+
 	return s.refreshStatus(ctx, row.TaskID)
 }
 
-func (s *TaskService) dispatchOne(ctx context.Context, id uint) {
+// DispatchOne 处理单条投递记录的发送。由事件总线各渠道消费者调用。
+func (s *TaskService) DispatchOne(ctx context.Context, id uint, expectedChannel string) error {
 	row, err := s.deliveries.WithContext(ctx).Detail(id)
 	if err != nil {
-		return
+		return err
+	}
+	if expectedChannel != "" && row.Channel != expectedChannel {
+		return nil
+	}
+	if row.Status == model.DeliveryStatusSent || row.Status == model.DeliveryStatusSkipped {
+		return nil
 	}
 	task, err := s.tasks.WithContext(ctx).Detail(row.TaskID)
 	if err != nil {
 		s.failDelivery(ctx, row, err.Error(), false)
-		return
+		return err
 	}
 	if task.Status == model.TaskStatusCancelled {
 		row.Status = model.DeliveryStatusSkipped
 		row.ErrorMsg = "任务已取消"
 		_ = s.deliveries.WithContext(ctx).Save(row)
 		_ = s.refreshStatus(ctx, task.ID)
-		return
+		return nil
 	}
 	if limit := s.rateLimit(ctx); limit > 0 && row.Channel != model.ChannelInApp && task.Category != model.CategorySecurity {
 		since := time.Now().Add(-24 * time.Hour)
@@ -73,7 +129,7 @@ func (s *TaskService) dispatchOne(ctx context.Context, id uint) {
 		if err == nil && n > int64(limit) {
 			s.failDelivery(ctx, row, "超过每日频率限制", false)
 			_ = s.refreshStatus(ctx, task.ID)
-			return
+			return nil
 		}
 	}
 	req := &contract.ChannelRequest{
@@ -99,7 +155,7 @@ func (s *TaskService) dispatchOne(ctx context.Context, id uint) {
 			if err != nil {
 				s.failDelivery(ctx, row, err.Error(), true)
 				_ = s.refreshStatus(ctx, task.ID)
-				return
+				return err
 			}
 			for _, d := range devices {
 				req.DeviceTokens = append(req.DeviceTokens, contract.DeviceTarget{ID: d.ID, Provider: d.Provider, Token: d.Token, Platform: d.Platform})
@@ -108,7 +164,7 @@ func (s *TaskService) dispatchOne(ctx context.Context, id uint) {
 	default:
 		s.failDelivery(ctx, row, "渠道不需要异步发送", false)
 		_ = s.refreshStatus(ctx, task.ID)
-		return
+		return nil
 	}
 	if account, err := s.accounts.WithContext(ctx).FindDefault(row.Channel); err == nil {
 		req.ConfigJSON = account.ConfigJSON
@@ -122,7 +178,7 @@ func (s *TaskService) dispatchOne(ctx context.Context, id uint) {
 	if err != nil {
 		s.failDelivery(ctx, row, err.Error(), true)
 		_ = s.refreshStatus(ctx, task.ID)
-		return
+		return err
 	}
 	now := time.Now()
 	row.Status = model.DeliveryStatusSent
@@ -134,6 +190,7 @@ func (s *TaskService) dispatchOne(ctx context.Context, id uint) {
 	}
 	_ = s.deliveries.WithContext(ctx).Save(row)
 	_ = s.refreshStatus(ctx, task.ID)
+	return nil
 }
 
 func (s *TaskService) failDelivery(ctx context.Context, row *model.Delivery, reason string, retry bool) {
@@ -231,7 +288,8 @@ func (w *Worker) Stop() {
 }
 
 func (w *Worker) loop(ctx context.Context) {
-	tick := time.NewTicker(2 * time.Second)
+	// 定时扫描降低为 10 秒（常规投递均已由 Event Bus 实时驱动，此处仅做定时任务、待办过期与免打扰延期补发）
+	tick := time.NewTicker(10 * time.Second)
 	hour := time.NewTicker(time.Hour)
 	defer tick.Stop()
 	defer hour.Stop()
@@ -240,7 +298,7 @@ func (w *Worker) loop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-tick.C:
-			_ = w.tasks.DispatchDue(ctx)
+			_ = w.tasks.DispatchPendingScheduled(ctx)
 			w.tasks.RunScheduled(ctx)
 			w.tasks.ExpireTodos(ctx)
 		case <-hour.C:

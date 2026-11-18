@@ -3,12 +3,15 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"bit-labs.cn/owl-admin/app-notification/contract"
+	notifEvent "bit-labs.cn/owl-admin/app-notification/event"
 	"bit-labs.cn/owl-admin/app-notification/model"
 	"bit-labs.cn/owl-admin/app-notification/repository"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	"bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
 	validatorv10 "github.com/go-playground/validator/v10"
@@ -76,6 +79,8 @@ type TaskService struct {
 	app        *AppChannel
 	locker     redis.LockerFactory
 	validate   *validatorv10.Validate
+	bus        contractEvent.EventBus
+	db         *gorm.DB
 }
 
 func NewTaskService(
@@ -94,11 +99,14 @@ func NewTaskService(
 	app *AppChannel,
 	locker redis.LockerFactory,
 	validate *validatorv10.Validate,
+	bus contractEvent.EventBus,
+	db *gorm.DB,
 ) *TaskService {
 	return &TaskService{
 		tasks: tasks, templates: templates, deliveries: deliveries, inbox: inbox, devices: devices,
 		accounts: accounts, subs: subs, settings: settings, audience: audience, hub: hub,
 		email: email, sms: sms, app: app, locker: locker, validate: validate,
+		bus: bus, db: db,
 	}
 }
 
@@ -305,19 +313,59 @@ func (s *TaskService) Submit(ctx context.Context, id uint) error {
 		row.Status = model.TaskStatusPendingReview
 		return s.tasks.WithContext(ctx).Save(row)
 	}
-	recipients, _, err := s.audience.Resolve(ctx, audience)
-	if err != nil {
-		return err
-	}
-	var channels []string
-	fromJSON(row.ChannelsJSON, &channels)
 	row.Status = model.TaskStatusSending
 	if err := s.tasks.WithContext(ctx).Save(row); err != nil {
 		return err
 	}
+
+	// 异步削峰：通过事件总线发布任务提交事件，交由后台流式消费受众解析与渠道扇出
+	if s.bus != nil {
+		evt, err := contractEvent.NewEvent(notifEvent.TopicTaskSubmit, notifEvent.TaskSubmitPayload{
+			TaskID: row.ID,
+		}, contractEvent.WithSource("owl-notification"), contractEvent.WithSubject(fmt.Sprintf("task:%d", row.ID)), contractEvent.WithPriority(contractEvent.PriorityHigh))
+		if err != nil {
+			return err
+		}
+		if err := s.bus.PublishTx(ctx, s.db, evt); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// 无事件总线时回退同步扇出
+	return s.FanoutAsync(ctx, row.ID)
+}
+
+// FanoutAsync 由事件总线消费者调用，异步解析受众、写入站内信并扇出各渠道投递事件。
+func (s *TaskService) FanoutAsync(ctx context.Context, taskID uint) error {
+	row, err := s.tasks.WithContext(ctx).Detail(taskID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if row.Status == model.TaskStatusCancelled {
+		return nil
+	}
+
+	var audience contract.Audience
+	fromJSON(row.AudienceJSON, &audience)
+
+	recipients, _, err := s.audience.Resolve(ctx, audience)
+	if err != nil {
+		row.Status = model.TaskStatusFailed
+		_ = s.tasks.WithContext(ctx).Save(row)
+		return err
+	}
+
+	var channels []string
+	fromJSON(row.ChannelsJSON, &channels)
+
 	for _, person := range recipients {
 		s.fanout(ctx, row, person, channels)
 	}
+
 	return s.refreshStatus(ctx, row.ID)
 }
 
@@ -437,6 +485,32 @@ func (s *TaskService) writeDelivery(ctx context.Context, task *model.Task, perso
 		}
 	}
 	_ = s.deliveries.WithContext(ctx).Create(row)
+
+	// 如果处于待发送状态且不在免打扰时段，通过事件总线触发各渠道异步消费发送
+	if row.Status == model.DeliveryStatusPending && row.NextRetryAt == nil && s.bus != nil {
+		var topic string
+		switch channel {
+		case model.ChannelEmail:
+			topic = notifEvent.TopicDispatchEmail
+		case model.ChannelSMS:
+			topic = notifEvent.TopicDispatchSMS
+		case model.ChannelApp:
+			topic = notifEvent.TopicDispatchApp
+		}
+		if topic != "" {
+			evt, err := contractEvent.NewEvent(topic, notifEvent.DispatchPayload{
+				DeliveryID:    row.ID,
+				TaskID:        task.ID,
+				RecipientType: person.Type,
+				RecipientID:   person.ID,
+				Channel:       channel,
+				Address:       address,
+			}, contractEvent.WithSource("owl-notification"), contractEvent.WithSubject(fmt.Sprintf("delivery:%d", row.ID)), contractEvent.WithPriority(contractEvent.PriorityHigh))
+			if err == nil {
+				_ = s.bus.PublishTx(ctx, s.db, evt)
+			}
+		}
+	}
 }
 
 func (s *TaskService) refreshStatus(ctx context.Context, taskID uint) error {

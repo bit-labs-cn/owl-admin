@@ -8,6 +8,7 @@ import (
 	"bit-labs.cn/owl-admin/app-notification/repository"
 	"bit-labs.cn/owl-admin/app-notification/route"
 	"bit-labs.cn/owl-admin/app-notification/service"
+	"bit-labs.cn/owl-admin/app-notification/subscribe"
 	"bit-labs.cn/owl/contract/foundation"
 	"bit-labs.cn/owl/provider/mailer"
 	"bit-labs.cn/owl/provider/router"
@@ -37,6 +38,7 @@ func (s *SubAppNotification) Bootstrap() {
 		email.SetMailer(mail)
 		hub.Start()
 		contract.Register(notifier)
+		subscribe.Init(s.app)
 	})
 }
 

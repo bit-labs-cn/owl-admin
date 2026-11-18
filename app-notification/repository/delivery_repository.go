@@ -17,7 +17,6 @@ type DeliveryRepositoryInterface interface {
 	Detail(id uint) (*model.Delivery, error)
 	Retrieve(page, pageSize int, taskID uint, channel string, status int) (int64, []model.Delivery, error)
 	ClaimDue(now time.Time, limit int) ([]model.Delivery, error)
-	TryStart(id uint) (bool, error)
 	CountToday(recipientType int, recipientID uint, channel string, since time.Time) (int64, error)
 	DeleteBefore(t time.Time) error
 	contract.WithContext[DeliveryRepositoryInterface]
@@ -77,11 +76,6 @@ func (r *DeliveryRepository) ClaimDue(now time.Time, limit int) ([]model.Deliver
 	err := r.db.Where("status = ? AND (next_retry_at IS NULL OR next_retry_at <= ?)", model.DeliveryStatusPending, now).
 		Order("id asc").Limit(limit).Find(&list).Error
 	return list, err
-}
-
-func (r *DeliveryRepository) TryStart(id uint) (bool, error) {
-	res := r.db.Model(&model.Delivery{}).Where("id = ? AND status = ?", id, model.DeliveryStatusPending).Update("status", model.DeliveryStatusSending)
-	return res.RowsAffected == 1, res.Error
 }
 
 func (r *DeliveryRepository) CountToday(recipientType int, recipientID uint, channel string, since time.Time) (int64, error) {

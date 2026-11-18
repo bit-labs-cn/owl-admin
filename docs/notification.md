@@ -9,10 +9,28 @@
 ## 代码位置
 
 - 子应用入口：`app-notification/app.go`
+- 事件与订阅：`app-notification/{event,subscribe}`（基于 owl Event Bus 异步削峰、扇出与渠道隔离消费）
 - 模型/仓储/服务/接口：`app-notification/{model,repository,service,handle}`
 - 路由与菜单：`app-notification/route/api.go`
 - 对外契约：`app-notification/contract/`（只依赖标准库）
 - 迁移与空值回填：`app-notification/database/`
+
+## 事件驱动架构（基于 owl Event Bus）
+
+通知子系统已全面升级为基于 `owl` 可靠事件总线（Transactional Outbox + Redis Streams / RabbitMQ）的反应式事件驱动架构：
+
+1. **异步削峰提交**：
+   - 任务触发 `Submit` 后，在当前事务中写入发件箱发布 `notify.task.submit` 事件并立即返回，不再在 HTTP 主线程中同步解析大受众或循环插入数千条投递记录。
+2. **两阶段异步扇出**：
+   - 消费者（`subscribe/task_submit.go`）接收到任务后，后台异步解析部门树、用户组、角色并取并集；
+   - 站内信直接写入收件箱并通过 SSE Hub 推送；
+   - 外部渠道按渠道生成对应的 `notify.dispatch.email`、`notify.dispatch.sms`、`notify.dispatch.app` 子事件。
+3. **独立渠道消费与物理故障隔离**：
+   - 各渠道拥有独立的 Redis Stream 消费组，并行消费；
+   - 短信或邮件服务商若发生网络超时，不会阻塞站内信和 App 推送的毫秒级送达；
+   - 失败重试交由总线内置的 Inbox 中间件与 XAUTOCLAIM 机制追踪，直接复用 `/system/event` 工作台。
+4. **废除数据库高频轮询**：
+   - 彻底废除了每 2 秒扫表的 `ClaimDue` 轮询 Worker；普通投递由事件流毫秒级触发，仅保留 10 秒轻量定时器用于定时任务唤醒和免打扰时段过后的平滑补发。
 
 前端子系统包已撤下，待重做。后端接口、表、契约保持可用。
 
