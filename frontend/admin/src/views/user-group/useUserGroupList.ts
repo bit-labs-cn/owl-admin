@@ -34,7 +34,9 @@ export function useUserGroupList() {
         cancelButtonText: "取消",
         type: "warning",
         dangerouslyUseHTMLString: true,
-        draggable: true
+        draggable: true,
+        closeOnClickModal: false,
+        closeOnPressEscape: false
       }
     ).then(() => {
       switchLoadMap.value[index] = Object.assign(

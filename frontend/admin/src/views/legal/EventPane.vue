@@ -21,7 +21,8 @@ function openUser(row: LegalEventRow) {
     draggable: true,
     alignCenter: true,
     hideFooter: true,
-    closeOnClickModal: true,
+    closeOnClickModal: false,
+    closeOnPressEscape: false,
     contentRenderer: () => h(EventDetail, { event: row })
   });
 }

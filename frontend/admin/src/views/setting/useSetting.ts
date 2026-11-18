@@ -81,7 +81,11 @@ export function useSetting() {
 
   async function restore(group: SettingGroup) {
     try {
-      await ElMessageBox.confirm(`确定把「${group.title}」恢复为默认值吗？`, "恢复默认");
+      await ElMessageBox.confirm(`确定把「${group.title}」恢复为默认值吗？`, "恢复默认", {
+        draggable: true,
+        closeOnClickModal: false,
+        closeOnPressEscape: false
+      });
     } catch {
       return;
     }

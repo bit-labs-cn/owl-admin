@@ -86,7 +86,9 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
         cancelButtonText: "取消",
         type: "warning",
         dangerouslyUseHTMLString: true,
-        draggable: true
+        draggable: true,
+        closeOnClickModal: false,
+        closeOnPressEscape: false
       }
     )
       .then(() => {
@@ -166,7 +168,9 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
           confirmButtonText: "删除",
           cancelButtonText: "取消",
           type: "warning",
-          draggable: true
+          draggable: true,
+          closeOnClickModal: false,
+          closeOnPressEscape: false
         }
       );
     } catch {
@@ -191,7 +195,9 @@ export function useUserList(tableRef: Ref, treeRef: Ref) {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning",
-          draggable: true
+          draggable: true,
+          closeOnClickModal: false,
+          closeOnPressEscape: false
         }
       );
     } catch {

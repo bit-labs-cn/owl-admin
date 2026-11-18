@@ -140,7 +140,8 @@ function openRoleUserDialog(row) {
     fullscreen: false,
     fullscreenIcon: true,
     hideFooter: true,
-    closeOnClickModal: true,
+    closeOnClickModal: false,
+    closeOnPressEscape: false,
     contentRenderer: () =>
       h(RoleUserListDialog, {
         roleId: row.id,

@@ -54,7 +54,8 @@ function openUserListDialog(row) {
     fullscreen: false,
     fullscreenIcon: true,
     hideFooter: true,
-    closeOnClickModal: true,
+    closeOnClickModal: false,
+    closeOnPressEscape: false,
     contentRenderer: () =>
       h(UserGroupUserListDialog, {
         groupId: row.id,

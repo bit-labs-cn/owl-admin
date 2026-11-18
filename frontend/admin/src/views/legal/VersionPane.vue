@@ -99,7 +99,8 @@ function openContent(row: LegalVersionRow) {
     draggable: true,
     alignCenter: true,
     hideFooter: true,
-    closeOnClickModal: true,
+    closeOnClickModal: false,
+    closeOnPressEscape: false,
     contentRenderer: () => h(VersionContent, { title: row.title, content: row.content })
   });
 }

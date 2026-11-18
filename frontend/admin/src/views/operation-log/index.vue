@@ -35,7 +35,8 @@ function openDetail(row) {
     draggable: true,
     alignCenter: true,
     hideFooter: true,
-    closeOnClickModal: true,
+    closeOnClickModal: false,
+    closeOnPressEscape: false,
     contentRenderer: () => h(OperationLogDetail, { log: row })
   });
 }

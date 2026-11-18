@@ -84,7 +84,9 @@ export function useRoleList(menuTreeRef: Ref) {
         cancelButtonText: "取消",
         type: "warning",
         dangerouslyUseHTMLString: true,
-        draggable: true
+        draggable: true,
+        closeOnClickModal: false,
+        closeOnPressEscape: false
       }
     )
       .then(() => {
