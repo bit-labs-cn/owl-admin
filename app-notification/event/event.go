@@ -1,40 +1,33 @@
 package event
 
-// 通知子系统的事件主题定义。
-// 通过统一事件总线（owl Event Bus）进行跨协程与跨实例的异步削峰、扇出与投递。
+import "bit-labs.cn/owl-admin/app-notification/contract"
+
 const (
-	// TopicTaskSubmit 通知任务提交事件（触发异步受众解析与扇出）
-	TopicTaskSubmit = "notify.task.submit"
+	// TopicNotifyDirect 定向消息发送事件（通知或待办）
+	TopicNotifyDirect = "notify.direct.send"
 
-	// TopicDispatchEmail 邮件渠道单次投递事件
-	TopicDispatchEmail = "notify.dispatch.email"
+	// TopicNotifyTodoComplete 业务完成勾销待办事件
+	TopicNotifyTodoComplete = "notify.todo.complete"
 
-	// TopicDispatchSMS 短信渠道单次投递事件
-	TopicDispatchSMS = "notify.dispatch.sms"
+	// TopicNotifyAnnouncement 全员/定向公告广播事件
+	TopicNotifyAnnouncement = "notify.announcement.broadcast"
 
-	// TopicDispatchApp 移动推送渠道单次投递事件（APNs / FCM）
-	TopicDispatchApp = "notify.dispatch.app"
-
-	// TopicTodoComplete 业务完成勾销待办事件
-	TopicTodoComplete = "notify.todo.complete"
+	// TopicNotifyChannelSend 外部渠道发送事件。载荷只带发送记录 ID。
+	TopicNotifyChannelSend = "notify.channel.send"
 )
 
-// TaskSubmitPayload 任务提交事件载荷
-type TaskSubmitPayload struct {
-	TaskID uint `json:"taskId"`
+// ChannelSendPayload 是外部渠道发送事件的载荷。
+type ChannelSendPayload struct {
+	DeliveryID uint `json:"deliveryId"`
 }
 
-// DispatchPayload 单条渠道投递事件载荷
-type DispatchPayload struct {
-	DeliveryID    uint   `json:"deliveryId"`
-	TaskID        uint   `json:"taskId"`
-	RecipientType int    `json:"recipientType"`
-	RecipientID   uint   `json:"recipientId"`
-	Channel       string `json:"channel"`
-	Address       string `json:"address"`
-}
+// DirectMessagePayload 定向消息事件载荷
+type DirectMessagePayload = contract.DirectMessage
 
 // TodoCompletePayload 待办完成事件载荷
 type TodoCompletePayload struct {
 	BizKey string `json:"bizKey"`
 }
+
+// AnnouncementPayload 公告广播事件载荷
+type AnnouncementPayload = contract.AnnouncementMessage

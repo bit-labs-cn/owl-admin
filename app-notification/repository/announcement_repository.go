@@ -6,101 +6,131 @@ import (
 
 	"bit-labs.cn/owl-admin/app-notification/model"
 	"bit-labs.cn/owl/contract"
-	"bit-labs.cn/owl/provider/db"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-// AnnouncementRepositoryInterface 读写公告。
+// UserAnnouncementDTO 包含公告本体及用户个人关闭/已读状态
+type UserAnnouncementDTO struct {
+	ID          uint       `json:"id,string"`
+	Title       string     `json:"title"`
+	Content     string     `json:"content"`
+	Level       int        `json:"level"`
+	DisplayMode int        `json:"displayMode"`
+	StartAt     *time.Time `json:"startAt,omitempty"`
+	EndAt       *time.Time `json:"endAt,omitempty"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	IsDismissed int        `json:"isDismissed"`
+	ReadAt      *time.Time `json:"readAt,omitempty"`
+}
+
 type AnnouncementRepositoryInterface interface {
-	Create(row *model.Announcement) error
-	Save(row *model.Announcement) error
-	Detail(id uint) (*model.Announcement, error)
-	Delete(id uint) error
-	Retrieve(page, pageSize int, title string, status int) (int64, []model.Announcement, error)
-	ListPublished(now time.Time) ([]model.Announcement, error)
-	Dismiss(principalType int, principalID, announcementID uint) error
-	DismissedIDs(principalType int, principalID uint) ([]uint, error)
+	Create(ctx context.Context, ann *model.NotifyAnnouncement) error
+	Update(ctx context.Context, ann *model.NotifyAnnouncement) error
+	Delete(ctx context.Context, id uint) error
+	Detail(ctx context.Context, id uint) (*model.NotifyAnnouncement, error)
+	RetrieveAdmin(ctx context.Context, page, pageSize int, keyword string, status int) (int64, []model.NotifyAnnouncement, error)
+	RetrieveUserAnnouncements(ctx context.Context, userID uint, page, pageSize int) (int64, []UserAnnouncementDTO, error)
+	Dismiss(ctx context.Context, announcementID, userID uint) error
 	contract.WithContext[AnnouncementRepositoryInterface]
 }
 
 type AnnouncementRepository struct {
 	db *gorm.DB
-	db.BaseRepository[model.Announcement]
 }
 
-func NewAnnouncementRepository(d *gorm.DB) AnnouncementRepositoryInterface {
-	return &AnnouncementRepository{db: d, BaseRepository: db.NewBaseRepository[model.Announcement](d)}
+func NewAnnouncementRepository(db *gorm.DB) AnnouncementRepositoryInterface {
+	return &AnnouncementRepository{db: db}
 }
 
 func (r *AnnouncementRepository) WithContext(ctx context.Context) AnnouncementRepositoryInterface {
-	next := r.db.WithContext(ctx)
-	return &AnnouncementRepository{db: next, BaseRepository: db.NewBaseRepository[model.Announcement](next)}
+	return &AnnouncementRepository{db: r.db.WithContext(ctx)}
 }
 
-func (r *AnnouncementRepository) Create(row *model.Announcement) error { return r.db.Create(row).Error }
-func (r *AnnouncementRepository) Save(row *model.Announcement) error   { return r.db.Save(row).Error }
+func (r *AnnouncementRepository) Create(ctx context.Context, ann *model.NotifyAnnouncement) error {
+	return r.db.WithContext(ctx).Create(ann).Error
+}
 
-func (r *AnnouncementRepository) Detail(id uint) (*model.Announcement, error) {
-	var row model.Announcement
-	err := r.db.Where("id = ?", id).First(&row).Error
+func (r *AnnouncementRepository) Update(ctx context.Context, ann *model.NotifyAnnouncement) error {
+	return r.db.WithContext(ctx).Save(ann).Error
+}
+
+func (r *AnnouncementRepository) Delete(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&model.NotifyAnnouncement{}, id).Error
+}
+
+func (r *AnnouncementRepository) Detail(ctx context.Context, id uint) (*model.NotifyAnnouncement, error) {
+	var row model.NotifyAnnouncement
+	err := r.db.WithContext(ctx).First(&row, id).Error
 	return &row, err
 }
 
-func (r *AnnouncementRepository) Delete(id uint) error {
-	return r.db.Delete(&model.Announcement{}, id).Error
-}
-
-func (r *AnnouncementRepository) Retrieve(page, pageSize int, title string, status int) (int64, []model.Announcement, error) {
-	tx := r.db.Model(&model.Announcement{})
-	if title != "" {
-		tx = tx.Where("title LIKE ?", "%"+title+"%")
-	}
-	if status > 0 {
-		tx = tx.Where("status = ?", status)
-	}
-	var total int64
-	if err := tx.Count(&total).Error; err != nil {
-		return 0, nil, err
-	}
+func (r *AnnouncementRepository) RetrieveAdmin(ctx context.Context, page, pageSize int, keyword string, status int) (int64, []model.NotifyAnnouncement, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 {
 		pageSize = 10
 	}
-	var list []model.Announcement
-	err := tx.Order("sort asc, id desc").Offset((page - 1) * pageSize).Limit(pageSize).Find(&list).Error
+	tx := r.db.WithContext(ctx).Model(&model.NotifyAnnouncement{})
+	if keyword != "" {
+		tx = tx.Where("title LIKE ?", "%"+keyword+"%")
+	}
+	if status > 0 {
+		tx = tx.Where("status = ?", status)
+	}
+
+	var total int64
+	if err := tx.Count(&total).Error; err != nil {
+		return 0, nil, err
+	}
+	var list []model.NotifyAnnouncement
+	err := tx.Order("id desc").Offset((page - 1) * pageSize).Limit(pageSize).Find(&list).Error
 	return total, list, err
 }
 
-func (r *AnnouncementRepository) ListPublished(now time.Time) ([]model.Announcement, error) {
-	var list []model.Announcement
-	err := r.db.Where("status = ?", model.AnnouncementStatusPublished).
-		Where("(start_at IS NULL OR start_at <= ?)", now).
-		Where("(end_at IS NULL OR end_at >= ?)", now).
-		Order("sort asc, id desc").Find(&list).Error
-	return list, err
-}
+// RetrieveUserAnnouncements 读扩散查询：只读取生效中且未被当前用户关闭的公告
+func (r *AnnouncementRepository) RetrieveUserAnnouncements(ctx context.Context, userID uint, page, pageSize int) (int64, []UserAnnouncementDTO, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
 
-func (r *AnnouncementRepository) Dismiss(principalType int, principalID, announcementID uint) error {
 	now := time.Now()
-	var row model.AnnouncementState
-	err := r.db.Where("principal_type = ? AND principal_id = ? AND announcement_id = ?", principalType, principalID, announcementID).First(&row).Error
-	if err == gorm.ErrRecordNotFound {
-		row = model.AnnouncementState{PrincipalType: principalType, PrincipalID: principalID, AnnouncementID: announcementID, DismissedAt: &now, LastShownAt: &now}
-		return r.db.Create(&row).Error
+	base := r.db.WithContext(ctx).Table("notification_announcement a").
+		Joins("LEFT JOIN notification_announcement_state s ON a.id = s.announcement_id AND s.user_id = ?", userID).
+		Where("a.status = ?", model.AnnouncementStatusPublished).
+		Where("(a.start_at IS NULL OR a.start_at <= ?)", now).
+		Where("(a.end_at IS NULL OR a.end_at >= ?)", now).
+		Where("(s.is_dismissed IS NULL OR s.is_dismissed = 0)")
+
+	var total int64
+	if err := base.Count(&total).Error; err != nil {
+		return 0, nil, err
 	}
-	if err != nil {
-		return err
-	}
-	row.DismissedAt = &now
-	return r.db.Save(&row).Error
+
+	var list []UserAnnouncementDTO
+	err := base.Select("a.id, a.title, a.content, a.level, a.display_mode, a.start_at, a.end_at, a.created_at, COALESCE(s.is_dismissed, 0) as is_dismissed, s.read_at").
+		Order("a.level desc, a.id desc").
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		Scan(&list).Error
+
+	return total, list, err
 }
 
-func (r *AnnouncementRepository) DismissedIDs(principalType int, principalID uint) ([]uint, error) {
-	var ids []uint
-	err := r.db.Model(&model.AnnouncementState{}).
-		Where("principal_type = ? AND principal_id = ? AND dismissed_at IS NOT NULL", principalType, principalID).
-		Pluck("announcement_id", &ids).Error
-	return ids, err
+func (r *AnnouncementRepository) Dismiss(ctx context.Context, announcementID, userID uint) error {
+	now := time.Now()
+	state := model.NotifyAnnouncementState{
+		AnnouncementID: announcementID,
+		UserID:         userID,
+		IsDismissed:    1,
+		ReadAt:         &now,
+	}
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "announcement_id"}, {Name: "user_id"}},
+		DoUpdates: clause.Assignments(map[string]any{"is_dismissed": 1, "read_at": &now}),
+	}).Create(&state).Error
 }

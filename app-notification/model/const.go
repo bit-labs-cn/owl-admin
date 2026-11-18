@@ -3,74 +3,57 @@ package model
 import "bit-labs.cn/owl-admin/app-notification/contract"
 
 const (
-	PrincipalTypeAdmin  = 1 // 后台用户
-	PrincipalTypePortal = 2 // 门户 / C 端用户
+	KindNotice = contract.KindNotice
+	KindTodo   = contract.KindTodo
 
-	RecipientTypeUser    = 1
-	RecipientTypeContact = 2
+	TodoStatusNone    = contract.TodoStatusNone
+	TodoStatusPending = contract.TodoStatusPending
+	TodoStatusDone    = contract.TodoStatusDone
+	TodoStatusExpired = contract.TodoStatusExpired
 
-	StatusEnabled  = 1
-	StatusDisabled = 2
+	ReadStatusUnread = contract.ReadStatusUnread
+	ReadStatusRead   = contract.ReadStatusRead
 
-	TaskStatusDraft         = 1
-	TaskStatusPendingReview = 2
-	TaskStatusPending       = 3
-	TaskStatusSending       = 4
-	TaskStatusPartial       = 5
-	TaskStatusSuccess       = 6
-	TaskStatusFailed        = 7
-	TaskStatusCancelled     = 8
+	ChannelInApp    = contract.ChannelInApp
+	ChannelEmail    = contract.ChannelEmail
+	ChannelSMS      = contract.ChannelSMS
+	ChannelWeCom    = contract.ChannelWeCom
+	ChannelDingTalk = contract.ChannelDingTalk
 
-	DeliveryStatusPending = 1
-	DeliveryStatusSending = 2
-	DeliveryStatusSent    = 3
-	DeliveryStatusFailed  = 4
-	DeliveryStatusSkipped = 5
+	RecipientTypeUser      = contract.RecipientTypeUser
+	RecipientTypeExternal  = contract.RecipientTypeExternal
+	RecipientTypeBroadcast = contract.RecipientTypeBroadcast
 
-	TodoStatusPending = 1
-	TodoStatusDone    = 2
-	TodoStatusExpired = 3
+	TypeStatusEnabled  = contract.TypeStatusEnabled
+	TypeStatusDisabled = contract.TypeStatusDisabled
 
-	DeviceStatusActive  = 1
-	DeviceStatusInvalid = 2
+	DeliveryStatusPending = contract.DeliveryStatusPending
+	DeliveryStatusSuccess = contract.DeliveryStatusSuccess
+	DeliveryStatusFailed  = contract.DeliveryStatusFailed
+	DeliveryStatusSkipped = contract.DeliveryStatusSkipped
 
-	ContactStatusSubscribed   = 1
-	ContactStatusUnsubscribed = 2
-	ContactStatusBounced      = 3
+	DeliveryMaxAttempts = contract.DeliveryMaxAttempts
+
+	ScheduleStatusPending  = contract.ScheduleStatusPending
+	ScheduleStatusSending  = contract.ScheduleStatusSending
+	ScheduleStatusSent     = contract.ScheduleStatusSent
+	ScheduleStatusCanceled = contract.ScheduleStatusCanceled
+	ScheduleStatusFailed   = contract.ScheduleStatusFailed
+	ScheduleMaxAttempts    = contract.ScheduleMaxAttempts
+
+	LevelInfo    = contract.LevelInfo
+	LevelWarning = contract.LevelWarning
+	LevelDanger  = contract.LevelDanger
+
+	DisplayModeInbox  = contract.DisplayModeInbox
+	DisplayModeBanner = contract.DisplayModeBanner
+	DisplayModePopup  = contract.DisplayModePopup
+
+	ScopeAll  = contract.ScopeAll
+	ScopeDept = contract.ScopeDept
+	ScopeRole = contract.ScopeRole
 
 	AnnouncementStatusDraft     = 1
 	AnnouncementStatusPublished = 2
 	AnnouncementStatusOffline   = 3
-
-	DisplayModeBanner = 1
-	DisplayModePopup  = 2
-	DisplayModeInbox  = 3
-
-	FrequencyOnce    = 1
-	FrequencySession = 2
-	FrequencyLogin   = 3
-
-	LevelInfo    = 1
-	LevelSuccess = 2
-	LevelWarning = 3
-	LevelDanger  = 4
-
-	ReadStatusUnread = 1
-	ReadStatusRead   = 2
-)
-
-const (
-	KindNotice  = contract.KindNotice
-	KindMessage = contract.KindMessage
-	KindTodo    = contract.KindTodo
-
-	CategorySystem    = contract.CategorySystem
-	CategorySecurity  = contract.CategorySecurity
-	CategoryBiz       = contract.CategoryBiz
-	CategoryMarketing = contract.CategoryMarketing
-
-	ChannelInApp = contract.ChannelInApp
-	ChannelEmail = contract.ChannelEmail
-	ChannelSMS   = contract.ChannelSMS
-	ChannelApp   = contract.ChannelApp
 )

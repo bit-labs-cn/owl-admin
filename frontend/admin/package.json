@@ -15,6 +15,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "@faker-js/faker": "^9.3.0",
+    "@bit-labs.cn/owl-notification-ui": "file:../../app-notification/frontend/admin",
     "@zxcvbn-ts/core": "^3.0.4",
     "dayjs": "^1.11.13",
     "sortablejs": "^1.15.6"

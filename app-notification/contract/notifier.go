@@ -2,12 +2,14 @@ package contract
 
 import "context"
 
-// Notifier 是业务子系统发送通知的入口。
+// Notifier 是业务子系统与通知中心的交互入口。
 type Notifier interface {
-	// Send 创建并提交一条通知，返回任务 ID。
-	Send(ctx context.Context, msg *Message) (string, error)
-	// CompleteByBizKey 把同一业务主键下未完成的待办标成已完成。
+	// SendDirect 发送定向消息（包含通知与待办，写扩散双表存储）
+	SendDirect(ctx context.Context, msg *DirectMessage) error
+
+	// CompleteByBizKey 根据业务主键一键办结待办（销项闭环）
 	CompleteByBizKey(ctx context.Context, bizKey string) error
-	// RegisterEvents 登记业务事件，供后台选模板和默认渠道。
-	RegisterEvents(ctx context.Context, events []EventDescriptor) error
+
+	// BroadcastAnnouncement 发布全员或定向公告（读扩散存储，杜绝大写入锁表）
+	BroadcastAnnouncement(ctx context.Context, ann *AnnouncementMessage) error
 }

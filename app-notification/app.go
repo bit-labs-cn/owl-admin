@@ -1,6 +1,8 @@
 package notification
 
 import (
+	"context"
+
 	"bit-labs.cn/owl"
 	"bit-labs.cn/owl-admin/app-notification/contract"
 	"bit-labs.cn/owl-admin/app-notification/database"
@@ -8,38 +10,49 @@ import (
 	"bit-labs.cn/owl-admin/app-notification/repository"
 	"bit-labs.cn/owl-admin/app-notification/route"
 	"bit-labs.cn/owl-admin/app-notification/service"
+	"bit-labs.cn/owl-admin/app-notification/service/plugins"
 	"bit-labs.cn/owl-admin/app-notification/subscribe"
 	"bit-labs.cn/owl/contract/foundation"
+	"bit-labs.cn/owl/contract/log"
 	"bit-labs.cn/owl/provider/mailer"
 	"bit-labs.cn/owl/provider/router"
+	"bit-labs.cn/owl/provider/setting"
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
 )
 
 var _ owl.SubApp = (*SubAppNotification)(nil)
 
-// SubAppNotification 是通知中心子系统。它跟着 owl-admin 走，但作为独立子应用
-// 注册，迁移、菜单和路由都走子应用契约，不占用 admin 的 ServiceProvider。
+// SubAppNotification 是通知中心子系统。
 type SubAppNotification struct {
 	app foundation.Application
 }
 
 func (s *SubAppNotification) Name() string { return "notify" }
 
-// Bootstrap 只做与数据库无关的装配。投递扫描会查表，放到 AfterMigrate 启动，
-// 避免表还没建好就开始查询。
 func (s *SubAppNotification) Bootstrap() {
 	_ = s.app.Invoke(func(
-		email *service.EmailChannel,
+		notifSvc *service.NotificationService,
 		hub *service.Hub,
-		notifier *service.Notifier,
 		mail *mailer.MailerManager,
+		logger log.Logger,
 	) {
-		email.SetMailer(mail)
+		// 1. 注册默认渠道插件（如邮件）
+		if mail != nil {
+			notifSvc.RegisterChannel(plugins.NewEmailPlugin(mail))
+		}
+		notifSvc.RegisterChannel(plugins.NewWeComPlugin(""))
+		// 2. 启动 Redis SSE 实时推送 Hub
 		hub.Start()
-		contract.Register(notifier)
+		// 3. 注册全局 contract.Notifier 单例供各业务域直接使用
+		contract.Register(notifSvc)
+		// 4. 初始化事件总线监听
 		subscribe.Init(s.app)
 	})
+}
+
+func (s *SubAppNotification) RegisterConfigs() setting.Catalog {
+	return service.NotifySettingCatalog()
 }
 
 func (s *SubAppNotification) ServiceProviders() []foundation.ServiceProvider { return nil }
@@ -53,58 +66,38 @@ func (s *SubAppNotification) RegisterCommands() []*cobra.Command { return nil }
 func (s *SubAppNotification) RegisterMigrate() []any { return database.Models() }
 
 func (s *SubAppNotification) BeforeMigrate(db *gorm.DB) error {
-	return database.BackfillNulls(db)
+	return nil
 }
 
 func (s *SubAppNotification) AfterMigrate(db *gorm.DB) error {
-	return s.app.Invoke(func(worker *service.Worker) {
+	return s.app.Invoke(func(
+		notifSvc *service.NotificationService,
+		worker *service.Worker,
+		logger log.Logger,
+	) {
+		if err := notifSvc.EnsureBuiltinTypes(context.Background()); err != nil {
+			logger.Error("notify: seed builtin types failed: ", err)
+		}
 		worker.Start()
 	})
 }
 
-// Binds 顺序：repository → service → handle。
+// Binds 注册核心仓库、服务与处理器。
 func (s *SubAppNotification) Binds() []any {
 	return []any{
-		repository.NewTemplateRepository,
-		repository.NewTaskRepository,
-		repository.NewDeliveryRepository,
-		repository.NewInboxRepository,
-		repository.NewDeviceRepository,
+		repository.NewMessageRepository,
 		repository.NewAnnouncementRepository,
-		repository.NewSubscriptionRepository,
-		repository.NewContactRepository,
-		repository.NewChannelAccountRepository,
-		repository.NewEventRepository,
-		repository.NewSettingRepository,
-		service.NewAudienceResolver,
+		repository.NewCatalogRepository,
 		service.NewHub,
-		service.NewEmailChannel,
-		service.NewSMSChannel,
-		service.NewAppChannel,
-		service.NewTemplateService,
-		service.NewTaskService,
-		service.NewInboxService,
-		service.NewAnnouncementService,
-		service.NewContactService,
-		service.NewChannelAccountService,
-		service.NewDeviceService,
-		service.NewDeliveryService,
-		service.NewEventService,
-		service.NewSettingService,
-		service.NewSubscriptionService,
-		service.NewNotifier,
+		service.NewNotificationService,
 		service.NewWorker,
-		v1.NewTemplateHandle,
-		v1.NewTaskHandle,
 		v1.NewAnnouncementHandle,
-		v1.NewAudienceHandle,
-		v1.NewContactHandle,
-		v1.NewChannelHandle,
-		v1.NewDeviceHandle,
+		v1.NewMessageHandle,
+		v1.NewTypeHandle,
+		v1.NewTemplateHandle,
 		v1.NewDeliveryHandle,
-		v1.NewEventHandle,
-		v1.NewSettingHandle,
-		v1.NewInboxHandle,
-		v1.NewSubscriptionHandle,
+		v1.NewSendHandle,
+		v1.NewScheduleHandle,
+		v1.NewMessageAdminHandle,
 	}
 }

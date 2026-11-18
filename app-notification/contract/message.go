@@ -1,164 +1,61 @@
 package contract
 
 import (
-	"context"
-	"encoding/json"
-	"strconv"
-	"strings"
 	"time"
 )
 
-// 通知类型。告诉用户发生了什么，或需要做什么。
-const (
-	KindNotice  = 1 // 系统通知
-	KindMessage = 2 // 业务消息
-	KindTodo    = 3 // 待办
-)
+// DirectMessage 定向消息（通知或待办）
+type DirectMessage struct {
+	Kind         int            `json:"kind"`                   // KindNotice(1) 或 KindTodo(2)
+	Title        string         `json:"title"`                  // 标题
+	Content      string         `json:"content"`                // 详细说明或正文
+	Link         string         `json:"link,omitempty"`         // 跳转深链（例如 /inspection/task/1024）
+	BizKey       string         `json:"bizKey,omitempty"`       // 业务唯一主键（例如 inspection:1024，用于自动销项）
+	DueAt        *time.Time     `json:"dueAt,omitempty"`        // 待办截止时间
+	UserIDs      []uint         `json:"userIds"`                // 目标接收人列表
+	Channels     []string       `json:"channels,omitempty"`     // 本条指定渠道，如 ["sms","wecom","dingtalk"]；空则用类型默认，再空则站内信
+	TypeCode     string         `json:"typeCode,omitempty"`     // 消息类型编码，空则不套用模板
+	Vars         map[string]any `json:"vars,omitempty"`         // 模板变量
+	SkipTemplate bool           `json:"skipTemplate,omitempty"` // 跳过类型模板，直接用 Title、Content、Link（人工发送使用）
+	SenderID     uint           `json:"senderId,omitempty"`     // 发送人（0 表示系统）
+	Payload      map[string]any `json:"payload,omitempty"`      // 附加业务元数据
 
-// 通知分类。决定能否退订，安全类强制送达。
-const (
-	CategorySystem    = 1
-	CategorySecurity  = 2
-	CategoryBiz       = 3
-	CategoryMarketing = 4
-)
-
-// 渠道编码。新增渠道时实现 Channel 并用这些编码之外的新编码注册。
-const (
-	ChannelInApp = "inapp"
-	ChannelEmail = "email"
-	ChannelSMS   = "sms"
-	ChannelApp   = "app"
-)
-
-// 动作类型。
-const (
-	ActionTypeLink     = 1 // 站内深链
-	ActionTypeExternal = 2 // 外链
-	ActionTypeAPI      = 3 // 预留：通知内直接调接口
-)
-
-// DeepLink 是跳到具体业务页的结构化地址，不从 HTML 里解析。
-type DeepLink struct {
-	App      string            `json:"app,omitempty"`
-	Path     string            `json:"path,omitempty"`
-	Query    map[string]string `json:"query,omitempty"`
-	External bool              `json:"external,omitempty"`
-	Target   string            `json:"target,omitempty"`
+	// ExternalRecipients 是没有系统账号的外部人员，只能走邮件等外部渠道
+	ExternalRecipients []ExternalRecipient `json:"externalRecipients,omitempty"`
 }
 
-// Action 是通知上的操作按钮。
-type Action struct {
-	Key   string    `json:"key"`
-	Label string    `json:"label"`
-	Type  int       `json:"type"`
-	Link  *DeepLink `json:"link,omitempty"`
-	Style string    `json:"style,omitempty"`
+// ExternalRecipient 是没有系统账号的外部人员。
+type ExternalRecipient struct {
+	Name  string `json:"name"`            // 称呼，用于发送记录展示
+	Email string `json:"email,omitempty"` // 邮箱
+	Phone string `json:"phone,omitempty"` // 手机号
 }
 
-// UintIDs 同时接受 JSON 数字和字符串，避免雪花 ID 在前端丢精度。
-type UintIDs []uint
-
-func (u *UintIDs) UnmarshalJSON(data []byte) error {
-	text := strings.TrimSpace(string(data))
-	if text == "" || text == "null" {
-		return nil
-	}
-	var raw []json.RawMessage
-	if err := json.Unmarshal(data, &raw); err != nil {
-		return err
-	}
-	out := make([]uint, 0, len(raw))
-	for _, item := range raw {
-		value := strings.Trim(string(item), `"`)
-		n, err := strconv.ParseUint(value, 10, 64)
-		if err != nil {
-			continue
-		}
-		out = append(out, uint(n))
-	}
-	*u = out
-	return nil
+// AnnouncementMessage 公告消息（全员或定向广播）
+type AnnouncementMessage struct {
+	Title        string         `json:"title"`                  // 公告标题
+	Content      string         `json:"content"`                // 公告正文 (Markdown/富文本)
+	Level        int            `json:"level"`                  // 级别: LevelInfo(1), LevelWarning(2), LevelDanger(3)
+	DisplayMode  int            `json:"displayMode"`            // 展示方式: DisplayModeInbox(1), DisplayModeBanner(2), DisplayModePopup(3)
+	Scope        string         `json:"scope"`                  // ScopeAll("all"), ScopeDept("dept"), ScopeRole("role")
+	TargetValues []uint         `json:"targetValues,omitempty"` // 目标受众ID列表（如部门ID或角色ID）
+	StartAt      *time.Time     `json:"startAt,omitempty"`      // 生效开始时间
+	EndAt        *time.Time     `json:"endAt,omitempty"`        // 生效结束时间
+	SenderID     uint           `json:"senderId,omitempty"`     // 发布人ID
+	Payload      map[string]any `json:"payload,omitempty"`
 }
 
-// Audience 描述接收范围。各 ID 列表取并集；All 表示全体有效用户。
-type Audience struct {
-	All        bool    `json:"all,omitempty"`
-	UserIDs    UintIDs `json:"userIds,omitempty"`
-	GroupIDs   UintIDs `json:"groupIds,omitempty"`
-	DeptIDs    UintIDs `json:"deptIds,omitempty"`
-	RoleIDs    UintIDs `json:"roleIds,omitempty"`
-	ContactIDs UintIDs `json:"contactIds,omitempty"`
-	ListIDs    UintIDs `json:"listIds,omitempty"`
-}
-
-// Message 是一次通知。HTML 负责展示，Link 负责跳转。
-type Message struct {
-	EventCode      string
-	Source         string
-	Kind           int
-	Category       int
-	Title          string
-	ContentHTML    string
-	ContentText    string
-	Payload        map[string]string
-	Link           *DeepLink
-	Actions        []Action
-	BizKey         string
-	DueAt          *time.Time
-	Audience       Audience
-	Channels       []string
-	ScheduleAt     *time.Time
-	IdempotencyKey string
-	Variables      map[string]string
-	TemplateCode   string
-}
-
-// EventDescriptor 由业务子系统声明自己会发出的通知事件。
-type EventDescriptor struct {
-	Code            string   `json:"code"`
-	Name            string   `json:"name"`
-	Source          string   `json:"source"`
-	Kind            int      `json:"kind"`
-	Category        int      `json:"category"`
-	DefaultChannels []string `json:"defaultChannels"`
-	Description     string   `json:"description"`
-}
-
-// ChannelRequest 是渠道实现收到的一条投递。
+// ChannelRequest 传递给外部渠道插件的单条外发请求
 type ChannelRequest struct {
-	TaskID       uint
-	DeliveryID   uint
-	Title        string
-	ContentHTML  string
-	ContentText  string
-	Address      string
-	Variables    map[string]string
-	Provider     string
-	ConfigJSON   string
-	SMSTemplate  string
-	Payload      map[string]string
-	Link         *DeepLink
-	Kind         int
-	DeviceTokens []DeviceTarget
-}
-
-// DeviceTarget 是一台已登记的推送设备。
-type DeviceTarget struct {
-	ID       uint
-	Provider string
-	Token    string
-	Platform string
-}
-
-// ChannelResult 是渠道发送结果。InvalidTokens 会被标成失效，不再重试。
-type ChannelResult struct {
-	ProviderMsgID string
-	InvalidTokens []string
-}
-
-// Channel 是可扩展的站外渠道。
-type Channel interface {
-	Code() string
-	Send(ctx context.Context, req *ChannelRequest) (*ChannelResult, error)
+	UserID  uint           `json:"userId"`
+	Email   string         `json:"email,omitempty"`
+	Phone   string         `json:"phone,omitempty"`
+	Title   string         `json:"title"`
+	Content string         `json:"content"`
+	// ContentText 是同一份正文的纯文本版，给邮件的 text/plain 备用部分用。
+	ContentText string         `json:"contentText,omitempty"`
+	Link        string         `json:"link,omitempty"`
+	Kind        int            `json:"kind"`
+	Webhook     string         `json:"webhook,omitempty"`
+	Payload     map[string]any `json:"payload,omitempty"`
 }
