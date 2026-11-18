@@ -7,11 +7,11 @@ import (
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/repository"
 	errContract "bit-labs.cn/owl/contract/errors"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	"bit-labs.cn/owl/contract/log"
 	"bit-labs.cn/owl/provider/db"
 	"bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
-	"github.com/asaskevich/EventBus"
 	validatorv10 "github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"github.com/spf13/cast"
@@ -73,14 +73,15 @@ type RoleService struct {
 
 	roleRepo repository.RoleRepositoryInterface
 	menuRepo *router.MenuRepository
-	eventbus EventBus.Bus
+	eventbus contractEvent.EventBus
 	locker   redis.LockerFactory
+	gormDB   *gorm.DB
 }
 
 func NewRoleService(
 	menuManager *router.MenuRepository,
 	roleRepo repository.RoleRepositoryInterface,
-	bus EventBus.Bus,
+	bus contractEvent.EventBus,
 	locker redis.LockerFactory,
 	validate *validatorv10.Validate,
 	gdb *gorm.DB,
@@ -92,6 +93,7 @@ func NewRoleService(
 		locker:         locker,
 		validate:       validate,
 		BaseRepository: db.NewBaseRepository[model.Role](gdb),
+		gormDB:         gdb,
 	}
 }
 func (i *RoleService) WithContext(ctx context.Context) *RoleService {
@@ -213,11 +215,18 @@ func (i *RoleService) AssignMenusToRole(ctx context.Context, req *AssignMenuToRo
 
 	role.SetMenus(db.GetModelsByIDs[model.Menu](req.MenuIDs))
 
-	err = i.roleRepo.WithContext(ctx).Save(role)
+	assignEvt, err := contractEvent.NewEvent(event.AssignMenuToRole, req, contractEvent.WithPriority(contractEvent.PriorityHigh))
+	if err != nil {
+		return err
+	}
 
-	i.eventbus.Publish(event.AssignMenuToRole, req)
-
-	return err
+	// 角色菜单与授权事件同事务提交：菜单存下来了，Casbin 策略就一定会被同步。
+	return i.gormDB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := repository.NewRoleRepository(tx).Save(role); err != nil {
+			return err
+		}
+		return i.eventbus.PublishTx(ctx, tx, assignEvt)
+	})
 }
 
 // GetRolesMenuIDs 获取角色的菜单IDs

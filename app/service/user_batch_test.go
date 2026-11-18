@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
+	"sync/atomic"
 	"testing"
 
 	"bit-labs.cn/owl-admin/app/event"
 	"bit-labs.cn/owl-admin/app/model"
-	"github.com/asaskevich/EventBus"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	"github.com/spf13/cast"
 )
 
@@ -61,10 +62,11 @@ func TestBatchDeleteAndStatus(t *testing.T) {
 
 func TestBatchAssignRolesAndDept(t *testing.T) {
 	gdb := setupUserImportDB(t)
-	bus := EventBus.New()
-	var published int
-	bus.Subscribe(event.AssignRoleToUser, func(req *AssignRoleToUser) {
-		published++
+	bus := newTestEventBus(t, gdb)
+	var published atomic.Int32
+	_ = bus.Subscribe(event.AssignRoleToUser, func(ctx context.Context, e *contractEvent.Event) error {
+		published.Add(1)
+		return nil
 	})
 	svc := newImportUserService(t, gdb, bus)
 
@@ -94,8 +96,9 @@ func TestBatchAssignRolesAndDept(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if published != 2 {
-		t.Fatalf("published=%d", published)
+	waitFor(t, "批量角色事件投递", func() bool { return published.Load() == 2 })
+	if got := published.Load(); got != 2 {
+		t.Fatalf("published=%d", got)
 	}
 	loaded, err := svc.userRepo.FindById(u1.ID)
 	if err != nil || len(loaded.Roles) != 1 || loaded.Roles[0].Name != "客服" {

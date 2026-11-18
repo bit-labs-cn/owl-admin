@@ -15,8 +15,10 @@ import (
 	"bit-labs.cn/owl-admin/app/event"
 	"bit-labs.cn/owl-admin/app/model"
 	errContract "bit-labs.cn/owl/contract/errors"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	"github.com/spf13/cast"
 	"github.com/xuri/excelize/v2"
+	"gorm.io/gorm"
 )
 
 const (
@@ -339,15 +341,33 @@ func (i *UserService) ImportUsers(ctx context.Context, filename string, data []b
 	out.Created = len(prepared)
 	out.Failed = out.Total - out.Created
 
+	events := make([]*contractEvent.Event, 0, len(prepared))
 	for _, p := range prepared {
 		if len(p.roleIDs) == 0 {
 			continue
 		}
-		i.eventBus.Publish(event.AssignRoleToUser, &AssignRoleToUser{
+		assignEvt, err := contractEvent.NewEvent(event.AssignRoleToUser, &AssignRoleToUser{
 			UserID:  p.user.ID,
 			RoleIDs: p.roleIDs,
-		})
+		}, contractEvent.WithPriority(contractEvent.PriorityHigh))
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, assignEvt)
 	}
+
+	// 导入的用户已落库，事件统一在一个事务里登记，避免部分用户角色同步、部分没同步。
+	if err := i.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, assignEvt := range events {
+			if err := i.eventBus.PublishTx(ctx, tx, assignEvt); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
 	return out, nil
 }
 

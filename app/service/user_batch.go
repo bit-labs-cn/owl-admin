@@ -6,8 +6,10 @@ import (
 	"bit-labs.cn/owl-admin/app/event"
 	"bit-labs.cn/owl-admin/app/model"
 	errContract "bit-labs.cn/owl/contract/errors"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	"bit-labs.cn/owl/provider/db"
 	"github.com/spf13/cast"
+	"gorm.io/gorm"
 )
 
 const (
@@ -153,13 +155,28 @@ func (i *UserService) BatchAssignUserRoles(ctx context.Context, req *BatchAssign
 	if err := i.userRepo.WithContext(ctx).SaveBatch(users); err != nil {
 		return err
 	}
+
+	events := make([]*contractEvent.Event, 0, len(users))
 	for _, user := range users {
-		i.eventBus.Publish(event.AssignRoleToUser, &AssignRoleToUser{
+		assignEvt, err := contractEvent.NewEvent(event.AssignRoleToUser, &AssignRoleToUser{
 			UserID:  user.ID,
 			RoleIDs: roleIDs,
-		})
+		}, contractEvent.WithPriority(contractEvent.PriorityHigh))
+		if err != nil {
+			return err
+		}
+		events = append(events, assignEvt)
 	}
-	return nil
+
+	// 批量角色已保存，事件统一在一个事务里落发件箱：要么全部登记待投递，要么整体报错。
+	return i.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, assignEvt := range events {
+			if err := i.eventBus.PublishTx(ctx, tx, assignEvt); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // BatchAssignUserDept 批量设置归属部门

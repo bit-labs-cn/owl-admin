@@ -18,6 +18,7 @@ import (
 	"bit-labs.cn/owl-admin/app/provider/jwt"
 	"bit-labs.cn/owl-admin/app/repository"
 	errContract "bit-labs.cn/owl/contract/errors"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	mailerContract "bit-labs.cn/owl/contract/mailer"
 	"bit-labs.cn/owl/provider/captcha"
 	"bit-labs.cn/owl/provider/conf"
@@ -26,7 +27,6 @@ import (
 	owlredis "bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/provider/router"
 	"bit-labs.cn/owl/utils"
-	"github.com/asaskevich/EventBus"
 	validatorv10 "github.com/go-playground/validator/v10"
 	"github.com/golang-module/carbon"
 	"github.com/jinzhu/copier"
@@ -133,7 +133,8 @@ type LoginContext struct {
 
 // LoginSuccessEvent 用户登录成功事件载荷
 type LoginSuccessEvent struct {
-	Ctx          context.Context
+	// Ctx 仅用于进程内透传，不参与序列化：事件经消息总线跨进程投递，消费端用 handler 的 ctx
+	Ctx          context.Context `json:"-"`
 	UserID       uint
 	Username     string
 	IsSuperAdmin bool
@@ -200,7 +201,7 @@ type UserService struct {
 	deptRepo          repository.DeptRepositoryInterface
 	roleRepo          repository.RoleRepositoryInterface
 	trustedDeviceRepo repository.TrustedDeviceRepositoryInterface
-	eventBus          EventBus.Bus
+	eventBus          contractEvent.EventBus
 	configure         *conf.Configure
 	locker            owlredis.LockerFactory
 	validate          *validatorv10.Validate
@@ -216,7 +217,7 @@ func NewUserService(
 	roleRepo repository.RoleRepositoryInterface,
 	trustedDeviceRepo repository.TrustedDeviceRepositoryInterface,
 	tx *gorm.DB,
-	eventBus EventBus.Bus,
+	eventBus contractEvent.EventBus,
 	configure *conf.Configure,
 	jwtSvc *jwt.JWTService,
 	menuManager *router.MenuRepository,
@@ -277,7 +278,7 @@ func (i *UserService) Login(ctx context.Context, req *LoginReq, loginCtx *LoginC
 		i.recordTrustedDevice(ctx, user.ID, req.DeviceID, ip, ua, captcha.VerifiedFromContext(ctx))
 	}
 
-	i.eventBus.Publish(event.UserLoginSuccess, &LoginSuccessEvent{
+	loginEvt, err := contractEvent.NewEvent(event.UserLoginSuccess, &LoginSuccessEvent{
 		Ctx:          ctx,
 		UserID:       user.ID,
 		Username:     user.Username,
@@ -285,7 +286,16 @@ func (i *UserService) Login(ctx context.Context, req *LoginReq, loginCtx *LoginC
 		IP:           ip,
 		UserAgent:    ua,
 		LoginTime:    carbon.Now().ToDateTimeString(),
-	})
+	}, contractEvent.WithPriority(contractEvent.PriorityHigh))
+	if err != nil {
+		return nil, err
+	}
+	// 登录成功事件与登录本身一起落库：写不进发件箱就不放行登录，避免登录日志永远缺失。
+	if err = i.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return i.eventBus.PublishTx(ctx, tx, loginEvt)
+	}); err != nil {
+		return nil, err
+	}
 
 	return &LoginResp{
 		User:        user,
@@ -418,10 +428,19 @@ func (i *UserService) AssignRoleToUser(ctx context.Context, req *AssignRoleToUse
 	}
 
 	user.SetRoles(roles)
-	err = i.userRepo.WithContext(ctx).Save(user)
 
-	i.eventBus.Publish(event.AssignRoleToUser, req)
-	return err
+	assignEvt, err := contractEvent.NewEvent(event.AssignRoleToUser, req, contractEvent.WithPriority(contractEvent.PriorityHigh))
+	if err != nil {
+		return err
+	}
+
+	// 用户角色与「角色变更」事件同事务：提交后 Cansbin 授权必定被同步，不会出现角色改了权限没跟上。
+	return i.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := repository.NewUserRepository(tx).Save(user); err != nil {
+			return err
+		}
+		return i.eventBus.PublishTx(ctx, tx, assignEvt)
+	})
 }
 
 // GetUserRoleIDs 获取用户的角色IDs

@@ -5,9 +5,9 @@ import (
 	"bit-labs.cn/owl-admin/app/cmd"
 	"bit-labs.cn/owl-admin/app/database"
 	"bit-labs.cn/owl-admin/app/database/seeder"
-	"bit-labs.cn/owl-admin/app/listener"
 	"bit-labs.cn/owl-admin/app/provider/jwt"
 	"bit-labs.cn/owl-admin/app/route"
+	"bit-labs.cn/owl-admin/app/subscribe"
 	"bit-labs.cn/owl/contract/foundation"
 	"bit-labs.cn/owl/provider/captcha"
 	"bit-labs.cn/owl/provider/db"
@@ -37,7 +37,7 @@ func (i *SubAppAdmin) Name() string {
 }
 
 func (i *SubAppAdmin) Bootstrap() {
-	listener.Init(i.app)
+	subscribe.Init(i.app)
 }
 
 func (i *SubAppAdmin) RegisterMigrate() []any { return database.Models() }

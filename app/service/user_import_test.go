@@ -3,17 +3,21 @@ package service
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"bit-labs.cn/owl-admin/app/event"
 	"bit-labs.cn/owl-admin/app/model"
 	"bit-labs.cn/owl-admin/app/repository"
+	contractEvent "bit-labs.cn/owl/contract/event"
 	"bit-labs.cn/owl/provider/db"
+	eventProvider "bit-labs.cn/owl/provider/event"
 	owlredis "bit-labs.cn/owl/provider/redis"
 	"bit-labs.cn/owl/utils"
-	"github.com/asaskevich/EventBus"
 	"github.com/glebarez/sqlite"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/cast"
@@ -46,16 +50,18 @@ func setupUserImportDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := gdb.AutoMigrate(&model.User{}, &model.Role{}, &model.Dept{}, &model.UserGroup{}, &model.Menu{}); err != nil {
+	if err := gdb.AutoMigrate(&model.User{}, &model.Role{}, &model.Dept{}, &model.UserGroup{}, &model.Menu{}, &eventProvider.OutboxEvent{}); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
 	return gdb
 }
 
-func newImportUserService(t *testing.T, gdb *gorm.DB, bus EventBus.Bus) *UserService {
+// newImportUserService 用发件箱 + Relay 装配服务：事件写入发件箱后由 Relay 异步投递，
+// 与生产链路一致，测试必须等投递完成再断言。
+func newImportUserService(t *testing.T, gdb *gorm.DB, bus contractEvent.EventBus) *UserService {
 	t.Helper()
 	if bus == nil {
-		bus = EventBus.New()
+		bus = newTestEventBus(t, gdb)
 	}
 	return &UserService{
 		db:             gdb,
@@ -67,6 +73,32 @@ func newImportUserService(t *testing.T, gdb *gorm.DB, bus EventBus.Bus) *UserSer
 		validate:       validator.New(),
 		BaseRepository: db.NewBaseRepository[model.User](gdb),
 	}
+}
+
+// newTestEventBus 组装「发件箱 + Relay + 内存驱动」的测试总线，
+// 与生产链路一致：PublishTx 只写发件箱，Relay 异步至少一次投递。
+func newTestEventBus(t *testing.T, gdb *gorm.DB) contractEvent.EventBus {
+	t.Helper()
+
+	driver := eventProvider.NewMemoryDriver()
+	relay := eventProvider.NewRelay(gdb, driver, nil)
+	relay.Start()
+	t.Cleanup(relay.Stop)
+	return eventProvider.NewBus(gdb, driver, relay, "test", nil)
+}
+
+// waitFor 轮询等待异步投递完成，避免测试与 Relay 的调度抢跑。
+func waitFor(t *testing.T, what string, cond func() bool) {
+	t.Helper()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		if cond() {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("等待%s超时", what)
 }
 
 func buildImportWorkbook(t *testing.T, headers []string, rows [][]string) []byte {
@@ -184,10 +216,17 @@ func TestBuildUserImportTemplate(t *testing.T) {
 
 func TestImportUsersPartialSuccess(t *testing.T) {
 	gdb := setupUserImportDB(t)
-	bus := EventBus.New()
+	bus := newTestEventBus(t, gdb)
+
 	var published []*AssignRoleToUser
-	bus.Subscribe(event.AssignRoleToUser, func(req *AssignRoleToUser) {
-		published = append(published, req)
+	var publishedMu sync.Mutex
+	_ = bus.Subscribe(event.AssignRoleToUser, func(ctx context.Context, e *contractEvent.Event) error {
+		var req AssignRoleToUser
+		_ = json.Unmarshal(e.Payload, &req)
+		publishedMu.Lock()
+		published = append(published, &req)
+		publishedMu.Unlock()
+		return nil
 	})
 	svc := newImportUserService(t, gdb, bus)
 
@@ -258,6 +297,14 @@ func TestImportUsersPartialSuccess(t *testing.T) {
 	if len(ok1.Roles) != 1 || ok1.Roles[0].Name != "客服" {
 		t.Fatalf("ok1 roles=%+v", ok1.Roles)
 	}
+	// 事件经发件箱由 Relay 异步投递，轮询等它到达
+	waitFor(t, "casbin 事件投递", func() bool {
+		publishedMu.Lock()
+		defer publishedMu.Unlock()
+		return len(published) > 0
+	})
+	publishedMu.Lock()
+	defer publishedMu.Unlock()
 	if len(published) != 1 || published[0].UserID != ok1.ID || cast.ToString(published[0].RoleIDs[0]) != cast.ToString(role.ID) {
 		t.Fatalf("casbin event=%+v", published)
 	}
