@@ -6,6 +6,7 @@ import { createColumns } from "./columns";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 import { usePublicHooks } from "../hooks";
+import { ADMIN_PERMS } from "../../permissions";
 
 import Role from "@iconify-icons/ri/admin-line";
 import Password from "@iconify-icons/ri/lock-password-line";
@@ -149,20 +150,24 @@ const columns = computed(() =>
         @refresh="onSearch"
       >
         <template #buttons>
-          <el-button
-            type="success"
-            :icon="useRenderIcon(Upload)"
-            @click="openImportDialog"
-          >
-            批量导入
-          </el-button>
-          <el-button
-            type="primary"
-            :icon="useRenderIcon(AddFill)"
-            @click="openDialog()"
-          >
-            新增用户
-          </el-button>
+          <Perms :value="ADMIN_PERMS.user.import">
+            <el-button
+              type="success"
+              :icon="useRenderIcon(Upload)"
+              @click="openImportDialog"
+            >
+              批量导入
+            </el-button>
+          </Perms>
+          <Perms :value="ADMIN_PERMS.user.create">
+            <el-button
+              type="primary"
+              :icon="useRenderIcon(AddFill)"
+              @click="openDialog()"
+            >
+              新增用户
+            </el-button>
+          </Perms>
         </template>
         <template v-slot="{ size, dynamicColumns }">
           <div
@@ -179,21 +184,29 @@ const columns = computed(() =>
             <el-button type="primary" text @click="onSelectionCancel">
               取消选择
             </el-button>
-            <el-button type="success" text @click="onBatchChangeStatus(1)">
-              批量启用
-            </el-button>
-            <el-button type="warning" text @click="onBatchChangeStatus(0)">
-              批量停用
-            </el-button>
-            <el-button type="primary" text @click="openBatchRoleDialog">
-              批量改角色
-            </el-button>
-            <el-button type="primary" text @click="openBatchDeptDialog">
-              批量改部门
-            </el-button>
-            <el-button type="danger" text @click="onbatchDel">
-              批量删除
-            </el-button>
+            <Perms :value="ADMIN_PERMS.user.batchChangeStatus">
+              <el-button type="success" text @click="onBatchChangeStatus(1)">
+                批量启用
+              </el-button>
+              <el-button type="warning" text @click="onBatchChangeStatus(0)">
+                批量停用
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.user.batchAssignRoles">
+              <el-button type="primary" text @click="openBatchRoleDialog">
+                批量改角色
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.user.batchAssignDept">
+              <el-button type="primary" text @click="openBatchDeptDialog">
+                批量改部门
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.user.batchDelete">
+              <el-button type="danger" text @click="onbatchDel">
+                批量删除
+              </el-button>
+            </Perms>
           </div>
           <pure-table
             border
@@ -217,48 +230,56 @@ const columns = computed(() =>
             @page-current-change="handleCurrentChange"
           >
             <template #operation="{ row }">
-              <el-button
-                link
-                type="primary"
-                :size="size"
-                :icon="useRenderIcon(EditPen)"
-                @click="openDialog('修改', row)"
-              >
-                修改
-              </el-button>
-              <el-button
-                link
-                type="success"
-                :size="size"
-                :icon="useRenderIcon(Role)"
-                @click="handleRole(row)"
-              >
-                角色
-              </el-button>
-              <el-popconfirm
-                :title="`是否确认删除用户编号为${row.id}的这条数据`"
-                @confirm="handleDelete(row)"
-              >
-                <template #reference>
-                  <el-button
-                    link
-                    type="danger"
-                    :size="size"
-                    :icon="useRenderIcon(Delete)"
-                  >
-                    删除
-                  </el-button>
-                </template>
-              </el-popconfirm>
-              <el-button
-                link
-                type="warning"
-                :size="size"
-                :icon="useRenderIcon(Password)"
-                @click="handleReset(row)"
-              >
-                重置
-              </el-button>
+              <Perms :value="ADMIN_PERMS.user.update">
+                <el-button
+                  link
+                  type="primary"
+                  :size="size"
+                  :icon="useRenderIcon(EditPen)"
+                  @click="openDialog('修改', row)"
+                >
+                  修改
+                </el-button>
+              </Perms>
+              <Perms :value="ADMIN_PERMS.user.assignRoles">
+                <el-button
+                  link
+                  type="success"
+                  :size="size"
+                  :icon="useRenderIcon(Role)"
+                  @click="handleRole(row)"
+                >
+                  角色
+                </el-button>
+              </Perms>
+              <Perms :value="ADMIN_PERMS.user.delete">
+                <el-popconfirm
+                  :title="`是否确认删除用户编号为${row.id}的这条数据`"
+                  @confirm="handleDelete(row)"
+                >
+                  <template #reference>
+                    <el-button
+                      link
+                      type="danger"
+                      :size="size"
+                      :icon="useRenderIcon(Delete)"
+                    >
+                      删除
+                    </el-button>
+                  </template>
+                </el-popconfirm>
+              </Perms>
+              <Perms :value="ADMIN_PERMS.user.resetPassword">
+                <el-button
+                  link
+                  type="warning"
+                  :size="size"
+                  :icon="useRenderIcon(Password)"
+                  @click="handleReset(row)"
+                >
+                  重置
+                </el-button>
+              </Perms>
             </template>
           </pure-table>
         </template>

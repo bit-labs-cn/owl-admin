@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 import type { Ref } from "vue";
 import { tableIndexColumn, type TablePaginationInput } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
+import { hasPerms } from "@bit-labs.cn/owl-ui/utils/auth";
+import { ADMIN_PERMS } from "../../permissions";
 
 function apkTypeLabel(apkType: number) {
   if (apkType === 1) return "iOS";
@@ -59,6 +61,7 @@ export function createColumns({
           active-text="已启用"
           inactive-text="已停用"
           inline-prompt
+          disabled={!hasPerms(ADMIN_PERMS.appVersion.changeStatus)}
           onChange={() => onChange(scope as any)}
         />
       )

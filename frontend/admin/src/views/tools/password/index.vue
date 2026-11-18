@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { usePasswordTool } from "./usePasswordTool";
+import { ADMIN_PERMS } from "../../../permissions";
 
 defineOptions({ name: "SystemPasswordTool" });
 
@@ -47,9 +48,11 @@ const {
             </div>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" :disabled="!charsetSelected" :loading="generating" @click="generate">
-              生成
-            </el-button>
+            <Perms :value="ADMIN_PERMS.password.generate">
+              <el-button type="primary" :disabled="!charsetSelected" :loading="generating" @click="generate">
+                生成
+              </el-button>
+            </Perms>
           </el-form-item>
         </el-form>
 
@@ -74,7 +77,9 @@ const {
             <el-input v-model="plain" type="password" show-password maxlength="72" placeholder="要计算的密码" />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" :loading="hashing" @click="hashPassword">计算</el-button>
+            <Perms :value="ADMIN_PERMS.password.hash">
+              <el-button type="primary" :loading="hashing" @click="hashPassword">计算</el-button>
+            </Perms>
           </el-form-item>
           <el-form-item v-if="hash" label="密文">
             <div class="hash-row">

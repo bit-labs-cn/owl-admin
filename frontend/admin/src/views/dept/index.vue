@@ -3,6 +3,7 @@ import { ref, h } from "vue";
 import { useDeptList } from "./useDeptList";
 import { createColumns } from "./columns";
 import { usePublicHooks } from "../hooks";
+import { ADMIN_PERMS } from "../../permissions";
 import DeptForm from "./DeptForm.vue";
 import type { DeptFormData } from "./types";
 import { deptAPI } from "@bit-labs.cn/owl-admin-ui/api/dept";
@@ -143,13 +144,15 @@ function handleDelete(row) {
       @fullscreen="onFullscreen"
     >
       <template #buttons>
-        <el-button
-          type="primary"
-          :icon="useRenderIcon(AddFill)"
-          @click="openDialog()"
-        >
-          新增部门
-        </el-button>
+        <Perms :value="ADMIN_PERMS.dept.create">
+          <el-button
+            type="primary"
+            :icon="useRenderIcon(AddFill)"
+            @click="openDialog()"
+          >
+            新增部门
+          </el-button>
+        </Perms>
       </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
@@ -173,42 +176,48 @@ function handleDelete(row) {
           @selection-change="handleSelectionChange"
         >
           <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(EditPen)"
-              @click="openDialog('修改', row)"
-            >
-              修改
-            </el-button>
-            <el-button
-              class="reset-margin"
-              link
-              type="success"
-              :size="size"
-              :icon="useRenderIcon(AddFill)"
-              @click="openDialog('新增', { parentId: row.id } as any)"
-            >
-              新增
-            </el-button>
-            <el-popconfirm
-              :title="`是否确认删除部门名称为${row.name}的这条数据`"
-              @confirm="handleDelete(row)"
-            >
-              <template #reference>
-                <el-button
-                  class="reset-margin"
-                  link
-                  type="danger"
-                  :size="size"
-                  :icon="useRenderIcon(Delete)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
+            <Perms :value="ADMIN_PERMS.dept.update">
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(EditPen)"
+                @click="openDialog('修改', row)"
+              >
+                修改
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.dept.create">
+              <el-button
+                class="reset-margin"
+                link
+                type="success"
+                :size="size"
+                :icon="useRenderIcon(AddFill)"
+                @click="openDialog('新增', { parentId: row.id } as any)"
+              >
+                新增
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.dept.delete">
+              <el-popconfirm
+                :title="`是否确认删除部门名称为${row.name}的这条数据`"
+                @confirm="handleDelete(row)"
+              >
+                <template #reference>
+                  <el-button
+                    class="reset-margin"
+                    link
+                    type="danger"
+                    :size="size"
+                    :icon="useRenderIcon(Delete)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-popconfirm>
+            </Perms>
           </template>
         </pure-table>
       </template>

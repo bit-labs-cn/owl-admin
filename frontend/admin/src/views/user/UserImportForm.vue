@@ -9,18 +9,22 @@
     />
 
     <div class="import-actions">
-      <el-button :loading="downloading" @click="downloadTemplate">
-        下载导入模板
-      </el-button>
-      <el-upload
-        :show-file-list="false"
-        :auto-upload="false"
-        accept=".xlsx"
-        :disabled="uploading"
-        @change="onFileChange"
-      >
-        <el-button type="primary" :loading="uploading">选择 Excel 并导入</el-button>
-      </el-upload>
+      <Perms :value="ADMIN_PERMS.user.importTemplate">
+        <el-button :loading="downloading" @click="downloadTemplate">
+          下载导入模板
+        </el-button>
+      </Perms>
+      <Perms :value="ADMIN_PERMS.user.import">
+        <el-upload
+          :show-file-list="false"
+          :auto-upload="false"
+          accept=".xlsx"
+          :disabled="uploading"
+          @change="onFileChange"
+        >
+          <el-button type="primary" :loading="uploading">选择 Excel 并导入</el-button>
+        </el-upload>
+      </Perms>
     </div>
 
     <div v-if="result" class="import-result">
@@ -31,16 +35,18 @@
           ，失败
           <span class="bad">{{ result.failed }}</span>
         </p>
-        <el-button
-          v-if="result.errors?.length"
-          type="warning"
-          plain
-          size="small"
-          :loading="exporting"
-          @click="exportErrors"
-        >
-          导出错误
-        </el-button>
+        <Perms :value="ADMIN_PERMS.user.exportImportErrors">
+          <el-button
+            v-if="result.errors?.length"
+            type="warning"
+            plain
+            size="small"
+            :loading="exporting"
+            @click="exportErrors"
+          >
+            导出错误
+          </el-button>
+        </Perms>
       </div>
       <el-table
         v-if="result.errors?.length"
@@ -68,6 +74,7 @@ import {
   userManageAPI,
   type ImportUserResult
 } from "@bit-labs.cn/owl-admin-ui/api/user";
+import { ADMIN_PERMS } from "../../permissions";
 
 const emit = defineEmits<{
   (e: "success"): void;

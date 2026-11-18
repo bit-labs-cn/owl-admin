@@ -4,6 +4,7 @@ import View from "@iconify-icons/ep/view";
 import RefreshRight from "@iconify-icons/ep/refresh-right";
 import { formatUnix } from "../../format";
 import { eventPriorityLabel, eventPriorityTag } from "../../status";
+import { ADMIN_PERMS } from "../../../../permissions";
 import type { EventOutboxRow } from "../../types";
 
 defineProps<{ rows: EventOutboxRow[] }>();
@@ -36,17 +37,21 @@ const emit = defineEmits<{
             {{ row.eventId }}<template v-if="row.retryCount"> · 已重试 {{ row.retryCount }} 次</template>
           </span>
           <span class="actions">
-            <el-button link type="primary" :icon="useRenderIcon(View)" @click="emit('detail', row)">
-              详情
-            </el-button>
-            <el-button
-              link
-              type="warning"
-              :icon="useRenderIcon(RefreshRight)"
-              @click="emit('retry', row)"
-            >
-              重投
-            </el-button>
+            <Perms :value="ADMIN_PERMS.event.outboxDetail">
+              <el-button link type="primary" :icon="useRenderIcon(View)" @click="emit('detail', row)">
+                详情
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.event.retryOutbox">
+              <el-button
+                link
+                type="warning"
+                :icon="useRenderIcon(RefreshRight)"
+                @click="emit('retry', row)"
+              >
+                重投
+              </el-button>
+            </Perms>
           </span>
         </div>
       </li>

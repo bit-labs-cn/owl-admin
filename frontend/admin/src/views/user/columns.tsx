@@ -2,6 +2,8 @@ import dayjs from "dayjs";
 import userAvatar from "@bit-labs.cn/owl-ui/assets/user.jpg";
 import type { Ref } from "vue";
 import { tableIndexColumn, type TablePaginationInput } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
+import { hasPerms } from "@bit-labs.cn/owl-ui/utils/auth";
+import { ADMIN_PERMS } from "../../permissions";
 
 /** 与后端 model.UserSourceLabel 保持一致，来源选项接口返回前先显示中文。 */
 function sourceText(source: string | undefined, labels: Record<string, string>) {
@@ -130,6 +132,7 @@ export function createColumns({
           active-text="已启用"
           inactive-text="已停用"
           inline-prompt
+          disabled={!hasPerms(ADMIN_PERMS.user.changeStatus)}
           style={switchStyle.value}
           onChange={() => onChange(scope as any)}
         />

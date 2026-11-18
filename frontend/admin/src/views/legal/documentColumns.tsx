@@ -1,5 +1,7 @@
 import type { Ref } from "vue";
 import { tableIndexColumn, type TablePaginationInput } from "@bit-labs.cn/owl-ui/utils/tableIndexColumn";
+import { hasPerms } from "@bit-labs.cn/owl-ui/utils/auth";
+import { ADMIN_PERMS } from "../../permissions";
 import type { LegalDocumentRow } from "./types";
 
 export function createDocumentColumns({
@@ -37,6 +39,7 @@ export function createDocumentColumns({
           active-text="启用"
           inactive-text="停用"
           inline-prompt
+          disabled={!hasPerms(ADMIN_PERMS.legal.updateDocument)}
           onChange={() => onChange(scope as any)}
         />
       )

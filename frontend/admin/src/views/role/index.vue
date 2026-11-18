@@ -18,6 +18,7 @@ import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 import { deviceDetection } from "@pureadmin/utils";
 import { usePublicHooks } from "../hooks";
+import { ADMIN_PERMS } from "../../permissions";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
@@ -257,13 +258,15 @@ function openDialog(title = "新增", row?: RoleFormData) {
         @refresh="onSearch"
       >
         <template #buttons>
-          <el-button
-            type="primary"
-            :icon="useRenderIcon(AddFill)"
-            @click="openDialog()"
-          >
-            新增角色
-          </el-button>
+          <Perms :value="ADMIN_PERMS.role.create">
+            <el-button
+              type="primary"
+              :icon="useRenderIcon(AddFill)"
+              @click="openDialog()"
+            >
+              新增角色
+            </el-button>
+          </Perms>
         </template>
         <template v-slot="{ size, dynamicColumns }">
           <pure-table
@@ -290,48 +293,56 @@ function openDialog(title = "新增", row?: RoleFormData) {
           >
             <template #operation="{ row }">
               <div class="role-op-actions">
-                <el-button
-                  link
-                  type="info"
-                  :size="size"
-                  :icon="roleUserOpIcon"
-                  @click="openRoleUserDialog(row)"
-                >
-                  用户
-                </el-button>
-                <el-button
-                  link
-                  type="primary"
-                  :size="size"
-                  :icon="roleEditOpIcon"
-                  @click="openDialog('修改', row)"
-                >
-                  修改
-                </el-button>
-                <el-popconfirm
-                  :title="`是否确认删除角色名称为${row.name}的这条数据`"
-                  @confirm="handleDelete(row)"
-                >
-                  <template #reference>
-                    <el-button
-                      link
-                      type="danger"
-                      :size="size"
-                      :icon="roleDeleteOpIcon"
-                    >
-                      删除
-                    </el-button>
-                  </template>
-                </el-popconfirm>
-                <el-button
-                  link
-                  type="warning"
-                  :size="size"
-                  :icon="roleMenuPermIcon"
-                  @click="handleMenu(row)"
-                >
-                  权限
-                </el-button>
+                <Perms :value="ADMIN_PERMS.role.getUsers">
+                  <el-button
+                    link
+                    type="info"
+                    :size="size"
+                    :icon="roleUserOpIcon"
+                    @click="openRoleUserDialog(row)"
+                  >
+                    用户
+                  </el-button>
+                </Perms>
+                <Perms :value="ADMIN_PERMS.role.update">
+                  <el-button
+                    link
+                    type="primary"
+                    :size="size"
+                    :icon="roleEditOpIcon"
+                    @click="openDialog('修改', row)"
+                  >
+                    修改
+                  </el-button>
+                </Perms>
+                <Perms :value="ADMIN_PERMS.role.delete">
+                  <el-popconfirm
+                    :title="`是否确认删除角色名称为${row.name}的这条数据`"
+                    @confirm="handleDelete(row)"
+                  >
+                    <template #reference>
+                      <el-button
+                        link
+                        type="danger"
+                        :size="size"
+                        :icon="roleDeleteOpIcon"
+                      >
+                        删除
+                      </el-button>
+                    </template>
+                  </el-popconfirm>
+                </Perms>
+                <Perms :value="ADMIN_PERMS.role.assignMenus">
+                  <el-button
+                    link
+                    type="warning"
+                    :size="size"
+                    :icon="roleMenuPermIcon"
+                    @click="handleMenu(row)"
+                  >
+                    权限
+                  </el-button>
+                </Perms>
               </div>
             </template>
           </pure-table>
@@ -355,14 +366,16 @@ function openDialog(title = "新增", row?: RoleFormData) {
               />
             </span>
             <span :class="[iconClass, 'ml-2']">
-              <IconifyIconOffline
-                v-tippy="{ content: '保存菜单权限' }"
-                class="dark:text-white"
-                width="18px"
-                height="18px"
-                :icon="Check"
-                @click="handleSave"
-              />
+              <Perms :value="ADMIN_PERMS.role.assignMenus">
+                <IconifyIconOffline
+                  v-tippy="{ content: '保存菜单权限' }"
+                  class="dark:text-white"
+                  width="18px"
+                  height="18px"
+                  :icon="Check"
+                  @click="handleSave"
+                />
+              </Perms>
             </span>
           </div>
           <p class="font-bold truncate">

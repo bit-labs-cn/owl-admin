@@ -15,7 +15,7 @@
 | 3 | [03-routing-menu-view-contract.md](03-routing-menu-view-contract.md) | /system 前缀、菜单字段、defineOptions name 与菜单 name 一致 |
 | 4 | [04-api-and-data-fetching.md](04-api-and-data-fetching.md) | API 分层、分页与请求风格 |
 | 5 | [05-ui-patterns-tables-dialogs-forms.md](05-ui-patterns-tables-dialogs-forms.md) | PureTableBar、addDialog、contentRenderer、getRef 校验闭环 |
-| 6 | [06-permission-role-menu-model.md](06-permission-role-menu-model.md) | 角色-菜单、auths、本包维护 vs owl-ui 执行 |
+| 6 | [06-permission-role-menu-model.md](06-permission-role-menu-model.md) | 角色-菜单、按钮权限码生成、本包配置 vs owl-ui 执行 |
 | 7 | [07-canonical-examples-and-ai-guardrails.md](07-canonical-examples-and-ai-guardrails.md) | 标准/复杂模板、勿照抄实现、AI 自检清单 |
 
 ## 术语表

@@ -9,6 +9,7 @@ import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
+import { ADMIN_PERMS } from "../../permissions";
 
 import AddFill from "@iconify-icons/ri/add-circle-line";
 import Refresh from "@iconify-icons/ep/refresh";
@@ -123,13 +124,15 @@ function handleDelete(row) {
 
     <PureTableBar title="岗位管理" :columns="columns" @refresh="onSearch">
       <template #buttons>
-        <el-button
-          type="primary"
-          :icon="useRenderIcon(AddFill)"
-          @click="openDialog()"
-        >
-          新增岗位
-        </el-button>
+        <Perms :value="ADMIN_PERMS.position.create">
+          <el-button
+            type="primary"
+            :icon="useRenderIcon(AddFill)"
+            @click="openDialog()"
+          >
+            新增岗位
+          </el-button>
+        </Perms>
       </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
@@ -153,32 +156,36 @@ function handleDelete(row) {
           @page-current-change="handleCurrentChange"
         >
           <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(EditPen)"
-              @click="openDialog('修改', row)"
-            >
-              修改
-            </el-button>
-            <el-popconfirm
-              :title="`是否确认删除岗位名称为${row.name}的这条数据`"
-              @confirm="handleDelete(row)"
-            >
-              <template #reference>
-                <el-button
-                  class="reset-margin"
-                  link
-                  type="danger"
-                  :size="size"
-                  :icon="useRenderIcon(Delete)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
+            <Perms :value="ADMIN_PERMS.position.update">
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(EditPen)"
+                @click="openDialog('修改', row)"
+              >
+                修改
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.position.delete">
+              <el-popconfirm
+                :title="`是否确认删除岗位名称为${row.name}的这条数据`"
+                @confirm="handleDelete(row)"
+              >
+                <template #reference>
+                  <el-button
+                    class="reset-margin"
+                    link
+                    type="danger"
+                    :size="size"
+                    :icon="useRenderIcon(Delete)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-popconfirm>
+            </Perms>
           </template>
         </pure-table>
       </template>

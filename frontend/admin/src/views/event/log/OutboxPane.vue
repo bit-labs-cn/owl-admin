@@ -16,6 +16,7 @@ import { useOutboxList } from "./useOutboxList";
 import { createOutboxColumns } from "./outboxColumns";
 import { OutboxStatus, outboxStatusOptions } from "../status";
 import { confirmRetryOutbox, openOutboxDetail } from "../useEventActions";
+import { ADMIN_PERMS } from "../../../permissions";
 import type { EventOutboxRow } from "../types";
 
 const props = defineProps<{ initialStatus?: string | number }>();
@@ -193,9 +194,11 @@ function openCleanup() {
           class="mr-4"
           @update:model-value="toggleAutoRefresh"
         />
-        <el-button :icon="useRenderIcon(Delete)" @click="openCleanup">
-          清理历史
-        </el-button>
+        <Perms :value="ADMIN_PERMS.event.cleanup">
+          <el-button :icon="useRenderIcon(Delete)" @click="openCleanup">
+            清理历史
+          </el-button>
+        </Perms>
       </template>
       <template #default="{ size, dynamicColumns }">
         <pure-table
@@ -219,27 +222,31 @@ function openCleanup() {
           @page-current-change="handleCurrentChange"
         >
           <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(View)"
-              @click="openOutboxDetail(row)"
-            >
-              详情
-            </el-button>
-            <el-button
-              v-if="row.status !== OutboxStatus.Sent"
-              class="reset-margin"
-              link
-              type="warning"
-              :size="size"
-              :icon="useRenderIcon(RefreshRight)"
-              @click="onRetry(row)"
-            >
-              重投
-            </el-button>
+            <Perms :value="ADMIN_PERMS.event.outboxDetail">
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(View)"
+                @click="openOutboxDetail(row)"
+              >
+                详情
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.event.retryOutbox">
+              <el-button
+                v-if="row.status !== OutboxStatus.Sent"
+                class="reset-margin"
+                link
+                type="warning"
+                :size="size"
+                :icon="useRenderIcon(RefreshRight)"
+                @click="onRetry(row)"
+              >
+                重投
+              </el-button>
+            </Perms>
           </template>
         </pure-table>
       </template>

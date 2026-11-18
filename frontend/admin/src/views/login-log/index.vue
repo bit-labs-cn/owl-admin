@@ -6,6 +6,7 @@ import LoginLogDetail from "./LoginLogDetail.vue";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
+import { ADMIN_PERMS } from "../../permissions";
 
 import Refresh from "@iconify-icons/ep/refresh";
 import View from "@iconify-icons/ep/view";
@@ -128,16 +129,18 @@ function openDetail(row) {
           @page-current-change="handleCurrentChange"
         >
           <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(View)"
-              @click="openDetail(row)"
-            >
-              详情
-            </el-button>
+            <Perms :value="ADMIN_PERMS.monitor.loginLogs">
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(View)"
+                @click="openDetail(row)"
+              >
+                详情
+              </el-button>
+            </Perms>
           </template>
         </pure-table>
       </template>

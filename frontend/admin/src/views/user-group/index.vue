@@ -11,6 +11,7 @@ import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 import { deviceDetection } from "@pureadmin/utils";
 import { usePublicHooks } from "../hooks";
+import { ADMIN_PERMS } from "../../permissions";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
@@ -173,13 +174,15 @@ async function openDialog(title = "新增", row?: UserGroupFormData) {
 
     <PureTableBar title="用户组管理" :columns="columns" @refresh="onSearch">
       <template #buttons>
-        <el-button
-          type="primary"
-          :icon="useRenderIcon(AddFill)"
-          @click="openDialog()"
-        >
-          新增用户组
-        </el-button>
+        <Perms :value="ADMIN_PERMS.userGroup.create">
+          <el-button
+            type="primary"
+            :icon="useRenderIcon(AddFill)"
+            @click="openDialog()"
+          >
+            新增用户组
+          </el-button>
+        </Perms>
       </template>
       <template v-slot="{ size, dynamicColumns }">
         <pure-table
@@ -202,42 +205,48 @@ async function openDialog(title = "新增", row?: UserGroupFormData) {
           @page-current-change="handleCurrentChange"
         >
           <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="info"
-              :size="size"
-              :icon="useRenderIcon(User)"
-              @click="openUserListDialog(row)"
-            >
-              成员
-            </el-button>
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(EditPen)"
-              @click="openDialog('修改', row)"
-            >
-              修改
-            </el-button>
-            <el-popconfirm
-              :title="`是否确认删除用户组【${row.name}】`"
-              @confirm="handleDelete(row)"
-            >
-              <template #reference>
-                <el-button
-                  class="reset-margin"
-                  link
-                  type="danger"
-                  :size="size"
-                  :icon="useRenderIcon(Delete)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
+            <Perms :value="ADMIN_PERMS.userGroup.getUsers">
+              <el-button
+                class="reset-margin"
+                link
+                type="info"
+                :size="size"
+                :icon="useRenderIcon(User)"
+                @click="openUserListDialog(row)"
+              >
+                成员
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.userGroup.update">
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(EditPen)"
+                @click="openDialog('修改', row)"
+              >
+                修改
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.userGroup.delete">
+              <el-popconfirm
+                :title="`是否确认删除用户组【${row.name}】`"
+                @confirm="handleDelete(row)"
+              >
+                <template #reference>
+                  <el-button
+                    class="reset-margin"
+                    link
+                    type="danger"
+                    :size="size"
+                    :icon="useRenderIcon(Delete)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-popconfirm>
+            </Perms>
           </template>
         </pure-table>
       </template>

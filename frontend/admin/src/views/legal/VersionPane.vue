@@ -11,6 +11,7 @@ import { legalAPI } from "@bit-labs.cn/owl-admin-ui/api/legal";
 import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
+import { ADMIN_PERMS } from "../../permissions";
 
 import AddFill from "@iconify-icons/ri/add-circle-line";
 import Refresh from "@iconify-icons/ep/refresh";
@@ -132,9 +133,11 @@ function handleDelete(row: LegalVersionRow) {
         <LegalSwitch />
       </template>
       <template #buttons>
-        <el-button type="primary" :icon="useRenderIcon(AddFill)" :disabled="!form.documentId" @click="openDialog()">
-          新增草稿
-        </el-button>
+        <Perms :value="ADMIN_PERMS.legal.createVersion">
+          <el-button type="primary" :icon="useRenderIcon(AddFill)" :disabled="!form.documentId" @click="openDialog()">
+            新增草稿
+          </el-button>
+        </Perms>
       </template>
       <template #default="{ size, dynamicColumns }">
         <pure-table
@@ -159,31 +162,37 @@ function handleDelete(row: LegalVersionRow) {
             <el-button link type="primary" :size="size" :icon="useRenderIcon(View)" @click="openContent(row)">
               查看
             </el-button>
-            <el-button
-              v-if="row.status === 'draft'"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(EditPen)"
-              @click="openDialog('修改', row)"
-            >
-              修改
-            </el-button>
-            <el-button
-              v-if="row.status === 'draft'"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(Upload)"
-              @click="openPublish(row)"
-            >
-              发布
-            </el-button>
-            <el-popconfirm v-if="row.status === 'draft'" :title="`删除草稿 ${row.version}？`" @confirm="handleDelete(row)">
-              <template #reference>
-                <el-button link type="danger" :size="size" :icon="useRenderIcon(Delete)">删除</el-button>
-              </template>
-            </el-popconfirm>
+            <Perms :value="ADMIN_PERMS.legal.updateVersion">
+              <el-button
+                v-if="row.status === 'draft'"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(EditPen)"
+                @click="openDialog('修改', row)"
+              >
+                修改
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.legal.publishVersion">
+              <el-button
+                v-if="row.status === 'draft'"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(Upload)"
+                @click="openPublish(row)"
+              >
+                发布
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.legal.deleteVersion">
+              <el-popconfirm v-if="row.status === 'draft'" :title="`删除草稿 ${row.version}？`" @confirm="handleDelete(row)">
+                <template #reference>
+                  <el-button link type="danger" :size="size" :icon="useRenderIcon(Delete)">删除</el-button>
+                </template>
+              </el-popconfirm>
+            </Perms>
           </template>
         </pure-table>
       </template>

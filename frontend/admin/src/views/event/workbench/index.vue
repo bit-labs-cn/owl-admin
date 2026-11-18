@@ -10,6 +10,7 @@ import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
 import Refresh from "@iconify-icons/ep/refresh";
 import Delete from "@iconify-icons/ep/delete";
 import { cleanupConsumers } from "@bit-labs.cn/owl-admin-ui/api/event";
+import { ADMIN_PERMS } from "../../../permissions";
 import KpiCard from "./components/KpiCard.vue";
 import TrendChart from "./components/TrendChart.vue";
 import StatusDonut from "./components/StatusDonut.vue";
@@ -300,14 +301,16 @@ function openCleanupConsumers() {
                 <span class="muted">
                   lag 为未投递条数，pending 为已投递未确认条数
                 </span>
-                <el-button
-                  link
-                  type="primary"
-                  :icon="useRenderIcon(Delete)"
-                  @click="openCleanupConsumers"
-                >
-                  清理僵尸消费者
-                </el-button>
+                <Perms :value="ADMIN_PERMS.event.cleanupConsumers">
+                  <el-button
+                    link
+                    type="primary"
+                    :icon="useRenderIcon(Delete)"
+                    @click="openCleanupConsumers"
+                  >
+                    清理僵尸消费者
+                  </el-button>
+                </Perms>
               </span>
             </div>
           </template>

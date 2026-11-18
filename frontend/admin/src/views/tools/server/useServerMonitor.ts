@@ -27,12 +27,13 @@ interface CounterSample {
   write: number;
 }
 
-export function useServerMonitor() {
+export function useServerMonitor(options: { enabled?: boolean } = {}) {
+  const enabled = options.enabled !== false;
   const snapshot = ref<ServerSnapshot | null>(null);
   const history = ref<TrendPoint[]>([]);
   const loading = ref(false);
   const loadError = ref("");
-  const autoRefresh = ref(true);
+  const autoRefresh = ref(enabled);
   let pending = false;
   let timer = 0;
   let previous: CounterSample | null = null;
@@ -43,6 +44,7 @@ export function useServerMonitor() {
   const healthScore = computed(() => scoreOf(snapshot.value));
 
   async function load() {
+    if (!enabled) return;
     if (pending) return;
     pending = true;
     if (!snapshot.value) loading.value = true;
@@ -136,6 +138,7 @@ export function useServerMonitor() {
   }
 
   onMounted(() => {
+    if (!enabled) return;
     void load();
     restart();
   });

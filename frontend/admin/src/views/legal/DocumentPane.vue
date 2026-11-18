@@ -9,6 +9,7 @@ import { legalAPI } from "@bit-labs.cn/owl-admin-ui/api/legal";
 import { dialogService } from "@bit-labs.cn/owl-ui/components/ReDialog";
 import { PureTableBar } from "@bit-labs.cn/owl-ui/components/RePureTableBar";
 import { useRenderIcon } from "@bit-labs.cn/owl-ui/components/ReIcon/src/hooks";
+import { ADMIN_PERMS } from "../../permissions";
 
 import AddFill from "@iconify-icons/ri/add-circle-line";
 import Refresh from "@iconify-icons/ep/refresh";
@@ -113,7 +114,9 @@ function handleDelete(row: LegalDocumentRow) {
         <LegalSwitch />
       </template>
       <template #buttons>
-        <el-button type="primary" :icon="useRenderIcon(AddFill)" @click="openDialog()">新增条款</el-button>
+        <Perms :value="ADMIN_PERMS.legal.createDocument">
+          <el-button type="primary" :icon="useRenderIcon(AddFill)" @click="openDialog()">新增条款</el-button>
+        </Perms>
       </template>
       <template #default="{ size, dynamicColumns }">
         <pure-table
@@ -135,14 +138,18 @@ function handleDelete(row: LegalDocumentRow) {
           @page-current-change="handleCurrentChange"
         >
           <template #operation="{ row }">
-            <el-button link type="primary" :size="size" :icon="useRenderIcon(EditPen)" @click="openDialog('修改', row)">
-              修改
-            </el-button>
-            <el-popconfirm :title="`删除条款「${row.name}」？已有同意记录的不能删`" @confirm="handleDelete(row)">
-              <template #reference>
-                <el-button link type="danger" :size="size" :icon="useRenderIcon(Delete)">删除</el-button>
-              </template>
-            </el-popconfirm>
+            <Perms :value="ADMIN_PERMS.legal.updateDocument">
+              <el-button link type="primary" :size="size" :icon="useRenderIcon(EditPen)" @click="openDialog('修改', row)">
+                修改
+              </el-button>
+            </Perms>
+            <Perms :value="ADMIN_PERMS.legal.deleteDocument">
+              <el-popconfirm :title="`删除条款「${row.name}」？已有同意记录的不能删`" @confirm="handleDelete(row)">
+                <template #reference>
+                  <el-button link type="danger" :size="size" :icon="useRenderIcon(Delete)">删除</el-button>
+                </template>
+              </el-popconfirm>
+            </Perms>
           </template>
         </pure-table>
       </template>

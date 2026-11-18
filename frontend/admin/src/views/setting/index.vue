@@ -3,6 +3,7 @@ import { onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useSetting } from "./useSetting";
 import type { SettingItem, SettingTreeNode } from "./types";
+import { ADMIN_PERMS } from "../../permissions";
 
 const imageTypes = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 
@@ -177,7 +178,9 @@ function chooseImage(item: SettingItem) {
             <el-button :disabled="saving || !currentGroup" @click="currentGroup && restore(currentGroup)">
               恢复默认
             </el-button>
-            <el-button type="primary" :loading="saving" @click="save">保存</el-button>
+            <Perms :value="ADMIN_PERMS.setting.update">
+              <el-button type="primary" :loading="saving" @click="save">保存</el-button>
+            </Perms>
           </footer>
         </section>
       </template>

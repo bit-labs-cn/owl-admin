@@ -9,6 +9,7 @@ import { useInboxList } from "./useInboxList";
 import { createInboxColumns } from "./inboxColumns";
 import { inboxStatusOptions } from "../status";
 import { openInboxDetail } from "../useEventActions";
+import { ADMIN_PERMS } from "../../../permissions";
 
 const props = defineProps<{ initialStatus?: string | number }>();
 
@@ -129,16 +130,18 @@ const columns = computed(() => createInboxColumns(pagination));
           @page-current-change="handleCurrentChange"
         >
           <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              :size="size"
-              :icon="useRenderIcon(View)"
-              @click="openInboxDetail(row)"
-            >
-              详情
-            </el-button>
+            <Perms :value="ADMIN_PERMS.event.inboxDetail">
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                :size="size"
+                :icon="useRenderIcon(View)"
+                @click="openInboxDetail(row)"
+              >
+                详情
+              </el-button>
+            </Perms>
           </template>
         </pure-table>
       </template>

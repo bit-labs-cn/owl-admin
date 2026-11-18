@@ -4,6 +4,8 @@ import type {
   DictItem,
   DictRepositoryInterface
 } from "./dict_repository";
+import { hasPerms } from "@bit-labs.cn/owl-ui/utils/auth";
+import { ADMIN_PERMS } from "../../permissions";
 import SmartTable from "./smart_table";
 
 
@@ -54,6 +56,7 @@ export class DictTable extends SmartTable {
     super();
 
     this.repo = repo;
+    this.canWrite = hasPerms(ADMIN_PERMS.dict.update);
     this.itemTable = new DictItemTable("0", repo, "");
     this.loadData();
   }
@@ -191,6 +194,7 @@ class DictItemTable extends SmartTable {
     super();
     this.repo = repo;
     this.loading.value = true;
+    this.canWrite = hasPerms(ADMIN_PERMS.dict.updateItem);
     this.dictID = dictID;
     this.dictType = dictType;
     this.loadData();

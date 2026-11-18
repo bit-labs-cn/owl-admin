@@ -4,6 +4,7 @@ import type { UploadProps, UploadUserFile } from "element-plus";
 import { ElMessage } from "element-plus";
 import type { AppVersionFormData } from "./types";
 import { appVersionAPI } from "@bit-labs.cn/owl-admin-ui/api/app-version";
+import { ADMIN_PERMS } from "../../permissions";
 
 const props = defineProps<{
   formInline: AppVersionFormData;
@@ -153,27 +154,29 @@ defineExpose({ getRef, getFormData: () => newFormInline.value });
       </el-radio-group>
     </el-form-item>
     <el-form-item label="安装包" prop="apkUrl">
-      <el-upload
-        v-model:file-list="fileList"
-        action=""
-        drag
-        :limit="1"
-        :accept="accept"
-        :http-request="submitPackage"
-        :before-upload="beforeUpload"
-        :on-remove="onRemove"
-      >
-        <div class="el-upload__text">将安装包拖到此处，或<em>点击上传</em></div>
-        <template #tip>
-          <div class="el-upload__tip">
-            {{
-              newFormInline.apkType === 1
-                ? "iOS 仅支持 .ipa，不超过 500MB"
-                : "Android 支持 .apk / .aab，不超过 500MB"
-            }}
-          </div>
-        </template>
-      </el-upload>
+      <Perms :value="ADMIN_PERMS.appVersion.upload">
+        <el-upload
+          v-model:file-list="fileList"
+          action=""
+          drag
+          :limit="1"
+          :accept="accept"
+          :http-request="submitPackage"
+          :before-upload="beforeUpload"
+          :on-remove="onRemove"
+        >
+          <div class="el-upload__text">将安装包拖到此处，或<em>点击上传</em></div>
+          <template #tip>
+            <div class="el-upload__tip">
+              {{
+                newFormInline.apkType === 1
+                  ? "iOS 仅支持 .ipa，不超过 500MB"
+                  : "Android 支持 .apk / .aab，不超过 500MB"
+              }}
+            </div>
+          </template>
+        </el-upload>
+      </Perms>
     </el-form-item>
     <el-form-item label="更新内容" prop="content">
       <el-input

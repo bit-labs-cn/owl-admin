@@ -11,6 +11,9 @@ export default abstract class SmartTable {
   abstract submitSave(dict: any): Promise<Result>;
   abstract loadData(): void;
 
+  /** 是否允许行内编辑；没有写权限的子类置为 false，只读展示文本 */
+  canWrite = true;
+
   editingData = computed(() => {
     return (index: number) => {
       return this.editMap.value[index]?.editing;
@@ -73,7 +76,7 @@ export default abstract class SmartTable {
       {!this.editingData.value(index) ? (
         <div
           style={{ width: "calc(100%)" }}
-          ondblclick={() => this.onEdit(row, index)}
+          ondblclick={() => this.canWrite && this.onEdit(row, index)}
         >
           {row[field]}
         </div>

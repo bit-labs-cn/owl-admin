@@ -3,8 +3,12 @@ import { computed } from "vue";
 import HealthGauge from "./HealthGauge.vue";
 import MonitorChart from "./MonitorChart.vue";
 import { useServerMonitor } from "./useServerMonitor";
+import { hasPerms } from "@bit-labs.cn/owl-ui/utils/auth";
+import { ADMIN_PERMS } from "../../../permissions";
 
 defineOptions({ name: "SystemServerMonitor" });
+
+const canReadSnapshot = hasPerms(ADMIN_PERMS.server.snapshot);
 
 const {
   snapshot,
@@ -23,7 +27,7 @@ const {
   percent,
   shiftText,
   collectedText
-} = useServerMonitor();
+} = useServerMonitor({ enabled: canReadSnapshot });
 
 const cpuSeries = computed(() => [
   { name: "用户态", color: "#5b8ff9", data: history.value.map(point => point.cpuUser || 0) },
@@ -57,7 +61,11 @@ function percentAxis(value: number) {
 
 <template>
   <div v-loading="loading" class="main">
-    <div class="monitor">
+    <el-empty
+      v-if="!canReadSnapshot"
+      description="没有查看服务器运行概况的权限，请联系管理员分配「运行概况」权限"
+    />
+    <div v-else class="monitor">
       <header class="monitor-head">
         <div>
           <h2>{{ snapshot?.host.hostname || "运行概况" }}</h2>
@@ -71,8 +79,14 @@ function percentAxis(value: number) {
         </div>
         <div class="monitor-actions">
           <span v-if="collectedText()" class="collected">采集于 {{ collectedText() }}</span>
-          <el-switch v-model="autoRefresh" active-text="自动刷新" />
-          <el-button @click="load">刷新</el-button>
+          <el-switch
+            v-model="autoRefresh"
+            active-text="自动刷新"
+            :disabled="!canReadSnapshot"
+          />
+          <Perms :value="ADMIN_PERMS.server.snapshot">
+            <el-button @click="load">刷新</el-button>
+          </Perms>
         </div>
       </header>
 

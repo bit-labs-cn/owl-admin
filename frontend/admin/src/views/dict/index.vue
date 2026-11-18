@@ -5,6 +5,7 @@ import { DictTable } from "./controller";
 import { Delete } from "@element-plus/icons-vue";
 import { DictAPI } from "@bit-labs.cn/owl-admin-ui/api/dict";
 import { isAllEmpty } from "@pureadmin/utils";
+import { ADMIN_PERMS } from "../../permissions";
 
 const dict = new DictTable(new DictAPI());
 const formRef = ref();
@@ -73,9 +74,11 @@ function resetForm(el) {
         <div class="flex justify-between p-2.5 bg-white">
           <div>字典列表</div>
           <div>
-            <el-button type="primary" size="small" @click="dict.createDict()"
-              >新增字典
-            </el-button>
+            <Perms :value="ADMIN_PERMS.dict.create">
+              <el-button type="primary" size="small" @click="dict.createDict()"
+                >新增字典
+              </el-button>
+            </Perms>
           </div>
         </div>
         <pure-table
@@ -89,13 +92,15 @@ function resetForm(el) {
           @row-click="dict.chooseDict"
         >
           <template #operation="{ index }">
-            <el-button
-              type="danger"
-              :icon="Delete"
-              circle
-              size="small"
-              @click="dict.deleteDict(index)"
-            />
+            <Perms :value="ADMIN_PERMS.dict.delete">
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                size="small"
+                @click="dict.deleteDict(index)"
+              />
+            </Perms>
           </template>
         </pure-table>
       </div>
@@ -104,13 +109,15 @@ function resetForm(el) {
         <div class="flex justify-between p-2.5 bg-white">
           <div>字典详情（{{ dict.choseDict.value?.name }}）</div>
           <div>
-            <el-button
-              type="primary"
-              size="small"
-              :disabled="!dict.choseDict.value"
-              @click="dict.createDictItem()"
-              >新增字典项
-            </el-button>
+            <Perms :value="ADMIN_PERMS.dict.createItem">
+              <el-button
+                type="primary"
+                size="small"
+                :disabled="!dict.choseDict.value"
+                @click="dict.createDictItem()"
+                >新增字典项
+              </el-button>
+            </Perms>
           </div>
         </div>
         <pure-table
@@ -122,13 +129,15 @@ function resetForm(el) {
           :loading="dict.itemIsLoading()"
         >
           <template #operation="{ index }">
-            <el-button
-              type="danger"
-              :icon="Delete"
-              circle
-              size="small"
-              @click="dict.deleteDictItem(index)"
-            />
+            <Perms :value="ADMIN_PERMS.dict.deleteItem">
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                size="small"
+                @click="dict.deleteDictItem(index)"
+              />
+            </Perms>
           </template>
         </pure-table>
       </div>
