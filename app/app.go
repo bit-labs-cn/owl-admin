@@ -130,5 +130,8 @@ func (i *SubAppAdmin) Binds() []any {
 		repository.NewEventRepository,
 		service.NewEventService,
 		v1.NewEventHandle,
+		repository.NewSchedulerRepository,
+		service.NewSchedulerService,
+		v1.NewSchedulerHandle,
 	}
 }

@@ -22,6 +22,7 @@ import (
 var (
 	userMenu, roleMenu, menuMenu, apiMenu, deptMenu, dictMenu, positionMenu, userGroupMenu, appVersionMenu, legalMenu, settingMenu, passwordToolMenu, serverMonitorMenu *router.Menu
 	eventWorkbenchMenu, eventLogMenu                                                                                                                                    *router.Menu
+	schedulerMenu                                                                                                                                                       *router.Menu
 )
 
 func InitMenu() []*router.Menu {
@@ -61,6 +62,7 @@ func InitMenu() []*router.Menu {
 				appVersionMenu,
 				legalMenu,
 				settingMenu,
+				schedulerMenu,
 			},
 		},
 		{
@@ -162,6 +164,7 @@ func InitApi(app foundation.Application, appName string) {
 		passwordToolHandle *v1.PasswordToolHandle,
 		serverMonitorHandle *v1.ServerMonitorHandle,
 		eventHandle *v1.EventHandle,
+		schedulerHandle *v1.SchedulerHandle,
 		enforcer *casbin.SyncedEnforcer,
 		engine *gin.Engine,
 		jwtSvc *jwt.JWTService,
@@ -440,6 +443,33 @@ func InitApi(app foundation.Application, appName string) {
 			r.Get("/events/inbox/:id", router.AccessAuthorized, eventHandle.InboxDetail).Name("收件箱详情").WithoutOperateLog().Build()
 			eventLogMenu = r.GetMenu()
 			eventLogMenu.Meta.Title = "事件记录"
+		}
+
+		// scheduler
+		{
+			r := router.NewRouteInfoBuilder(appName, schedulerHandle, gv1, router.MenuOption{
+				ComponentName: "SystemScheduler",
+				Path:          "/system/scheduler/index",
+				Icon:          "ep:timer",
+			})
+			r.Get("/scheduler/jobs", router.AccessAuthorized, schedulerHandle.RetrieveJobs).Name("定时任务列表").WithoutOperateLog().Build()
+			r.Get("/scheduler/jobs/:id", router.AccessSuperAdmin, schedulerHandle.JobDetail).Name("定时任务详情").WithoutOperateLog().Build()
+			r.Post("/scheduler/jobs", router.AccessSuperAdmin, schedulerHandle.CreateJob).Name("新建定时任务").Build()
+			r.Put("/scheduler/jobs/:id", router.AccessSuperAdmin, schedulerHandle.UpdateJob).Name("修改定时任务").Build()
+			r.Delete("/scheduler/jobs/:id", router.AccessSuperAdmin, schedulerHandle.DeleteJob).Name("删除定时任务").Build()
+			r.Put("/scheduler/jobs/:id/status", router.AccessAuthorized, schedulerHandle.ChangeStatus).Name("启停定时任务").Build()
+			r.Post("/scheduler/jobs/:id/trigger", router.AccessAuthorized, schedulerHandle.TriggerJob).Name("手动触发定时任务").Build()
+			r.Get("/scheduler/actions", router.AccessSuperAdmin, schedulerHandle.RetrieveActions).Name("可调用方法目录").WithoutOperateLog().Build()
+			r.Post("/scheduler/actions/:code/options", router.AccessSuperAdmin, schedulerHandle.ActionOptions).Name("可调用方法候选").WithoutOperateLog().Build()
+			r.Get("/scheduler/runs", router.AccessAuthorized, schedulerHandle.RetrieveRuns).Name("执行记录列表").WithoutOperateLog().Build()
+			r.Get("/scheduler/runs/:id", router.AccessAuthorized, schedulerHandle.RunDetail).Name("执行记录详情").WithoutOperateLog().Build()
+			r.Post("/scheduler/runs/:id/retry", router.AccessAuthorized, schedulerHandle.RetryRun).Name("重试执行记录").Build()
+			r.Post("/scheduler/runs/:id/cancel", router.AccessAuthorized, schedulerHandle.CancelRun).Name("取消执行记录").Build()
+			r.Post("/scheduler/runs/cleanup", router.AccessAuthorized, schedulerHandle.CleanupRuns).Name("清理执行记录").Build()
+			r.Post("/scheduler/cron/preview", router.AccessAuthorized, schedulerHandle.PreviewCron).Name("预览Cron执行时间").WithoutOperateLog().Build()
+			r.Get("/scheduler/stats", router.AccessAuthorized, schedulerHandle.Stats).Name("定时任务汇总").WithoutOperateLog().Build()
+			schedulerMenu = r.GetMenu()
+			schedulerMenu.Meta.Title = "定时任务"
 		}
 
 		// app version (admin + public latest)

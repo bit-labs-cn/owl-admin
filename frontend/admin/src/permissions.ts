@@ -94,5 +94,23 @@ export const ADMIN_PERMS = {
   password: {
     generate: "admin:password:Generate",
     hash: "admin:password:Hash"
+  },
+  scheduler: {
+    list: "admin:scheduler:RetrieveJobs",
+    detail: "admin:scheduler:JobDetail",
+    create: "admin:scheduler:CreateJob",
+    update: "admin:scheduler:UpdateJob",
+    delete: "admin:scheduler:DeleteJob",
+    changeStatus: "admin:scheduler:ChangeStatus",
+    trigger: "admin:scheduler:TriggerJob",
+    runs: "admin:scheduler:RetrieveRuns",
+    runDetail: "admin:scheduler:RunDetail",
+    retryRun: "admin:scheduler:RetryRun",
+    cancelRun: "admin:scheduler:CancelRun",
+    cleanup: "admin:scheduler:CleanupRuns",
+    previewCron: "admin:scheduler:PreviewCron",
+    stats: "admin:scheduler:Stats",
+    actions: "admin:scheduler:RetrieveActions",
+    actionOptions: "admin:scheduler:ActionOptions"
   }
 } as const;
