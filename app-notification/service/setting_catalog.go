@@ -13,6 +13,7 @@ const (
 	keyEmailEnabled = "emailEnabled"
 	keyWecomEnabled = "wecomEnabled"
 	keyWecomWebhook = "wecomWebhook"
+	keyBaseURL      = "baseUrl"
 )
 
 // NotifySettingCatalog 是通知中心写进系统设置的渠道开关。
@@ -38,6 +39,19 @@ func NotifySettingCatalog() setting.Catalog {
 					},
 				},
 			},
+			{
+				Key:   "general",
+				Title: "通用",
+				Items: []setting.Item{
+					{
+						Key: keyBaseURL, Title: "站点地址",
+						Hint:    "把邮件里的站内链接和站内图片补成绝对地址，例如 https://admin.example.com。留空时相对链接在邮件里点不开。",
+						Type:    setting.TypeString,
+						Default: "",
+						Max:     256,
+					},
+				},
+			},
 		},
 	}
 }
@@ -57,4 +71,17 @@ func (s *NotificationService) channelGates(ctx context.Context) (emailOn bool, w
 		webhook = strings.TrimSpace(v)
 	}
 	return emailOn, wecomOn, webhook
+}
+
+// baseURL 返回站点地址，用于把外部渠道里的站内相对链接补成绝对地址。
+// 未配置时返回空串，调用方按相对地址原样投递。
+func (s *NotificationService) baseURL(ctx context.Context) string {
+	if s.settings == nil {
+		return ""
+	}
+	v, err := s.settings.String(ctx, settingSubsystem, keyBaseURL)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(v)
 }

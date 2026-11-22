@@ -100,13 +100,23 @@ func (s *NotificationService) sendEmail(ctx context.Context, row *model.NotifyDe
 	}
 	var payload map[string]any
 	fromJSON(row.Payload, &payload)
+
+	// 邮件里没有站点上下文：站内链接与图片要补成绝对地址，再包成完整文档，
+	// 否则正文只有片段，颜色、链接按钮和整体排版都出不来。
+	base := s.baseURL(ctx)
+	content := AbsolutizeHTML(base, row.Content)
+	link := AbsoluteURL(base, row.Link)
+	text := HTMLToText(row.Content)
+	if link != "" {
+		text = strings.TrimSpace(text + "\n\n查看详情：" + link)
+	}
 	return sender.Send(ctx, &contract.ChannelRequest{
 		UserID:      row.UserID,
 		Email:       email,
 		Title:       row.Title,
-		Content:     row.Content,
-		ContentText: HTMLToText(row.Content),
-		Link:        row.Link,
+		Content:     EmailDocument(row.Title, content, link),
+		ContentText: text,
+		Link:        link,
 		Payload:     payload,
 	})
 }
