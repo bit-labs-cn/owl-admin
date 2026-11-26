@@ -66,6 +66,7 @@ func (h *Hub) Stop() {
 func (h *Hub) subscribe(ctx context.Context) {
 	sub := h.redis.Subscribe(ctx, pushChannel)
 	defer sub.Close()
+
 	ch := sub.Channel()
 	for {
 		select {
@@ -114,6 +115,7 @@ func (h *Hub) deliverLocal(ev PushEvent) {
 	key := connKey(ev.PrincipalType, ev.PrincipalID)
 	h.mu.RLock()
 	defer h.mu.RUnlock()
+
 	for _, ch := range h.conns[key] {
 		select {
 		case ch <- raw:
@@ -125,6 +127,7 @@ func (h *Hub) deliverLocal(ev PushEvent) {
 // Subscribe 登记一条本机连接。返回的函数用于断开。
 func (h *Hub) Subscribe(principalType int, principalID uint) (<-chan []byte, func()) {
 	ch := make(chan []byte, 16)
+
 	h.mu.Lock()
 	h.nextID++
 	id := h.nextID

@@ -38,6 +38,7 @@ const detailColumns = createDeliveryDetailColumns();
 
 async function openDetail(row: DeliveryBatchRow) {
   await loadDetail(row);
+
   dialogService.open({
     title: `发送明细 · ${row.title}`,
     width: "980px",
@@ -58,6 +59,7 @@ async function openDetail(row: DeliveryBatchRow) {
 
 async function retryOne(row: DeliveryRow) {
   if (!(await confirmAction(`确认重试「${row.title}」到 ${row.userName} 吗？`, "重试发送"))) return;
+
   await deliveryAPI.retry(row.id);
   message("已重新提交", { type: "success" });
   onSearch();

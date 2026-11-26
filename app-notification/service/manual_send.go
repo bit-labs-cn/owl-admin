@@ -51,6 +51,7 @@ func (s *NotificationService) resolveKind(ctx context.Context, kind int, typeCod
 		}
 		return model.KindNotice, nil
 	}
+
 	typ, err := s.catalog.FindTypeByCode(ctx, typeCode)
 	if err != nil {
 		return 0, err
@@ -97,6 +98,7 @@ func (s *NotificationService) ManualSend(ctx context.Context, in ManualSendInput
 	if err != nil {
 		return nil, err
 	}
+
 	externals := normalizeExternals(in.ExternalRecipients)
 	if len(userIDs) == 0 && len(externals) == 0 {
 		return nil, Invalid("请选择接收人，或填写外部人员的邮箱")
@@ -110,6 +112,7 @@ func (s *NotificationService) ManualSend(ctx context.Context, in ManualSendInput
 	if strings.TrimSpace(in.Title) == "" {
 		return nil, Invalid("请填写标题")
 	}
+
 	channels := normalizeChannels(in.Channels)
 	for _, channel := range channels {
 		if !knownChannel(channel) {
@@ -157,6 +160,7 @@ func (s *NotificationService) toRecipientOptions(contacts []repository.UserConta
 			Disabled: contact.Status != adminmodel.UserStatusEnabled,
 		})
 	}
+
 	return out
 }
 
@@ -185,6 +189,7 @@ func (s *NotificationService) EstimateAudience(
 			externalCount++
 		}
 	}
+
 	return &AudienceEstimate{
 		UserCount:     len(userIDs),
 		ExternalCount: externalCount,
@@ -203,6 +208,7 @@ func (s *NotificationService) AdminMessages(ctx context.Context, q repository.Me
 	if err != nil {
 		return 0, nil, err
 	}
+
 	for i := range list {
 		if list[i].TypeCode != "" && list[i].TypeName == "" {
 			list[i].TypeName = fmt.Sprintf("未知类型(%s)", list[i].TypeCode)
@@ -214,6 +220,7 @@ func (s *NotificationService) AdminMessages(ctx context.Context, q repository.Me
 			list[i].SenderName = "系统"
 		}
 	}
+
 	return total, list, nil
 }
 
@@ -240,6 +247,7 @@ func (s *NotificationService) AdminMessageDetail(ctx context.Context, id uint) (
 			row.UserName = fmt.Sprintf("未知用户(%d)", row.UserID)
 		}
 	}
+
 	return detail, nil
 }
 
@@ -267,5 +275,6 @@ func normalizeExternals(items []contract.ExternalRecipient) []contract.ExternalR
 		}
 		out = append(out, contract.ExternalRecipient{Name: name, Email: email, Phone: phone})
 	}
+
 	return out
 }

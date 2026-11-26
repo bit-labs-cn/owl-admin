@@ -56,6 +56,7 @@ func chooseChannels(userIDs []uint, requested, defaults []string, typed bool, em
 				choice.Skips = append(choice.Skips, skipChoice{Channel: channel, Reason: reason})
 				continue
 			}
+
 			switch channel {
 			case model.ChannelInApp:
 				choice.InApp = true
@@ -78,6 +79,7 @@ func chooseChannels(userIDs []uint, requested, defaults []string, typed bool, em
 		}
 		plan.Users = append(plan.Users, choice)
 	}
+
 	return plan
 }
 
@@ -108,6 +110,7 @@ func normalizeChannels(codes []string) []string {
 		seen[code] = struct{}{}
 		out = append(out, code)
 	}
+
 	return out
 }
 
@@ -133,5 +136,6 @@ func dedupeUsers(ids []uint) []uint {
 		seen[id] = struct{}{}
 		out = append(out, id)
 	}
+
 	return out
 }

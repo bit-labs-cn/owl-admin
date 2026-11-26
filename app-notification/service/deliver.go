@@ -25,6 +25,7 @@ func (s *NotificationService) DeliverChannel(ctx context.Context, deliveryID uin
 	if deliveryID == 0 {
 		return nil
 	}
+
 	row, err := s.catalog.FindDelivery(ctx, deliveryID)
 	if err != nil {
 		return err
@@ -61,6 +62,7 @@ func (s *NotificationService) DeliverChannel(ctx context.Context, deliveryID uin
 		return nil
 	}
 	row.Status = model.DeliveryStatusPending
+
 	if err := s.catalog.SaveDelivery(ctx, row); err != nil {
 		return err
 	}
@@ -110,6 +112,7 @@ func (s *NotificationService) sendEmail(ctx context.Context, row *model.NotifyDe
 	if link != "" {
 		text = strings.TrimSpace(text + "\n\n查看详情：" + link)
 	}
+
 	return sender.Send(ctx, &contract.ChannelRequest{
 		UserID:      row.UserID,
 		Email:       email,
@@ -132,6 +135,7 @@ func (s *NotificationService) sendWeCom(ctx context.Context, row *model.NotifyDe
 	}
 	var payload map[string]any
 	fromJSON(row.Payload, &payload)
+
 	return sender.Send(ctx, &contract.ChannelRequest{
 		UserID:  row.UserID,
 		Title:   row.Title,
@@ -154,6 +158,7 @@ func (s *NotificationService) RetryDelivery(ctx context.Context, id uint) error 
 	if row.Status != model.DeliveryStatusFailed {
 		return Invalid("只有失败的发送记录可以重试")
 	}
+
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		row.Status = model.DeliveryStatusPending
 		row.Attempts = 0
@@ -173,6 +178,7 @@ func (s *NotificationService) RetryDelivery(ctx context.Context, id uint) error 
 		if err != nil {
 			return err
 		}
+
 		return s.bus.PublishTx(ctx, tx, evt)
 	})
 }

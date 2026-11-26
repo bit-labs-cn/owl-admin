@@ -59,6 +59,7 @@ function openDialog(title = "新增", row?: AnnouncementRow) {
       const FormRef = announcementFormRef.value.getRef();
       FormRef.validate((valid: boolean) => {
         if (!valid) return;
+
         const curData = announcementFormRef.value.getFormData();
         const payload = {
           ...curData,
@@ -103,6 +104,7 @@ async function showRead(row: AnnouncementRow) {
     message("已读情况加载失败", { type: "error" });
     return;
   }
+
   dialogService.open({
     title: `已读情况 · ${row.title}`,
     width: "860px",

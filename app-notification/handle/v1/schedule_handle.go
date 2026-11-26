@@ -34,6 +34,7 @@ func (h *ScheduleHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -48,6 +49,7 @@ func (h *ScheduleHandle) Cancel(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -58,6 +60,7 @@ func (h *ScheduleHandle) SendNow(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("定时任务 ID 无效"))
 		return
 	}
+
 	if err := h.svc.SendScheduleNow(ctx.Request.Context(), id); err != nil {
 		router.Fail(ctx, err)
 		return
@@ -76,5 +79,6 @@ func (h *ScheduleHandle) Retry(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }

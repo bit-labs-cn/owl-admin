@@ -34,6 +34,7 @@ func (h *AnnouncementHandle) Mine(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -53,6 +54,7 @@ func (h *AnnouncementHandle) Dismiss(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -72,6 +74,7 @@ func (h *AnnouncementHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -98,6 +101,7 @@ func (h *AnnouncementHandle) ReadState(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, view)
 }
 
@@ -129,6 +133,7 @@ func (h *AnnouncementHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -145,10 +150,12 @@ func (h *AnnouncementHandle) Update(ctx *gin.Context) {
 		return
 	}
 	req.ID = id
+
 	if err := h.svc.SaveAnnouncement(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -171,10 +178,12 @@ func (h *AnnouncementHandle) Publish(ctx *gin.Context) {
 		return
 	}
 	ann.Status = model.AnnouncementStatusPublished
+
 	if err := h.svc.SaveAnnouncement(ctx.Request.Context(), ann); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -187,9 +196,11 @@ func (h *AnnouncementHandle) Offline(ctx *gin.Context) {
 		return
 	}
 	ann.Status = model.AnnouncementStatusOffline
+
 	if err := h.svc.SaveAnnouncement(ctx.Request.Context(), ann); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }

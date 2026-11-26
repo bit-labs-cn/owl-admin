@@ -33,6 +33,7 @@ func (h *TypeHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -51,10 +52,12 @@ func (h *TypeHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("请求参数无效"))
 		return
 	}
+
 	if err := h.svc.SaveType(ctx.Request.Context(), req.input(0)); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -69,10 +72,12 @@ func (h *TypeHandle) Update(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("请求参数无效"))
 		return
 	}
+
 	if err := h.svc.SaveType(ctx.Request.Context(), req.input(id)); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -82,10 +87,12 @@ func (h *TypeHandle) Delete(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("类型 ID 无效"))
 		return
 	}
+
 	if err := h.svc.DeleteType(ctx.Request.Context(), id); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -110,6 +117,7 @@ func (h *TemplateHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -119,10 +127,12 @@ func (h *TemplateHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("请求参数无效"))
 		return
 	}
+
 	if err := h.svc.SaveTemplate(ctx.Request.Context(), req.input(0)); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -137,10 +147,12 @@ func (h *TemplateHandle) Update(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("请求参数无效"))
 		return
 	}
+
 	if err := h.svc.SaveTemplate(ctx.Request.Context(), req.input(id)); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -150,10 +162,12 @@ func (h *TemplateHandle) Delete(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("模板 ID 无效"))
 		return
 	}
+
 	if err := h.svc.DeleteTemplate(ctx.Request.Context(), id); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -173,6 +187,7 @@ func (h *TemplateHandle) Preview(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, gin.H{"title": copy.Title, "body": copy.Content, "link": copy.Link})
 }
 
@@ -199,6 +214,7 @@ func (h *DeliveryHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -214,6 +230,7 @@ func (h *DeliveryHandle) Detail(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, list)
 }
 
@@ -227,6 +244,7 @@ func (h *DeliveryHandle) Retry(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 

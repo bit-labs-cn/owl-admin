@@ -38,6 +38,7 @@ func (h *MessageAdminHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -53,5 +54,6 @@ func (h *MessageAdminHandle) Detail(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, detail)
 }

@@ -213,15 +213,19 @@ func (s *NotificationService) SendDirect(ctx context.Context, msg *contract.Dire
 				return nil
 			}
 		}
+
 		if err := s.messages.CreateDirect(ctx, tx, row, inAppUsers); err != nil {
 			return err
 		}
+
 		for i := range deliveries {
 			deliveries[i].MessageID = row.ID
 		}
+
 		if err := s.catalog.CreateDeliveries(ctx, tx, deliveries); err != nil {
 			return err
 		}
+
 		for i := range deliveries {
 			if deliveries[i].Status != model.DeliveryStatusPending {
 				continue
@@ -232,6 +236,7 @@ func (s *NotificationService) SendDirect(ctx context.Context, msg *contract.Dire
 			if evtErr != nil {
 				return evtErr
 			}
+
 			if err := s.bus.PublishTx(ctx, tx, evt); err != nil {
 				return err
 			}
@@ -357,11 +362,13 @@ func (s *NotificationService) MyMessages(ctx context.Context, userID uint, kind 
 	if err != nil {
 		return 0, nil, err
 	}
+
 	for i := range list {
 		if list[i].TypeCode != "" && list[i].TypeName == "" {
 			list[i].TypeName = fmt.Sprintf("未知类型(%s)", list[i].TypeCode)
 		}
 	}
+
 	return total, list, nil
 }
 

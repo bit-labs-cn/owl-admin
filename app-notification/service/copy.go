@@ -139,6 +139,7 @@ func externalDeliveries(externals []contract.ExternalRecipient, rendered rendere
 		}
 		out = append(out, delivery)
 	}
+
 	return out
 }
 

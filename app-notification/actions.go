@@ -154,6 +154,7 @@ func (s *SubAppNotification) RegisterActions() []schedulerContract.Action {
 				}
 				msg.DueAt = &dueAt
 			}
+
 			if err := notifSvc.SendDirect(ctx, msg); err != nil {
 				return "", err
 			}

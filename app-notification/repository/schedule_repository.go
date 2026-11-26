@@ -150,6 +150,7 @@ func (r *CatalogRepository) ListSchedules(ctx context.Context, q ScheduleQuery) 
 		item.Channels = decodeChannelList(row.ChannelsText)
 		list = append(list, item)
 	}
+
 	return total, list, nil
 }
 
@@ -185,6 +186,7 @@ func (r *CatalogRepository) ClaimDueSchedules(ctx context.Context, now time.Time
 		row.Attempts++
 		claimed = append(claimed, row)
 	}
+
 	return claimed, nil
 }
 
@@ -198,6 +200,7 @@ func (r *CatalogRepository) ClaimSchedule(ctx context.Context, id uint, planAt *
 	if planAt != nil {
 		updates["plan_at"] = *planAt
 	}
+
 	res := r.db.WithContext(ctx).Model(&model.NotifySchedule{}).
 		Where("id = ? AND status IN ?", id, []int{model.ScheduleStatusPending, model.ScheduleStatusFailed}).
 		Updates(updates)

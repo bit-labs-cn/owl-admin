@@ -41,7 +41,6 @@ const props = defineProps<{
   knownUsers: RecipientOption[];
 }>();
 
-
 const PAGE_SIZE = 20;
 
 const keyword = ref("");
@@ -94,9 +93,11 @@ async function load() {
       page: page.value,
       pageSize: PAGE_SIZE
     });
+
     const rows = (res?.data?.list ?? []) as SystemUserRow[];
     list.value = rows.map(toRecipient);
     total.value = res?.total ?? 0;
+
     for (const user of list.value) {
       if (selected.value.has(user.id)) userCache.set(user.id, user);
     }
@@ -196,6 +197,7 @@ async function onImportFile(uploadFile: UploadFile) {
     message("请上传 .xlsx 文件", { type: "warning" });
     return;
   }
+
   importing.value = true;
   importErrors.value = [];
   try {
@@ -215,6 +217,7 @@ async function onImportFile(uploadFile: UploadFile) {
       externals.value.push(row);
       added++;
     }
+
     importErrors.value = errors;
     if (added === 0) {
       message("没有新增外部人员，请检查文件内容", { type: "warning" });

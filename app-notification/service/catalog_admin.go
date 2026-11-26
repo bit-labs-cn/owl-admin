@@ -71,6 +71,7 @@ func (s *NotificationService) TypeOptions(ctx context.Context) ([]TypeOption, er
 			DefaultChannels: normalizeChannels(channels),
 		})
 	}
+
 	return out, nil
 }
 
@@ -89,6 +90,7 @@ func (s *NotificationService) SaveType(ctx context.Context, in TypeInput) error 
 	if in.Status != model.TypeStatusEnabled && in.Status != model.TypeStatusDisabled {
 		return Invalid("类型状态无效")
 	}
+
 	channels := normalizeChannels(in.DefaultChannels)
 	for _, channel := range channels {
 		if !knownChannel(channel) {
@@ -103,6 +105,7 @@ func (s *NotificationService) SaveType(ctx context.Context, in TypeInput) error 
 		if exist != nil {
 			return Conflict("类型编码已存在")
 		}
+
 		return s.catalog.SaveType(ctx, &model.NotifyType{
 			Code:            code,
 			Name:            name,
@@ -124,6 +127,7 @@ func (s *NotificationService) SaveType(ctx context.Context, in TypeInput) error 
 	current.Kind = in.Kind
 	current.DefaultChannels = encodeChannels(channels)
 	current.Status = in.Status
+
 	return s.catalog.SaveType(ctx, current)
 }
 
@@ -132,6 +136,7 @@ func (s *NotificationService) DeleteType(ctx context.Context, id uint) error {
 	if err != nil {
 		return err
 	}
+
 	n, err := s.catalog.CountTemplates(ctx, current.Code)
 	if err != nil {
 		return err
@@ -139,6 +144,7 @@ func (s *NotificationService) DeleteType(ctx context.Context, id uint) error {
 	if n > 0 {
 		return Conflict("请先删除该类型下的模板")
 	}
+
 	return s.catalog.DeleteType(ctx, id)
 }
 
@@ -152,6 +158,7 @@ func (s *NotificationService) SaveTemplate(ctx context.Context, in TemplateInput
 	if typeCode == "" {
 		return Invalid("请选择消息类型")
 	}
+
 	typ, err := s.catalog.FindTypeByCode(ctx, typeCode)
 	if err != nil {
 		return err
@@ -195,6 +202,7 @@ func (s *NotificationService) SaveTemplate(ctx context.Context, in TemplateInput
 	current.Title = in.Title
 	current.Body = in.Body
 	current.Link = in.Link
+
 	return s.catalog.SaveTemplate(ctx, current)
 }
 
@@ -234,6 +242,7 @@ func (s *NotificationService) AdminDeliveryBatches(ctx context.Context, q reposi
 	if err != nil {
 		return 0, nil, err
 	}
+
 	for i := range list {
 		if list[i].TypeName == "" && list[i].Title != "" {
 			list[i].TypeName = "未分类"
@@ -242,6 +251,7 @@ func (s *NotificationService) AdminDeliveryBatches(ctx context.Context, q reposi
 			list[i].SenderName = "系统"
 		}
 	}
+
 	return total, list, nil
 }
 
@@ -284,6 +294,7 @@ func (s *NotificationService) decorateDeliveries(ctx context.Context, rows []rep
 		}
 		out = append(out, view)
 	}
+
 	return out, nil
 }
 

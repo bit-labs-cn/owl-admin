@@ -59,6 +59,7 @@ func (h *SendHandle) Recipients(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, list)
 }
 
@@ -87,6 +88,7 @@ func (h *SendHandle) EstimateAudience(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, estimate)
 }
 
@@ -162,5 +164,6 @@ func (h *SendHandle) Send(ctx *gin.Context) {
 		})
 		return
 	}
+
 	router.Success(ctx, gin.H{"scheduled": false})
 }

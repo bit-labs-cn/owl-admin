@@ -25,6 +25,7 @@ func decodeIDList(raw string) ([]uint, error) {
 			out = append(out, id)
 		}
 	}
+
 	return out, nil
 }
 
@@ -44,6 +45,7 @@ func (s *NotificationService) AdminAnnouncementRead(ctx context.Context, id uint
 	if err != nil {
 		return nil, err
 	}
+
 	states, err := s.catalog.ListAnnouncementStates(ctx, id)
 	if err != nil {
 		return nil, err

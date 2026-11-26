@@ -39,9 +39,11 @@ func (s *NotificationService) EnsureBuiltinTypes(ctx context.Context) error {
 		if exist != nil {
 			continue
 		}
+
 		if err := s.catalog.SaveType(ctx, &seeds[i]); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

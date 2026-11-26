@@ -54,6 +54,7 @@ func (s *NotificationService) CreateSchedule(ctx context.Context, in ScheduleInp
 	if title == "" {
 		return nil, Invalid("请填写标题")
 	}
+
 	channels := normalizeChannels(in.Channels)
 	for _, channel := range channels {
 		if !knownChannel(channel) {
@@ -115,6 +116,7 @@ func (s *NotificationService) CreateSchedule(ctx context.Context, in ScheduleInp
 		Status:          model.ScheduleStatusPending,
 		SenderID:        in.SenderID,
 	}
+
 	if err := s.catalog.CreateSchedule(ctx, row); err != nil {
 		return nil, err
 	}
@@ -157,6 +159,7 @@ func (s *NotificationService) AdminSchedules(ctx context.Context, q repository.S
 	if err != nil {
 		return 0, nil, err
 	}
+
 	for i := range list {
 		row := &list[i]
 		if row.TypeCode != "" && row.TypeName == "" {
@@ -168,6 +171,7 @@ func (s *NotificationService) AdminSchedules(ctx context.Context, q repository.S
 			row.SenderName = fmt.Sprintf("未知用户(%d)", row.SenderID)
 		}
 	}
+
 	return total, list, nil
 }
 
@@ -180,6 +184,7 @@ func (s *NotificationService) CancelSchedule(ctx context.Context, id uint) error
 	if row == nil {
 		return NotFound("定时任务不存在")
 	}
+
 	switch row.Status {
 	case model.ScheduleStatusCanceled:
 		return Invalid("该定时任务已取消")
@@ -188,8 +193,10 @@ func (s *NotificationService) CancelSchedule(ctx context.Context, id uint) error
 	case model.ScheduleStatusSending:
 		return Invalid("任务正在发送，无法取消")
 	}
+
 	row.Status = model.ScheduleStatusCanceled
 	row.LastError = ""
+
 	return s.catalog.SaveSchedule(ctx, row)
 }
 
@@ -242,6 +249,7 @@ func (s *NotificationService) RetrySchedule(ctx context.Context, id uint) error 
 	row.LastError = ""
 	row.MessageID = 0
 	row.SentAt = nil
+
 	if err := s.catalog.SaveSchedule(ctx, row); err != nil {
 		return err
 	}
@@ -317,6 +325,7 @@ func (s *NotificationService) dispatchSchedule(ctx context.Context, row *model.N
 	if msg, findErr := s.messages.FindByBizKey(ctx, nil, scheduleBizKey(row.ID)); findErr == nil && msg != nil {
 		row.MessageID = msg.ID
 	}
+
 	return s.catalog.SaveSchedule(ctx, row)
 }
 
@@ -330,6 +339,7 @@ func (s *NotificationService) markScheduleFailure(ctx context.Context, row *mode
 		// 第 n 次失败后等 n 分钟再试，给依赖方恢复的时间
 		row.PlanAt = time.Now().Add(time.Duration(row.Attempts) * time.Minute)
 	}
+
 	if err := s.catalog.SaveSchedule(ctx, row); err != nil {
 		return err
 	}

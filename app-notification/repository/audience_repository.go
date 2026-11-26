@@ -80,6 +80,7 @@ func (r *CatalogRepository) deptTree(ctx context.Context) ([]AudienceOption, err
 				Children: build(item.ID),
 			})
 		}
+
 		return out
 	}
 	return build(0), nil

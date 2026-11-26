@@ -32,5 +32,6 @@ func (p *EmailPlugin) Send(ctx context.Context, req *contract.ChannelRequest) er
 		Body:    req.ContentText,
 		HTML:    req.Content,
 	}
+
 	return p.mailer.Send(ctx, msg)
 }

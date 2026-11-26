@@ -42,6 +42,7 @@ func (h *MessageHandle) Counts(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, gin.H{
 		"unreadNotice": unreadNotice,
 		"pendingTodo":  pendingTodo,
@@ -75,6 +76,7 @@ func (h *MessageHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(total), page, pageSize, list)
 }
 
@@ -103,6 +105,7 @@ func (h *MessageHandle) Read(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -117,6 +120,7 @@ func (h *MessageHandle) ReadAll(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -138,6 +142,7 @@ func (h *MessageHandle) Complete(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -157,6 +162,7 @@ func (h *MessageHandle) Done(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -176,6 +182,7 @@ func (h *MessageHandle) Reopen(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -191,10 +198,12 @@ func (h *MessageHandle) Delete(ctx *gin.Context) {
 		router.Fail(ctx, service.Invalid("消息记录 ID 无效"))
 		return
 	}
+
 	if err := h.svc.DeleteUserMessage(ctx.Request.Context(), uid, id); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -210,6 +219,7 @@ func (h *MessageHandle) Ticket(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, gin.H{"ticket": token})
 }
 
@@ -241,6 +251,7 @@ func (h *MessageHandle) Stream(ctx *gin.Context) {
 	flusher.Flush()
 	heart := time.NewTicker(20 * time.Second)
 	defer heart.Stop()
+
 	var seq uint64
 	for {
 		select {
