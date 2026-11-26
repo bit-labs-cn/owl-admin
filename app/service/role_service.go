@@ -123,6 +123,7 @@ func (i *RoleService) CreateRole(ctx context.Context, req *CreateRoleReq) error 
 	}
 
 	role.Enable()
+
 	return i.roleRepo.WithContext(ctx).Save(&role)
 }
 

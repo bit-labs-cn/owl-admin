@@ -334,6 +334,7 @@ func (i *UserService) ImportUsers(ctx context.Context, filename string, data []b
 	for idx := range prepared {
 		users[idx] = &prepared[idx].user
 	}
+
 	if err := i.userRepo.WithContext(ctx).SaveBatch(users); err != nil {
 		return nil, err
 	}
@@ -390,6 +391,7 @@ func (i *UserService) loadUserImportCatalog(ctx context.Context, drafts []userIm
 	if err != nil {
 		return nil, err
 	}
+
 	roles, err := i.roleRepo.WithContext(ctx).ListAll()
 	if err != nil {
 		return nil, err
@@ -551,6 +553,7 @@ func parseUserImportRows(rows [][]string) ([]userImportDraft, error) {
 			Remark:    cellBy(row, idx, "remark"),
 		})
 	}
+
 	return out, nil
 }
 
@@ -571,6 +574,7 @@ func mapUserImportHeader(header []string) (map[string]int, error) {
 			return nil, ImportFileInvalid("缺少列：" + label)
 		}
 	}
+
 	return idx, nil
 }
 
@@ -622,6 +626,7 @@ func splitImportRoleNames(raw string) []string {
 		seen[name] = struct{}{}
 		out = append(out, name)
 	}
+
 	return out
 }
 
@@ -630,6 +635,7 @@ func normalizeDeptPath(path string) string {
 	if path == "" {
 		return ""
 	}
+
 	path = strings.ReplaceAll(path, "\\", "/")
 	parts := strings.Split(path, "/")
 	clean := make([]string, 0, len(parts))
@@ -640,6 +646,7 @@ func normalizeDeptPath(path string) string {
 		}
 		clean = append(clean, p)
 	}
+
 	return strings.Join(clean, "/")
 }
 
@@ -697,6 +704,7 @@ func buildDeptPathMaps(depts []model.Dept) (map[string]model.Dept, map[string]st
 		}
 		paths[path] = d
 	}
+
 	return paths, ambig
 }
 
@@ -748,6 +756,7 @@ func uniqueImportStrings(in []string) []string {
 		seen[s] = struct{}{}
 		out = append(out, s)
 	}
+
 	return out
 }
 

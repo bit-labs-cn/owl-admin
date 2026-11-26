@@ -81,6 +81,7 @@ func initDictDataWithTx(tx *gorm.DB) error {
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -200,5 +201,6 @@ func initDictItemDataWithTx(tx *gorm.DB) error {
 			}
 		}
 	}
+
 	return nil
 }

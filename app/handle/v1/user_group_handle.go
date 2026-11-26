@@ -36,10 +36,12 @@ func (i *UserGroupHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	if err := i.svc.CreateUserGroup(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -61,10 +63,12 @@ func (i *UserGroupHandle) Update(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
+
 	if err := i.svc.UpdateUserGroup(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -103,11 +107,13 @@ func (i *UserGroupHandle) Retrieve(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	count, list, err := i.svc.RetrieveUserGroups(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 
@@ -133,6 +139,7 @@ func (i *UserGroupHandle) ChangeStatus(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -172,6 +179,7 @@ func (i *UserGroupHandle) GetUsersByGroupID(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), page, pageSize, list)
 }
 
@@ -215,5 +223,6 @@ func (i *UserGroupHandle) AssignUsersToGroup(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }

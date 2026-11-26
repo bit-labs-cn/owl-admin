@@ -183,6 +183,7 @@ func (i *LegalService) CreateScene(ctx context.Context, req *CreateLegalSceneReq
 	if err != nil {
 		return err
 	}
+
 	unlock, err := i.lock("legal:scene:" + key)
 	if err != nil {
 		return err
@@ -197,11 +198,13 @@ func (i *LegalService) CreateScene(ctx context.Context, req *CreateLegalSceneReq
 	if existing != nil {
 		return LegalSceneExists()
 	}
+
 	items, err := i.buildSceneItems(repo, 0, req.Kind, req.Items)
 	if err != nil {
 		return err
 	}
 	scene := &model.LegalScene{Key: key, Name: strings.TrimSpace(req.Name), Kind: req.Kind}
+
 	return repo.Transaction(func(tx repository.LegalRepositoryInterface) error {
 		if err := tx.SaveScene(scene); err != nil {
 			return err
@@ -218,6 +221,7 @@ func (i *LegalService) UpdateScene(ctx context.Context, req *UpdateLegalSceneReq
 	if err := i.validate.Struct(req); err != nil {
 		return err
 	}
+
 	unlock, err := i.lock("legal:scene-id:" + cast.ToString(req.ID))
 	if err != nil {
 		return err
@@ -232,12 +236,14 @@ func (i *LegalService) UpdateScene(ctx context.Context, req *UpdateLegalSceneReq
 	if scene == nil {
 		return LegalSceneNotFound()
 	}
+
 	items, err := i.buildSceneItems(repo, scene.ID, req.Kind, req.Items)
 	if err != nil {
 		return err
 	}
 	scene.Name = strings.TrimSpace(req.Name)
 	scene.Kind = req.Kind
+
 	return repo.Transaction(func(tx repository.LegalRepositoryInterface) error {
 		if err := tx.SaveScene(scene); err != nil {
 			return err
@@ -262,6 +268,7 @@ func (i *LegalService) DeleteScene(ctx context.Context, id uint) error {
 	if scene == nil {
 		return LegalSceneNotFound()
 	}
+
 	return repo.DeleteScene(scene.ID)
 }
 
@@ -270,11 +277,13 @@ func (i *LegalService) RetrieveScenes(ctx context.Context, req *RetrieveLegalSce
 	if err := i.validate.Struct(req); err != nil {
 		return 0, nil, err
 	}
+
 	repo := i.repo.WithContext(ctx)
 	count, scenes, err := repo.ListScenes(req.Page, req.PageSize, strings.TrimSpace(req.Name), req.Kind)
 	if err != nil {
 		return 0, nil, err
 	}
+
 	out, err := i.decorateScenes(repo, scenes)
 	if err != nil {
 		return 0, nil, err
@@ -351,6 +360,7 @@ func (i *LegalService) buildSceneItems(repo repository.LegalRepositoryInterface,
 		}
 		items = append(items, item)
 	}
+
 	return items, nil
 }
 
@@ -373,6 +383,7 @@ func (i *LegalService) decorateScenes(repo repository.LegalRepositoryInterface, 
 		if err != nil {
 			return nil, err
 		}
+
 		for _, doc := range options {
 			docs[doc.ID] = doc
 		}
@@ -381,6 +392,7 @@ func (i *LegalService) decorateScenes(repo repository.LegalRepositoryInterface, 
 			if _, ok := docs[id]; ok {
 				continue
 			}
+
 			doc, err := repo.FindDocumentByID(id)
 			if err != nil {
 				return nil, err
@@ -427,6 +439,7 @@ func (i *LegalService) decorateScenes(repo repository.LegalRepositoryInterface, 
 			Items:       views,
 		})
 	}
+
 	return out, nil
 }
 
@@ -497,6 +510,7 @@ func (i *LegalService) PublicScene(ctx context.Context, key string) (*LegalScene
 		}
 		view.Groups[idx].Documents = append(view.Groups[idx].Documents, entry)
 	}
+
 	return view, nil
 }
 
@@ -599,10 +613,12 @@ func (i *LegalService) SceneRequirementsMet(ctx context.Context, sceneKey string
 	if err != nil {
 		return err
 	}
+
 	for _, item := range items {
 		if !item.Required {
 			continue
 		}
+
 		doc, err := repo.FindDocumentByID(item.DocumentID)
 		if err != nil {
 			return err
@@ -622,6 +638,7 @@ func (i *LegalService) SceneRequirementsMet(ctx context.Context, sceneKey string
 			return LegalAcceptanceIncomplete(doc.Name)
 		}
 	}
+
 	return nil
 }
 
@@ -634,6 +651,7 @@ func (i *LegalService) RecordAcceptances(ctx context.Context, actor LegalActor, 
 	if err != nil {
 		return nil, err
 	}
+
 	unlock, err := i.lock("legal:accept:" + cast.ToString(actor.UserID))
 	if err != nil {
 		return nil, err
@@ -649,6 +667,7 @@ func (i *LegalService) RecordAcceptances(ctx context.Context, actor LegalActor, 
 		return nil, LegalSceneNotFound()
 	}
 	events := make([]model.LegalEvent, 0, len(req.Items))
+
 	err = repo.Transaction(func(tx repository.LegalRepositoryInterface) error {
 		for _, item := range req.Items {
 			event, err := i.prepareEvent(tx, actor, sceneKey, item)
@@ -668,6 +687,7 @@ func (i *LegalService) RecordAcceptances(ctx context.Context, actor LegalActor, 
 		item.SceneName = scene.Name
 		out = append(out, item)
 	}
+
 	return out, nil
 }
 
@@ -680,6 +700,7 @@ func (i *LegalService) prepareEvent(repo repository.LegalRepositoryInterface, ac
 	if err != nil {
 		return nil, err
 	}
+
 	doc, err := repo.FindDocumentByKey(key)
 	if err != nil {
 		return nil, err
@@ -719,6 +740,7 @@ func (i *LegalService) prepareEvent(repo repository.LegalRepositoryInterface, ac
 		IP:            actor.IP,
 		UserAgent:     actor.UserAgent,
 	}
+
 	if err := repo.InsertEvent(event); err != nil {
 		return nil, err
 	}
@@ -784,6 +806,7 @@ func (i *LegalService) Status(ctx context.Context, userID uint) (*LegalStatus, e
 			Kind:    doc.Kind,
 		})
 	}
+
 	return &LegalStatus{Pending: pending}, nil
 }
 
@@ -792,6 +815,7 @@ func (i *LegalService) RetrieveEvents(ctx context.Context, req *RetrieveLegalEve
 	if err := i.validate.Struct(req); err != nil {
 		return 0, nil, err
 	}
+
 	count, rows, err := i.repo.WithContext(ctx).ListEvents(req.Page, req.PageSize, strings.TrimSpace(req.DocumentKey), strings.TrimSpace(req.SceneKey), req.Action)
 	if err != nil {
 		return 0, nil, err
@@ -835,5 +859,6 @@ func (i *LegalService) RetrieveEvents(ctx context.Context, req *RetrieveLegalEve
 			UserAgent:    row.UserAgent,
 		})
 	}
+
 	return int(count), out, nil
 }

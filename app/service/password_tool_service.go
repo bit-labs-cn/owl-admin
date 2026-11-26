@@ -99,6 +99,7 @@ func (i *PasswordToolService) Generate(ctx context.Context, req *GeneratePasswor
 		}
 		passwords = append(passwords, password)
 	}
+
 	return GeneratePasswordResult{Passwords: passwords}, nil
 }
 
@@ -223,5 +224,6 @@ func shuffleRunes(chars []rune) error {
 		j := int(n.Int64())
 		chars[i], chars[j] = chars[j], chars[i]
 	}
+
 	return nil
 }

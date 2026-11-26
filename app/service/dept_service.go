@@ -85,6 +85,7 @@ func (i DeptService) CreateDept(ctx context.Context, req *CreateDeptReq) error {
 	if err != nil {
 		return err
 	}
+
 	return i.deptRepo.WithContext(ctx).Create(&dept)
 }
 
@@ -109,6 +110,7 @@ func (i DeptService) UpdateDept(ctx context.Context, req *UpdateDeptReq) error {
 	if err != nil {
 		return err
 	}
+
 	return i.deptRepo.WithContext(ctx).Update(&dept)
 }
 func (i DeptService) DeleteDept(ctx context.Context, id uint) error {

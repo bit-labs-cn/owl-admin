@@ -183,6 +183,7 @@ func (i *AppVersionService) Create(ctx context.Context, req *CreateAppVersionReq
 	now := time.Now()
 	m.CreateTime = &now
 	m.UpdateTime = &now
+
 	return i.repo.WithContext(ctx).Save(&m)
 }
 
@@ -221,6 +222,7 @@ func (i *AppVersionService) Update(ctx context.Context, req *UpdateAppVersionReq
 	}
 	now := time.Now()
 	m.UpdateTime = &now
+
 	return i.repo.WithContext(ctx).Save(m)
 }
 

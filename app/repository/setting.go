@@ -91,6 +91,7 @@ func (i *SettingRepository) Apply(subsystem string, upserts map[string]string, d
 				return err
 			}
 		}
+
 		return nil
 	})
 }

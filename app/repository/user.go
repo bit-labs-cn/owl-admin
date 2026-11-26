@@ -60,6 +60,7 @@ func (i *UserRepository) Save(user *model.User) error {
 	if err != nil {
 		return err
 	}
+
 	if err = db.ReplaceJoinTable(i.db, user, "Roles", user.Roles); err != nil {
 		return err
 	}
@@ -73,6 +74,7 @@ func (i *UserRepository) SaveBatch(users []*model.User) error {
 	if len(users) == 0 {
 		return nil
 	}
+
 	return i.db.Transaction(func(tx *gorm.DB) error {
 		repo := &UserRepository{
 			db:             tx,
@@ -84,6 +86,7 @@ func (i *UserRepository) SaveBatch(users []*model.User) error {
 				return err
 			}
 		}
+
 		return nil
 	})
 }

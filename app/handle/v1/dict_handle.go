@@ -46,6 +46,7 @@ func (i *DictHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -65,6 +66,7 @@ func (i *DictHandle) Delete(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -124,6 +126,7 @@ func (i *DictHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, list)
 }
 
@@ -145,11 +148,13 @@ func (i *DictHandle) CreateItem(ctx *gin.Context) {
 		return
 	}
 	req.DictID = cast.ToUint(ctx.Param("id"))
+
 	err := i.dictSvc.CreateItem(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -173,11 +178,13 @@ func (i *DictHandle) UpdateItem(ctx *gin.Context) {
 	}
 	req.DictID = cast.ToUint(ctx.Param("id"))
 	req.ID = cast.ToUint(ctx.Param("itemID"))
+
 	err := i.dictSvc.UpdateItem(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 

@@ -61,11 +61,13 @@ func (i *EventHandle) RetrieveOutbox(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	count, list, err := i.svc.RetrieveOutbox(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 
@@ -124,6 +126,7 @@ func (i *EventHandle) Cleanup(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, resp)
 }
 
@@ -148,6 +151,7 @@ func (i *EventHandle) CleanupConsumers(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, resp)
 }
 
@@ -170,11 +174,13 @@ func (i *EventHandle) RetrieveInbox(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	count, list, err := i.svc.RetrieveInbox(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 

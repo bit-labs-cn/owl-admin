@@ -43,6 +43,7 @@ func (i DeptHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -69,6 +70,7 @@ func (i DeptHandle) Update(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -103,11 +105,13 @@ func (i DeptHandle) Retrieve(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	_, list, err := i.deptSvc.RetrieveDepts(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, list)
 }
 

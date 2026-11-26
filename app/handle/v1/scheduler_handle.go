@@ -42,11 +42,13 @@ func (i *SchedulerHandle) RetrieveJobs(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	count, list, err := i.svc.RetrieveJobs(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 
@@ -83,11 +85,13 @@ func (i *SchedulerHandle) CreateJob(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	job, err := i.svc.CreateJob(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, job)
 }
 
@@ -109,11 +113,13 @@ func (i *SchedulerHandle) UpdateJob(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
+
 	job, err := i.svc.UpdateJob(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, job)
 }
 
@@ -130,6 +136,7 @@ func (i *SchedulerHandle) DeleteJob(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -181,6 +188,7 @@ func (i *SchedulerHandle) TriggerJob(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.SuccessWithMsg(ctx, "已提交执行，稍后刷新执行记录查看结果", run)
 }
 
@@ -219,6 +227,7 @@ func (i *SchedulerHandle) ActionOptions(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, resp)
 }
 
@@ -242,11 +251,13 @@ func (i *SchedulerHandle) RetrieveRuns(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	count, list, err := i.svc.RetrieveRuns(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 
@@ -321,6 +332,7 @@ func (i *SchedulerHandle) CleanupRuns(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.SuccessWithMsg(ctx, "清理完成", gin.H{"deleted": count})
 }
 
@@ -345,6 +357,7 @@ func (i *SchedulerHandle) PreviewCron(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, resp)
 }
 

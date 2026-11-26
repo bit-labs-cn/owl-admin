@@ -382,6 +382,7 @@ func readDatabase(ctx context.Context, gdb *gorm.DB) DatabaseSnapshot {
 
 	pingCtx, cancel := context.WithTimeout(ctx, probeTimeout)
 	defer cancel()
+
 	started := time.Now()
 	if err := sqlDB.PingContext(pingCtx); err != nil {
 		snap.Error = err.Error()
@@ -400,6 +401,7 @@ func readRedis(ctx context.Context, client redis.UniversalClient) RedisSnapshot 
 	}
 	probeCtx, cancel := context.WithTimeout(ctx, probeTimeout)
 	defer cancel()
+
 	raw, err := client.Info(probeCtx, "server", "memory", "stats", "clients").Result()
 	if err != nil {
 		snap.Error = err.Error()
@@ -435,6 +437,7 @@ func parseRedisInfo(raw string) map[string]string {
 		}
 		info[key] = value
 	}
+
 	return info
 }
 

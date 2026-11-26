@@ -15,6 +15,7 @@ func subscribeUserLoginSuccess(bus contractEvent.EventBus, logSvc *service.LogSe
 		if evt.IsSuperAdmin {
 			userType = "super_admin"
 		}
+
 		return logSvc.CreateLoginLog(ctx, &service.CreateLoginLogReq{
 			UserId:    int(evt.UserID),
 			UserName:  evt.Username,

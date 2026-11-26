@@ -25,6 +25,7 @@ func (i *UserHandle) BatchDelete(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -47,6 +48,7 @@ func (i *UserHandle) BatchChangeStatus(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -69,6 +71,7 @@ func (i *UserHandle) BatchAssignRoles(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -91,5 +94,6 @@ func (i *UserHandle) BatchAssignDept(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }

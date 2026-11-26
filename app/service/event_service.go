@@ -200,6 +200,7 @@ func (i *EventService) Workbench(ctx context.Context, days int) (*EventWorkbench
 	if err != nil {
 		return nil, err
 	}
+
 	for status, count := range outboxCounts {
 		resp.Outbox.Total += count
 		switch status {
@@ -216,6 +217,7 @@ func (i *EventService) Workbench(ctx context.Context, days int) (*EventWorkbench
 	if err != nil {
 		return nil, err
 	}
+
 	for status, count := range inboxCounts {
 		resp.Inbox.Total += count
 		switch status {
@@ -324,6 +326,7 @@ func buildTrend(days int, published, consumed []time.Time) ([]EventTrendPoint, b
 			points[idx].Consumed++
 		}
 	}
+
 	return points, truncated
 }
 
@@ -674,6 +677,7 @@ func (i *EventService) Cleanup(ctx context.Context, req *CleanupEventsReq) (*Cle
 			resp.InboxDeleted = deleted
 		}
 	}
+
 	return resp, nil
 }
 
@@ -759,6 +763,7 @@ func (i *EventService) CleanupConsumers(ctx context.Context, req *CleanupConsume
 		resp.Skipped += item.SkippedPending
 		resp.Groups = append(resp.Groups, item)
 	}
+
 	return resp, nil
 }
 

@@ -179,6 +179,7 @@ func (i DictService) CreateItem(ctx context.Context, req *CreateDictItemReq) err
 	if err := copier.Copy(&item, req); err != nil {
 		return err
 	}
+
 	return i.dictRepo.WithContext(ctx).CreateItem(&item)
 }
 

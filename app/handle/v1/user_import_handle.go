@@ -64,6 +64,7 @@ func (i *UserHandle) Import(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.SuccessWithMsg(ctx, fmt.Sprintf("导入完成：成功 %d 人，失败 %d 人", result.Created, result.Failed), result)
 }
 

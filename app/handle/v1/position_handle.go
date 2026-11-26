@@ -34,10 +34,12 @@ func (i *PositionHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	if err := i.svc.CreatePosition(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -59,10 +61,12 @@ func (i *PositionHandle) Update(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
+
 	if err := i.svc.UpdatePosition(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -100,11 +104,13 @@ func (i *PositionHandle) Retrieve(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	count, list, err := i.svc.RetrievePositions(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 
@@ -130,6 +136,7 @@ func (i *PositionHandle) ChangeStatus(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 

@@ -39,6 +39,7 @@ func InitAdminAreaData(db *gorm.DB) {
 				return err
 			}
 		}
+
 		return nil
 	})
 

@@ -99,6 +99,7 @@ func (i *UserService) BatchDeleteUsers(ctx context.Context, req *BatchUserIDsReq
 	for n, id := range ids {
 		anyIDs[n] = id
 	}
+
 	return i.userRepo.WithContext(ctx).Delete(anyIDs...)
 }
 
@@ -152,6 +153,7 @@ func (i *UserService) BatchAssignUserRoles(ctx context.Context, req *BatchAssign
 		user.SetRoles(roles)
 		users = append(users, user)
 	}
+
 	if err := i.userRepo.WithContext(ctx).SaveBatch(users); err != nil {
 		return err
 	}
@@ -216,5 +218,6 @@ func (i *UserService) BatchAssignUserDept(ctx context.Context, req *BatchAssignU
 		user.Depts = depts
 		users = append(users, user)
 	}
+
 	return i.userRepo.WithContext(ctx).SaveBatch(users)
 }

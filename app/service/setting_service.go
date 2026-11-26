@@ -97,6 +97,7 @@ func (s *SettingService) Update(ctx context.Context, req *UpdateSettingsReq) err
 	if err := s.validate.Struct(req); err != nil {
 		return err
 	}
+
 	sub, ok := s.registry.Find(req.Subsystem)
 	if !ok {
 		return SettingUnknown("子系统不存在")
@@ -165,6 +166,7 @@ func (s *SettingService) Update(ctx context.Context, req *UpdateSettingsReq) err
 		}
 		upserts[v.Key] = v.Value
 	}
+
 	return s.repo.WithContext(ctx).Apply(req.Subsystem, upserts, drops)
 }
 
@@ -213,6 +215,7 @@ func (s *SettingService) lookup(ctx context.Context, subsystem, key string) (set
 	if !ok {
 		return setting.Item{}, "", SettingUnknown("配置项不存在")
 	}
+
 	row, found, err := s.repo.WithContext(ctx).Get(subsystem, key)
 	if err != nil {
 		return setting.Item{}, "", err

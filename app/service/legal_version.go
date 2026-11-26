@@ -68,6 +68,7 @@ func (i *LegalService) CreateVersion(ctx context.Context, req *CreateLegalVersio
 	if strings.TrimSpace(req.Content) == "" {
 		return LegalContentEmpty()
 	}
+
 	unlock, err := i.lock("legal:document-id:" + cast.ToString(req.DocumentID))
 	if err != nil {
 		return err
@@ -96,6 +97,7 @@ func (i *LegalService) CreateVersion(ctx context.Context, req *CreateLegalVersio
 		Content:    req.Content,
 		Status:     model.LegalVersionDraft,
 	}
+
 	return repo.SaveVersion(ver)
 }
 
@@ -111,6 +113,7 @@ func (i *LegalService) UpdateVersion(ctx context.Context, req *UpdateLegalVersio
 	if strings.TrimSpace(req.Content) == "" {
 		return LegalContentEmpty()
 	}
+
 	unlock, err := i.lock("legal:version:" + cast.ToString(req.ID))
 	if err != nil {
 		return err
@@ -140,6 +143,7 @@ func (i *LegalService) UpdateVersion(ctx context.Context, req *UpdateLegalVersio
 	ver.Version = version
 	ver.Title = strings.TrimSpace(req.Title)
 	ver.Content = req.Content
+
 	return repo.SaveVersion(ver)
 }
 
@@ -169,6 +173,7 @@ func (i *LegalService) DeleteVersion(ctx context.Context, id uint) error {
 	if count > 0 {
 		return LegalDocumentHasEvents()
 	}
+
 	return repo.DeleteVersion(ver.ID)
 }
 
@@ -177,6 +182,7 @@ func (i *LegalService) PublishVersion(ctx context.Context, req *PublishLegalVers
 	if err := i.validate.Struct(req); err != nil {
 		return err
 	}
+
 	unlock, err := i.lock("legal:version:" + cast.ToString(req.ID))
 	if err != nil {
 		return err
@@ -200,6 +206,7 @@ func (i *LegalService) PublishVersion(ctx context.Context, req *PublishLegalVers
 	ver.ContentSHA256 = legalHash(ver.Content)
 	ver.PublishedAt = &now
 	ver.EffectiveAt = &now
+
 	return repo.Transaction(func(tx repository.LegalRepositoryInterface) error {
 		if err := tx.ArchivePublished(ver.DocumentID, ver.ID); err != nil {
 			return err

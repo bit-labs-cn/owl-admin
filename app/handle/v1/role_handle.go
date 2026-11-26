@@ -49,6 +49,7 @@ func (i *RoleHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -82,6 +83,7 @@ func (i *RoleHandle) Update(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -119,6 +121,7 @@ func (i *RoleHandle) Retrieve(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 
@@ -145,6 +148,7 @@ func (i *RoleHandle) AssignMenusToRole(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -218,5 +222,6 @@ func (i *RoleHandle) ChangeStatus(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }

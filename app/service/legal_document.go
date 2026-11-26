@@ -123,6 +123,7 @@ func (i *LegalService) CreateDocument(ctx context.Context, req *CreateLegalDocum
 	if err != nil {
 		return err
 	}
+
 	unlock, err := i.lock("legal:document:" + key)
 	if err != nil {
 		return err
@@ -143,6 +144,7 @@ func (i *LegalService) CreateDocument(ctx context.Context, req *CreateLegalDocum
 		Kind:   req.Kind,
 		Status: model.LegalStatusEnabled,
 	}
+
 	return repo.SaveDocument(doc)
 }
 
@@ -151,6 +153,7 @@ func (i *LegalService) UpdateDocument(ctx context.Context, req *UpdateLegalDocum
 	if err := i.validate.Struct(req); err != nil {
 		return err
 	}
+
 	unlock, err := i.lock("legal:document-id:" + cast.ToString(req.ID))
 	if err != nil {
 		return err
@@ -168,6 +171,7 @@ func (i *LegalService) UpdateDocument(ctx context.Context, req *UpdateLegalDocum
 	doc.Name = strings.TrimSpace(req.Name)
 	doc.Kind = req.Kind
 	doc.Status = req.Status
+
 	return repo.SaveDocument(doc)
 }
 
@@ -194,6 +198,7 @@ func (i *LegalService) DeleteDocument(ctx context.Context, id uint) error {
 	if count > 0 {
 		return LegalDocumentHasEvents()
 	}
+
 	return repo.Transaction(func(tx repository.LegalRepositoryInterface) error {
 		if err := tx.DeleteItemsByDocument(doc.ID); err != nil {
 			return err
@@ -238,6 +243,7 @@ func (i *LegalService) DocumentOptions(ctx context.Context) ([]LegalOption, erro
 			Status: doc.Status,
 		})
 	}
+
 	return out, nil
 }
 
@@ -300,5 +306,6 @@ func (i *LegalService) decorateDocuments(repo repository.LegalRepositoryInterfac
 			SceneNames:     names,
 		})
 	}
+
 	return out, nil
 }

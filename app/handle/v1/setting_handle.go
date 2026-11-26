@@ -55,10 +55,12 @@ func (i *SettingHandle) Update(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	if err := i.svc.Update(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 

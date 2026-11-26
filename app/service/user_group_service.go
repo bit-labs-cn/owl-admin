@@ -101,6 +101,7 @@ func (i *UserGroupService) CreateUserGroup(ctx context.Context, req *CreateUserG
 	if req.UserIDs != nil {
 		group.Users = db.GetModelsByIDs[model.User](req.UserIDs)
 	}
+
 	return i.repo.WithContext(ctx).Save(&group)
 }
 
@@ -130,6 +131,7 @@ func (i *UserGroupService) UpdateUserGroup(ctx context.Context, req *UpdateUserG
 	if req.UserIDs != nil {
 		group.Users = db.GetModelsByIDs[model.User](req.UserIDs)
 	}
+
 	return i.repo.WithContext(ctx).Save(group)
 }
 
@@ -193,6 +195,7 @@ func (i *UserGroupService) AssignUsersToGroup(ctx context.Context, req *AssignUs
 	}
 
 	group.SetUsers(db.GetModelsByIDs[model.User](req.UserIDs))
+
 	return i.repo.WithContext(ctx).Save(group)
 }
 

@@ -44,6 +44,7 @@ func (i *PasswordToolHandle) Generate(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, result)
 }
 
@@ -68,5 +69,6 @@ func (i *PasswordToolHandle) Hash(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, result)
 }

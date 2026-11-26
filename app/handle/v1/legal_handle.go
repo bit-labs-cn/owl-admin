@@ -58,10 +58,12 @@ func (i *LegalHandle) CreateDocument(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	if err := i.svc.CreateDocument(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -81,10 +83,12 @@ func (i *LegalHandle) UpdateDocument(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
+
 	if err := i.svc.UpdateDocument(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -120,11 +124,13 @@ func (i *LegalHandle) RetrieveDocuments(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	count, list, err := i.svc.RetrieveDocuments(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, count, req.Page, req.PageSize, list)
 }
 
@@ -157,10 +163,12 @@ func (i *LegalHandle) CreateVersion(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	if err := i.svc.CreateVersion(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -180,10 +188,12 @@ func (i *LegalHandle) UpdateVersion(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
+
 	if err := i.svc.UpdateVersion(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -218,10 +228,12 @@ func (i *LegalHandle) PublishVersion(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
+
 	if err := i.svc.PublishVersion(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -240,11 +252,13 @@ func (i *LegalHandle) RetrieveVersions(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	count, list, err := i.svc.RetrieveVersions(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, count, req.Page, req.PageSize, list)
 }
 
@@ -262,10 +276,12 @@ func (i *LegalHandle) CreateScene(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	if err := i.svc.CreateScene(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -285,10 +301,12 @@ func (i *LegalHandle) UpdateScene(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToUint(ctx.Param("id"))
+
 	if err := i.svc.UpdateScene(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -323,11 +341,13 @@ func (i *LegalHandle) RetrieveScenes(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	count, list, err := i.svc.RetrieveScenes(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, count, req.Page, req.PageSize, list)
 }
 
@@ -363,11 +383,13 @@ func (i *LegalHandle) RetrieveEvents(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	count, list, err := i.svc.RetrieveEvents(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, count, req.Page, req.PageSize, list)
 }
 
@@ -449,6 +471,7 @@ func (i *LegalHandle) Accept(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	list, err := i.svc.RecordAcceptances(ctx.Request.Context(), legalActor(ctx), &req)
 	if err != nil {
 		router.Fail(ctx, err)

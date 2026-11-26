@@ -50,6 +50,7 @@ func (i *AppVersionHandle) Upgrade(ctx *gin.Context) {
 		abs := absolutePublicURL(ctx, *latest.ApkURL)
 		latest.ApkURL = &abs
 	}
+
 	router.Success(ctx, latest)
 }
 
@@ -89,6 +90,7 @@ func (i *AppVersionHandle) Upload(ctx *gin.Context) {
 		return
 	}
 	result.URL = absolutePublicURL(ctx, result.URL)
+
 	router.Success(ctx, result)
 }
 
@@ -108,10 +110,12 @@ func (i *AppVersionHandle) Create(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	if err := i.svc.Create(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -133,10 +137,12 @@ func (i *AppVersionHandle) Update(ctx *gin.Context) {
 		return
 	}
 	req.ID = cast.ToInt64(ctx.Param("id"))
+
 	if err := i.svc.Update(ctx.Request.Context(), &req); err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }
 
@@ -175,11 +181,13 @@ func (i *AppVersionHandle) Retrieve(ctx *gin.Context) {
 		router.BadRequest(ctx, "参数绑定失败")
 		return
 	}
+
 	count, list, err := i.svc.Retrieve(ctx.Request.Context(), &req)
 	if err != nil {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.PageSuccess(ctx, int(count), req.Page, req.PageSize, list)
 }
 
@@ -205,5 +213,6 @@ func (i *AppVersionHandle) ChangeStatus(ctx *gin.Context) {
 		router.Fail(ctx, err)
 		return
 	}
+
 	router.Success(ctx, nil)
 }

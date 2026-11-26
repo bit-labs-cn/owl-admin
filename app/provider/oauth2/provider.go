@@ -61,6 +61,7 @@ func NewCatalog(configure *conf.Configure) *Catalog {
 func (c *Catalog) get(name string) Provider {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
 	if p, ok := c.cache[name]; ok {
 		return p
 	}
@@ -110,6 +111,7 @@ func (c *Catalog) List() []ProviderView {
 		}
 		list = append(list, ProviderView{Provider: p.Name(), Name: label})
 	}
+
 	return list
 }
 

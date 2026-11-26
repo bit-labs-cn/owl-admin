@@ -298,6 +298,7 @@ func (s *SchedulerService) CreateJob(ctx context.Context, req *CreateJobReq) (*J
 		Status:              schedulerpkg.JobStatusEnabled,
 		NextRunAt:           next,
 	}
+
 	if err := s.repo.WithContext(ctx).CreateJob(job); err != nil {
 		return nil, err
 	}
@@ -348,6 +349,7 @@ func (s *SchedulerService) UpdateJob(ctx context.Context, req *UpdateJobReq) (*J
 	job.RetryBackoffSeconds = req.RetryBackoffSeconds
 	job.OverlapPolicy = req.OverlapPolicy
 	job.NextRunAt = next
+
 	if err := s.repo.WithContext(ctx).SaveJob(job); err != nil {
 		return nil, err
 	}
@@ -364,6 +366,7 @@ func (s *SchedulerService) DeleteJob(ctx context.Context, id uint) error {
 	if job.IsBuiltin() {
 		return SchedulerBuiltinImmutable()
 	}
+
 	active, err := s.repo.WithContext(ctx).CountActiveRuns(job.ID)
 	if err != nil {
 		return err
@@ -377,6 +380,7 @@ func (s *SchedulerService) DeleteJob(ctx context.Context, id uint) error {
 		return err
 	}
 	defer lock.Unlock()
+
 	return s.repo.WithContext(ctx).DeleteJob(id)
 }
 
@@ -412,6 +416,7 @@ func (s *SchedulerService) ChangeStatus(ctx context.Context, id uint, req *Chang
 		// 停用后清掉排期，扫描循环就不会再命中它。
 		updates["next_run_at"] = nil
 	}
+
 	return s.repo.WithContext(ctx).UpdateJobFields(job.ID, updates)
 }
 
@@ -477,6 +482,7 @@ func (s *SchedulerService) RetrieveActions() []ActionDTO {
 			Params:      item.Action.Params,
 		})
 	}
+
 	return out
 }
 
@@ -485,6 +491,7 @@ func (s *SchedulerService) ActionOptions(ctx context.Context, code string, req *
 	if err := s.validate.Struct(req); err != nil {
 		return nil, err
 	}
+
 	reg, ok := s.manager.FindAction(strings.TrimSpace(code))
 	if !ok {
 		return nil, SchedulerScriptInvalid("方法未注册：请确认所属子系统已加载")

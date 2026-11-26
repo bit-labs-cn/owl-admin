@@ -40,6 +40,7 @@ func (i *MenuSaveServiceProvider) iter(menu *router.Menu, level int) {
 	if level == 1 {
 		menu.ID = menu.Name
 		meta, _ := jsoniter.MarshalToString(menu.Meta)
+
 		i.db.Model(&model.Menu{}).Create(&model.Menu{
 			ID:       menu.ID,
 			Name:     menu.Name,
@@ -56,6 +57,7 @@ func (i *MenuSaveServiceProvider) iter(menu *router.Menu, level int) {
 			v.ID = menu.ID + "," + v.Name
 			i.iter(v, level+1)
 			meta, _ := jsoniter.MarshalToString(menu.Meta)
+
 			i.db.Model(&model.Menu{}).Create(&model.Menu{
 				ID:       v.ID,
 				ParentID: menu.Name,

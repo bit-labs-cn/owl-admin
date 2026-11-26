@@ -82,9 +82,9 @@ func newSchedulerTestService(t *testing.T) (*SchedulerService, *gorm.DB) {
 	}
 	if err := registry.AddActions("notify",
 		schedulerContract.Action{
-			Key:    "send-message",
-			Name:   "发送通知",
-			Group:  "通知中心",
+			Key:   "send-message",
+			Name:  "发送通知",
+			Group: "通知中心",
 			Params: []schedulerContract.Param{
 				{Name: "title", Label: "标题", Type: schedulerContract.ParamString, Required: true},
 			},
@@ -93,9 +93,9 @@ func newSchedulerTestService(t *testing.T) (*SchedulerService, *gorm.DB) {
 			},
 		},
 		schedulerContract.Action{
-			Key:    "power-on",
-			Name:   "开机",
-			Group:  "物理开关",
+			Key:   "power-on",
+			Name:  "开机",
+			Group: "物理开关",
 			Params: []schedulerContract.Param{
 				{Name: "switch", Label: "开关", Type: schedulerContract.ParamSelect, Required: true, Dynamic: true},
 			},

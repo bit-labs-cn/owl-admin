@@ -86,6 +86,7 @@ func (i *PositionService) UpdatePosition(ctx context.Context, req *UpdatePositio
 	if err = copier.Copy(m, req); err != nil {
 		return err
 	}
+
 	return i.repo.WithContext(ctx).Save(m)
 }
 
